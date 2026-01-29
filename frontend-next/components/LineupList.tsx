@@ -8,6 +8,7 @@ type LineupListProps = {
 
 export default function LineupList({ rows }: LineupListProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const leadNames = new Set(["Spektral", "Chippa"]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -73,7 +74,11 @@ export default function LineupList({ rows }: LineupListProps) {
         <div className="lineup-row" key={`row-${rowIndex}`}>
           {row.map((artist, index) => (
             <div className="lineup-item" key={artist}>
-              <span className="lineup-name">{artist}</span>
+              <span
+                className={`lineup-name${leadNames.has(artist) ? " lineup-name--lead" : ""}`}
+              >
+                {artist}
+              </span>
               {index < row.length - 1 ? (
                 <span className="lineup-divider" aria-hidden="true">
                   |

@@ -247,7 +247,7 @@ input {
 .lineup-rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
   width: min(920px, 92vw);
 }
 
@@ -274,6 +274,10 @@ input {
   text-shadow: 0 0 12px rgba(47, 215, 255, 0.3);
 }
 
+.lineup-name--lead {
+  font-size: clamp(2.09rem, 7.48vw, 3.96rem);
+}
+
 .lineup-divider {
   display: inline-block;
   width: clamp(0.12em, 0.2vw + 0.06em, 0.3em);
@@ -289,9 +293,12 @@ input {
 
 .hosts-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 12px 0;
+  width: min(920px, 92vw);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .powered-by {
@@ -318,7 +325,7 @@ input {
   font-family: var(--font-condensed);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: clamp(1.52rem, 5.44vw, 2.88rem);
+  font-size: clamp(1.1rem, 3vw + 0.35rem, 2.6rem);
   letter-spacing: 0.04em;
   color: #f3f5ff;
   text-shadow: 0 0 12px rgba(47, 215, 255, 0.3);

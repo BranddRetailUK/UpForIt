@@ -14,9 +14,10 @@ const BACKGROUND_MOBILE =
 export const revalidate = 3600;
 
 const LINEUP_ROWS = [
-  ["Spektral", "Chippa", "Garron T & Darko"],
-  ["Sinik", "Savage", "Scott Charles"],
-  ["Skandal", "Deechase", "Frantic & Robz"]
+  ["Spektral", "Chippa"],
+  ["Garron T & Darko", "Sinik"],
+  ["Scott Charles", "Skandal"],
+  ["Savage", "Deechase", "Frantic & Robz"]
 ];
 
 const HOSTS = ["E Dappa", "Danzee", "Razor", "Ashman"];
