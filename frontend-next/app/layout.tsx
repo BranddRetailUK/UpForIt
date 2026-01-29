@@ -21,15 +21,15 @@ const condensed = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "UP FOR IT",
+  title: "UPFORIT | Underground Bass Music",
   description: "Exclusive event. Limited tickets.",
   openGraph: {
-    title: "UP FOR IT",
+    title: "UPFORIT | Underground Bass Music",
     description: "Exclusive event. Limited tickets.",
     type: "website",
     images: [
       {
-        url: "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769687281",
+        url: "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769693888",
         width: 1200,
         height: 2130,
         alt: "UP FOR IT event flyer"
@@ -38,10 +38,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "UP FOR IT",
+    title: "UPFORIT | Underground Bass Music",
     description: "Exclusive event. Limited tickets.",
     images: [
-      "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769687281"
+      "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769693888"
     ]
   }
 };

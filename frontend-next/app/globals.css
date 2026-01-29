@@ -22,6 +22,7 @@
 
 body {
   min-height: 100vh;
+  position: relative;
   background:
     radial-gradient(circle at 18% 12%, rgba(47, 215, 255, 0.18), transparent 45%),
     radial-gradient(circle at 85% 18%, rgba(17, 93, 130, 0.2), transparent 50%),
@@ -51,9 +52,9 @@ body::before {
 
 body::after {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 20%, rgba(0, 0, 0, 0.75) 70%);
+  background: radial-gradient(circle at center, transparent 20%, rgba(0, 0, 0, 0.6) 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -101,18 +102,21 @@ input {
   filter: blur(45px);
   opacity: 0.85;
   z-index: 1;
-  animation: pulse 8s ease-in-out infinite;
+  animation: pulse 8s ease-in-out infinite, spotlightDrift 42s ease-in-out infinite;
+  will-change: transform;
 }
 
 .glow--one {
   top: -160px;
   left: -140px;
+  animation-duration: 8s, 48s;
 }
 
 .glow--two {
   bottom: 120px;
   right: -170px;
-  animation-delay: 1.8s;
+  animation-delay: 1.8s, -12s;
+  animation-duration: 8s, 54s;
 }
 
 .glow--three {
@@ -121,7 +125,8 @@ input {
   width: 240px;
   height: 240px;
   opacity: 0.7;
-  animation-delay: 3s;
+  animation-delay: 3s, -22s;
+  animation-duration: 8s, 60s;
 }
 
 .top {
@@ -575,6 +580,24 @@ input {
   50% {
     box-shadow: 0 0 16px rgba(47, 215, 255, 0.65);
     opacity: 1;
+  }
+}
+
+@keyframes spotlightDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(6vw, -4vh, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-4vw, 6vh, 0) scale(0.98);
+  }
+  75% {
+    transform: translate3d(5vw, 3vh, 0) scale(1.03);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
