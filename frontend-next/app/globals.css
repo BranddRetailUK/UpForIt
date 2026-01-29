@@ -57,13 +57,13 @@ body::before {
   z-index: 0;
 }
 
-body::after {
+.flyer::before {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at center, transparent 20%, rgba(0, 0, 0, 0.6) 70%);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 button,
@@ -83,6 +83,12 @@ input {
   isolation: isolate;
 }
 
+.flyer > header,
+.flyer > section {
+  position: relative;
+  z-index: 3;
+}
+
 .flyer-media {
   position: absolute;
   inset: 0;
@@ -100,40 +106,45 @@ input {
   filter: grayscale(1) contrast(1.1);
 }
 
+.flyer-image--mobile {
+  display: none;
+}
+
 .glow {
   position: absolute;
-  width: 360px;
-  height: 360px;
+  width: 540px;
+  height: 540px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(47, 215, 255, 0.55), transparent 70%);
-  filter: blur(45px);
-  opacity: 0.85;
-  z-index: 1;
-  animation: pulse 8s ease-in-out infinite, spotlightDrift 42s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(47, 215, 255, 0.6), transparent 70%);
+  filter: blur(54px);
+  opacity: 0.9;
+  z-index: 2;
+  mix-blend-mode: overlay;
+  animation: pulse 8s ease-in-out infinite, spotlightDrift 24s ease-in-out infinite;
   will-change: transform;
 }
 
 .glow--one {
   top: -160px;
   left: -140px;
-  animation-duration: 8s, 48s;
+  animation-duration: 8s, 27s;
 }
 
 .glow--two {
   bottom: 120px;
   right: -170px;
   animation-delay: 1.8s, -12s;
-  animation-duration: 8s, 54s;
+  animation-duration: 8s, 30s;
 }
 
 .glow--three {
   top: 45%;
   right: 10%;
-  width: 240px;
-  height: 240px;
+  width: 360px;
+  height: 360px;
   opacity: 0.7;
   animation-delay: 3s, -22s;
-  animation-duration: 8s, 60s;
+  animation-duration: 8s, 33s;
 }
 
 .top {
@@ -147,11 +158,12 @@ input {
 
 .genres {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: clamp(0.6rem, 1.2vw + 0.3rem, 0.9rem);
   text-transform: uppercase;
-  letter-spacing: 0.35em;
+  letter-spacing: clamp(0.12em, 0.6vw, 0.35em);
   color: var(--accent-strong);
   text-shadow: 0 0 10px rgba(47, 215, 255, 0.6);
+  white-space: nowrap;
 }
 
 .title-block {
@@ -177,8 +189,8 @@ input {
 }
 
 .divider {
-  width: min(280px, 60vw);
-  height: 2px;
+  width: min(320px, 70vw);
+  height: 3px;
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
   box-shadow: 0 0 10px rgba(47, 215, 255, 0.4);
   animation: glowPulse 4.5s ease-in-out infinite;
@@ -200,8 +212,8 @@ input {
 }
 
 .section-underline {
-  width: min(160px, 50vw);
-  height: 2px;
+  width: min(190px, 60vw);
+  height: 3px;
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
   box-shadow: 0 0 10px rgba(47, 215, 255, 0.45);
   animation: glowPulse 4.5s ease-in-out infinite;
@@ -243,37 +255,43 @@ input {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px 16px;
+  gap: 12px 0;
 }
 
 .lineup-item {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 0;
 }
 
 .lineup-name {
-  font-family: var(--font-display);
+  font-family: var(--font-condensed);
+  font-weight: 700;
   text-transform: uppercase;
   font-size: clamp(1.9rem, 6.8vw, 3.6rem);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   color: #f3f5ff;
   text-shadow: 0 0 12px rgba(47, 215, 255, 0.3);
 }
 
 .lineup-divider {
-  color: var(--accent);
-  font-size: 1.6rem;
-  font-weight: 700;
+  display: inline-block;
+  width: clamp(0.12em, 0.2vw + 0.06em, 0.3em);
+  height: clamp(0.7em, 1.4vw + 0.3em, 2.5em);
+  margin-inline: clamp(0.35em, 0.9vw, 0.5em);
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(47, 215, 255, 0.4);
+  color: transparent;
   line-height: 1;
-  transform: translateY(-1px) scaleY(1.2);
+  transform: translateY(0.04em);
 }
 
 .hosts-row {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px 20px;
+  gap: 12px 0;
 }
 
 .powered-by {
@@ -293,24 +311,30 @@ input {
 .host-item {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 0;
 }
 
 .host-name {
-  font-family: var(--font-display);
+  font-family: var(--font-condensed);
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: clamp(1.71rem, 6.12vw, 3.24rem);
-  letter-spacing: 0.08em;
+  font-size: clamp(1.52rem, 5.44vw, 2.88rem);
+  letter-spacing: 0.04em;
   color: #f3f5ff;
   text-shadow: 0 0 12px rgba(47, 215, 255, 0.3);
 }
 
 .host-divider {
-  color: var(--accent);
-  font-size: 1.6rem;
-  font-weight: 700;
+  display: inline-block;
+  width: clamp(0.12em, 0.2vw + 0.06em, 0.2em);
+  height: clamp(0.8em, 1.2vw + 0.3em, 2em);
+  margin-inline: clamp(0.35em, 0.9vw, 0.5em);
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(47, 215, 255, 0.4);
+  color: transparent;
   line-height: 1;
-  transform: translateY(-1px) scaleY(1.2);
+  transform: translateY(0.04em);
 }
 
 .details {
@@ -389,7 +413,7 @@ input {
 }
 
 .detail-value {
-  font-family: var(--font-display);
+  font-family: var(--font-condensed);
   font-size: clamp(1.3rem, 4vw, 2rem);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -404,6 +428,7 @@ input {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
+  font-family: var(--font-condensed);
   color: var(--accent-strong);
   text-shadow: 0 0 10px rgba(47, 215, 255, 0.6);
 }
@@ -767,16 +792,16 @@ input {
     max-width: 100%;
   }
 
-  body::after {
+  .flyer::before {
     opacity: 0.5;
   }
 
   .lineup-row {
-    gap: 6px 10px;
+    gap: 6px 0;
   }
 
   .lineup-item {
-    gap: 6px;
+    gap: 0;
   }
 
   .lineup {
@@ -788,12 +813,20 @@ input {
   }
 
   .lineup-name {
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     font-size: clamp(1.6rem, 6.4vw, 3rem);
   }
 
+  .flyer-image--desktop {
+    display: none;
+  }
+
+  .flyer-image--mobile {
+    display: block;
+  }
+
   .host-item {
-    gap: 8px;
+    gap: 0;
   }
 
   .countdown__row {

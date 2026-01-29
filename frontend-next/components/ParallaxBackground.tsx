@@ -4,12 +4,14 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 type ParallaxBackgroundProps = {
-  src: string;
+  srcDesktop: string;
+  srcMobile: string;
   blurDataURL?: string;
 };
 
 export default function ParallaxBackground({
-  src,
+  srcDesktop,
+  srcMobile,
   blurDataURL
 }: ParallaxBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -53,12 +55,21 @@ export default function ParallaxBackground({
   return (
     <div ref={containerRef} className="flyer-media" aria-hidden="true">
       <Image
-        src={src}
+        src={srcDesktop}
         alt=""
         fill
         priority
         sizes="100vw"
-        className="flyer-image"
+        className="flyer-image flyer-image--desktop"
+        placeholder={blurDataURL ? "blur" : "empty"}
+        blurDataURL={blurDataURL}
+      />
+      <Image
+        src={srcMobile}
+        alt=""
+        fill
+        sizes="100vw"
+        className="flyer-image flyer-image--mobile"
         placeholder={blurDataURL ? "blur" : "empty"}
         blurDataURL={blurDataURL}
       />

@@ -1,12 +1,15 @@
 import Image from "next/image";
 import Countdown from "../components/Countdown";
+import LineupList from "../components/LineupList";
 import ParallaxBackground from "../components/ParallaxBackground";
 import ScrollToTopOnLoad from "../components/ScrollToTopOnLoad";
 import SignupForm from "../components/SignupForm";
 
 const EVENT_DATE = "2026-03-28T18:00:00Z";
-const FLYER_IMAGE =
-  "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769687281";
+const BACKGROUND_DESKTOP =
+  "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/BG_DESKTOP.jpg?v=1769701103";
+const BACKGROUND_MOBILE =
+  "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/BG_MOBILE.jpg?v=1769701103";
 
 export const revalidate = 3600;
 
@@ -23,7 +26,8 @@ export default function Home() {
     <main className="flyer">
       <ScrollToTopOnLoad />
       <ParallaxBackground
-        src={FLYER_IMAGE}
+        srcDesktop={BACKGROUND_DESKTOP}
+        srcMobile={BACKGROUND_MOBILE}
         blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMDkwYjEwIi8+PC9zdmc+"
       />
       <div className="glow glow--one" aria-hidden="true" />
@@ -51,22 +55,7 @@ export default function Home() {
           <span className="section-label">Lineup</span>
           <span className="section-underline" aria-hidden="true" />
         </div>
-        <div className="lineup-rows">
-          {LINEUP_ROWS.map((row, rowIndex) => (
-            <div className="lineup-row" key={`row-${rowIndex}`}>
-              {row.map((artist, index) => (
-                <div className="lineup-item" key={artist}>
-                  <span className="lineup-name">{artist}</span>
-                  {index < row.length - 1 ? (
-                    <span className="lineup-divider" aria-hidden="true">
-                      |
-                    </span>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+        <LineupList rows={LINEUP_ROWS} />
       </section>
 
       <section className="hosts reveal delay-4">
