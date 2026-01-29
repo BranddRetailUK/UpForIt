@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
 
@@ -8,6 +8,21 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
   const [message, setMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (status !== "success") return;
+
+    setShowModal(true);
+
+    const tickDurationMs = 1200;
+    const hideDelayMs = 3000;
+    const timeout = window.setTimeout(() => {
+      setShowModal(false);
+    }, tickDurationMs + hideDelayMs);
+
+    return () => window.clearTimeout(timeout);
+  }, [status]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,7 +51,7 @@ export default function SignupForm() {
       }
 
       setStatus("success");
-      setMessage("Thanks! You're on the list.");
+      setMessage("");
       setEmail("");
     } catch (error) {
       const messageText =
@@ -47,30 +62,52 @@ export default function SignupForm() {
   };
 
   return (
-    <form className="signup-form" onSubmit={handleSubmit}>
-      <input
-        className="signup-input"
-        type="email"
-        name="email"
-        placeholder="Enter your email"
-        autoComplete="email"
-        required
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        disabled={status === "loading"}
-      />
-      <button className="btn btn--solid" type="submit" disabled={status === "loading"}>
-        {status === "loading" ? "SENDING..." : "SIGN UP"}
-      </button>
-      {message ? (
-        <p
-          className={`signup-message signup-message--${status}`}
-          role="status"
-          aria-live="polite"
-        >
-          {message}
-        </p>
+    <>
+      <form className="signup-form" onSubmit={handleSubmit}>
+        <input
+          className="signup-input"
+          type="email"
+          name="email"
+          placeholder="Enter your email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          disabled={status === "loading"}
+        />
+        <button className="btn btn--solid" type="submit" disabled={status === "loading"}>
+          {status === "loading" ? "SENDING..." : "SIGN UP"}
+        </button>
+        {message ? (
+          <p
+            className={`signup-message signup-message--${status}`}
+            role="status"
+            aria-live="polite"
+          >
+            {message}
+          </p>
+        ) : null}
+      </form>
+      {showModal ? (
+        <div className="signup-modal-overlay" role="presentation">
+          <div className="signup-modal" role="dialog" aria-modal="true" aria-labelledby="signup-success-title">
+            <div className="signup-modal__icon" aria-hidden="true">
+              <svg className="signup-tick" viewBox="0 0 52 52">
+                <circle className="signup-tick__circle" cx="26" cy="26" r="24" fill="none" />
+                <path
+                  className="signup-tick__check"
+                  fill="none"
+                  d="M14 27.5 L22 35 L38 18"
+                />
+              </svg>
+            </div>
+            <h3 className="signup-modal__title" id="signup-success-title">
+              You're in.
+            </h3>
+            <p className="signup-modal__text">Thanks for signing up.</p>
+          </div>
+        </div>
       ) : null}
-    </form>
+    </>
   );
 }

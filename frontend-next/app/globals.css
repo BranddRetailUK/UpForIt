@@ -525,6 +525,78 @@ input {
   text-shadow: 0 0 12px rgba(255, 120, 120, 0.35);
 }
 
+.signup-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 4, 10, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+  backdrop-filter: blur(2px);
+}
+
+.signup-modal {
+  width: min(420px, 88vw);
+  padding: 26px 24px 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(90, 205, 255, 0.5);
+  background: linear-gradient(180deg, rgba(6, 14, 28, 0.96), rgba(2, 8, 16, 0.92));
+  box-shadow:
+    0 0 40px rgba(47, 215, 255, 0.35),
+    inset 0 0 18px rgba(47, 215, 255, 0.18);
+  text-align: center;
+  animation: modalIn 0.35s ease-out;
+}
+
+.signup-modal__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.signup-tick {
+  width: 68px;
+  height: 68px;
+}
+
+.signup-tick__circle,
+.signup-tick__check {
+  stroke: var(--accent-strong);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(47, 215, 255, 0.55));
+}
+
+.signup-tick__circle {
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  animation: tickCircle 0.8s ease-out forwards;
+}
+
+.signup-tick__check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: tickCheck 0.5s 0.65s ease-out forwards;
+}
+
+.signup-modal__title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 1.4rem;
+}
+
+.signup-modal__text {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .meta {
   font-size: 0.85rem;
   color: rgba(170, 185, 220, 0.85);
@@ -604,6 +676,29 @@ input {
   50% {
     box-shadow: 0 0 16px rgba(47, 215, 255, 0.65);
     opacity: 1;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tickCircle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tickCheck {
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
