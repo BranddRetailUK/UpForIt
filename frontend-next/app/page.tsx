@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Countdown from "../components/Countdown";
 import ParallaxBackground from "../components/ParallaxBackground";
+import ScrollToTopOnLoad from "../components/ScrollToTopOnLoad";
 import SignupForm from "../components/SignupForm";
 
 const EVENT_DATE = "2026-03-28T18:00:00Z";
@@ -20,6 +21,7 @@ const HOSTS = ["E Dappa", "Danzee", "Razor", "Ashman"];
 export default function Home() {
   return (
     <main className="flyer">
+      <ScrollToTopOnLoad />
       <ParallaxBackground
         src={FLYER_IMAGE}
         blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMDkwYjEwIi8+PC9zdmc+"
@@ -42,7 +44,6 @@ export default function Home() {
           priority
         />
         <div className="divider" aria-hidden="true" />
-        <p className="subtitle">Exclusive event. Limited tickets.</p>
       </section>
 
       <section className="lineup reveal delay-3">
@@ -84,6 +85,18 @@ export default function Home() {
               ) : null}
             </div>
           ))}
+        </div>
+        <div className="powered-by">
+          <div className="section-heading section-heading--stacked">
+            <span className="section-label">Powered By</span>
+          </div>
+          <Image
+            className="powered-by-logo"
+            src="https://cdn.shopify.com/s/files/1/0841/7545/4535/files/REVOLT_LOGO.png?v=1769698342"
+            alt="Revolt logo"
+            width={360}
+            height={160}
+          />
         </div>
       </section>
 

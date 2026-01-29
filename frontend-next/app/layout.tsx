@@ -21,28 +21,30 @@ const condensed = Oswald({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.upforitevents.co.uk"),
   title: "UPFORIT | Underground Bass Music",
-  description: "Exclusive event. Limited tickets.",
+  description:
+    "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
   openGraph: {
     title: "UPFORIT | Underground Bass Music",
-    description: "Exclusive event. Limited tickets.",
+    description:
+      "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
     type: "website",
     images: [
       {
-        url: "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769693888",
-        width: 1200,
-        height: 2130,
-        alt: "UP FOR IT event flyer"
+        url: "/opengraph-image.jpg",
+        width: 1500,
+        height: 2051,
+        alt: "UPFORIT Open Graph image"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
     title: "UPFORIT | Underground Bass Music",
-    description: "Exclusive event. Limited tickets.",
-    images: [
-      "https://cdn.shopify.com/s/files/1/0841/7545/4535/files/FLYER_NEW.jpg?v=1769693888"
-    ]
+    description:
+      "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
+    images: ["/opengraph-image.jpg"]
   }
 };
 
