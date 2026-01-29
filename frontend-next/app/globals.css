@@ -20,6 +20,11 @@
   padding: 0;
 }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   min-height: 100vh;
   position: relative;
@@ -501,6 +506,25 @@ input {
   color: rgba(190, 205, 230, 0.6);
 }
 
+.signup-message {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.signup-message--success {
+  color: var(--accent-strong);
+  text-shadow: 0 0 12px rgba(47, 215, 255, 0.6);
+}
+
+.signup-message--error {
+  color: #ff8b8b;
+  text-shadow: 0 0 12px rgba(255, 120, 120, 0.35);
+}
+
 .meta {
   font-size: 0.85rem;
   color: rgba(170, 185, 220, 0.85);
@@ -602,6 +626,24 @@ input {
 }
 
 @media (max-width: 720px) {
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
+  }
+
+  .flyer {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body::after {
+    opacity: 0.5;
+  }
+
   .genres {
     letter-spacing: 0.18em;
     font-size: 0.65rem;

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Countdown from "../components/Countdown";
 import ParallaxBackground from "../components/ParallaxBackground";
+import SignupForm from "../components/SignupForm";
 
 const EVENT_DATE = "2026-03-28T18:00:00Z";
 const FLYER_IMAGE =
@@ -123,19 +124,7 @@ export default function Home() {
           <span className="section-label">Email signup</span>
           <span className="section-line" />
         </div>
-        <form className="signup-form">
-          <input
-            className="signup-input"
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            autoComplete="email"
-            required
-          />
-          <button className="btn btn--solid" type="submit">
-            SIGN UP
-          </button>
-        </form>
+        <SignupForm />
       </section>
 
     </main>
