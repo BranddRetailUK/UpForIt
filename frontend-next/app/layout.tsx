@@ -25,14 +25,20 @@ export const metadata: Metadata = {
   title: "UPFORIT | Underground Bass Music",
   description:
     "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
+  alternates: {
+    canonical: "https://www.upforitevents.co.uk"
+  },
   openGraph: {
     title: "UPFORIT | Underground Bass Music",
     description:
       "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
     type: "website",
+    url: "https://www.upforitevents.co.uk",
+    siteName: "UPFORIT",
+    locale: "en_GB",
     images: [
       {
-        url: "/opengraph-image.jpg",
+        url: "https://www.upforitevents.co.uk/opengraph-image.jpg",
         width: 1500,
         height: 2051,
         alt: "UPFORIT Open Graph image"
@@ -44,7 +50,7 @@ export const metadata: Metadata = {
     title: "UPFORIT | Underground Bass Music",
     description:
       "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
-    images: ["/opengraph-image.jpg"]
+    images: ["https://www.upforitevents.co.uk/opengraph-image.jpg"]
   }
 };
 
