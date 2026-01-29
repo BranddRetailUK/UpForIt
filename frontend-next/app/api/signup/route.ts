@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { pool } from "../../../lib/db";
+import { getPool } from "../../../lib/db";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,6 +29,17 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: "Please enter a valid email address." },
       { status: 400 }
+    );
+  }
+
+  let pool;
+  try {
+    pool = getPool();
+  } catch (error) {
+    console.error("Database not configured", error);
+    return NextResponse.json(
+      { ok: false, error: "Database is not configured." },
+      { status: 500 }
     );
   }
 

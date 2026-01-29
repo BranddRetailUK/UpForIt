@@ -41,10 +41,10 @@ export default function SignupForm() {
         body: JSON.stringify({ email })
       });
 
-      const data = (await response.json()) as {
-        ok?: boolean;
-        error?: string;
-      };
+      const text = await response.text();
+      const data = text
+        ? (JSON.parse(text) as { ok?: boolean; error?: string })
+        : null;
 
       if (!response.ok) {
         throw new Error(data?.error || "Unable to sign up right now.");
