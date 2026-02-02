@@ -256,6 +256,28 @@ input {
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px 0;
+  --lineup-size: clamp(1.9rem, 6.6vw, 3.4rem);
+  font-size: var(--lineup-size);
+}
+
+.lineup-row:nth-child(1) {
+  --lineup-size: clamp(2.2rem, 7.8vw, 4.2rem);
+}
+
+.lineup-row:nth-child(2) {
+  --lineup-size: clamp(2.05rem, 7.2vw, 3.9rem);
+}
+
+.lineup-row:nth-child(3) {
+  --lineup-size: clamp(1.85rem, 6.6vw, 3.45rem);
+}
+
+.lineup-row:nth-child(4) {
+  --lineup-size: clamp(1.9rem, 6.7vw, 3.55rem);
+}
+
+.lineup-row:nth-child(5) {
+  --lineup-size: clamp(1.75rem, 6.2vw, 3.2rem);
 }
 
 .lineup-item {
@@ -268,21 +290,22 @@ input {
   font-family: var(--font-condensed);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: clamp(1.9rem, 6.8vw, 3.6rem);
+  font-size: 1em;
   letter-spacing: 0.04em;
   color: #f3f5ff;
+  line-height: 1;
   text-shadow: 0 0 12px rgba(47, 215, 255, 0.3);
 }
 
 .lineup-name--lead {
-  font-size: clamp(2.09rem, 7.48vw, 3.96rem);
+  font-size: 1em;
 }
 
 .lineup-divider {
   display: inline-block;
-  width: clamp(0.12em, 0.2vw + 0.06em, 0.3em);
-  height: clamp(0.7em, 1.4vw + 0.3em, 2.5em);
-  margin-inline: clamp(0.35em, 0.9vw, 0.5em);
+  width: 0.12em;
+  height: 0.9em;
+  margin-inline: 0.4em;
   border-radius: 999px;
   background: var(--accent);
   box-shadow: 0 0 10px rgba(47, 215, 255, 0.4);
@@ -805,6 +828,27 @@ input {
 
   .lineup-row {
     gap: 6px 0;
+    flex-wrap: nowrap;
+  }
+
+  .lineup-row:nth-child(1) {
+    --lineup-size: clamp(1.7rem, 7vw, 3.2rem);
+  }
+
+  .lineup-row:nth-child(2) {
+    --lineup-size: clamp(1.6rem, 6.6vw, 3rem);
+  }
+
+  .lineup-row:nth-child(3) {
+    --lineup-size: clamp(1.48rem, 6.1vw, 2.75rem);
+  }
+
+  .lineup-row:nth-child(4) {
+    --lineup-size: clamp(1.52rem, 6.2vw, 2.85rem);
+  }
+
+  .lineup-row:nth-child(5) {
+    --lineup-size: clamp(1.4rem, 5.8vw, 2.6rem);
   }
 
   .lineup-item {
@@ -821,7 +865,16 @@ input {
 
   .lineup-name {
     letter-spacing: 0.03em;
-    font-size: clamp(1.6rem, 6.4vw, 3rem);
+  }
+
+  .lineup-name--lead {
+    font-size: 1em;
+  }
+
+  .lineup-divider {
+    width: 0.1em;
+    height: 0.85em;
+    margin-inline: 0.34em;
   }
 
   .flyer-image--desktop {
@@ -834,6 +887,21 @@ input {
 
   .host-item {
     gap: 0;
+  }
+
+  .hosts-row {
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .host-name {
+    font-size: clamp(0.95rem, 2.6vw + 0.25rem, 2rem);
+  }
+
+  .host-divider {
+    width: clamp(0.1em, 0.16vw + 0.05em, 0.18em);
+    margin-inline: clamp(0.25em, 0.6vw, 0.4em);
   }
 
   .countdown__row {

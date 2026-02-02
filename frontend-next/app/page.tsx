@@ -15,12 +15,13 @@ export const revalidate = 3600;
 
 const LINEUP_ROWS = [
   ["Spektral", "Chippa"],
-  ["Garron T & Darko", "Sinik"],
+  ["Garron T & Darko"],
+  ["Sinik", "Savage", "Tommo"],
   ["Scott Charles", "Skandal"],
-  ["Savage", "Deechase", "Frantic & Robz"]
+  ["Deechase", "Frantic & Robz"]
 ];
 
-const HOSTS = ["E Dappa", "Danzee", "Razor", "Ashman"];
+const HOSTS = ["E Dappa", "Danzee", "Razor", "Ashman", "Treble"];
 
 export default function Home() {
   return (
@@ -110,15 +111,6 @@ export default function Home() {
 
       <section className="countdown-panel reveal delay-6">
         <Countdown target={EVENT_DATE} />
-      </section>
-
-      <section className="cta-row reveal delay-7">
-        <button className="btn btn--solid" type="button">
-          Buy Ticket
-        </button>
-        <button className="btn btn--ghost" type="button">
-          VIP Access
-        </button>
       </section>
 
       <section className="signup reveal delay-8">
