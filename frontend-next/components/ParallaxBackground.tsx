@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
 
 type ParallaxBackgroundProps = {
   srcDesktop: string;
@@ -15,6 +15,9 @@ export default function ParallaxBackground({
   blurDataURL
 }: ParallaxBackgroundProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const mobileTileStyle = {
+    "--flyer-mobile-background": `url("${srcMobile}")`
+  } as CSSProperties;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -53,7 +56,12 @@ export default function ParallaxBackground({
   }, []);
 
   return (
-    <div ref={containerRef} className="flyer-media" aria-hidden="true">
+    <div
+      ref={containerRef}
+      className="flyer-media"
+      style={mobileTileStyle}
+      aria-hidden="true"
+    >
       <Image
         src={srcDesktop}
         alt=""
@@ -73,6 +81,7 @@ export default function ParallaxBackground({
         placeholder={blurDataURL ? "blur" : "empty"}
         blurDataURL={blurDataURL}
       />
+      <div className="flyer-image-tile" />
     </div>
   );
 }

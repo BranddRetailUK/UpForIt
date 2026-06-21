@@ -22,35 +22,35 @@ const condensed = Oswald({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.upforitevents.co.uk"),
-  title: "UPFORIT | Underground Bass Music",
+  title: "UPFORIT Multi Genre Day Festival | 27 June 2026",
   description:
-    "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
+    "UPFORIT Multi Genre Day Festival at McCarthys Sports Bar, Bletchley on Saturday 27 June 2026, midday to 10PM.",
   alternates: {
     canonical: "https://www.upforitevents.co.uk"
   },
   openGraph: {
-    title: "UPFORIT | Underground Bass Music",
+    title: "UPFORIT Multi Genre Day Festival | 27 June 2026",
     description:
-      "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
+      "UPFORIT Multi Genre Day Festival at McCarthys Sports Bar, Bletchley on Saturday 27 June 2026, midday to 10PM.",
     type: "website",
     url: "https://www.upforitevents.co.uk",
     siteName: "UPFORIT",
     locale: "en_GB",
     images: [
       {
-        url: "https://www.upforitevents.co.uk/opengraph-image.jpg",
-        width: 1500,
-        height: 2051,
-        alt: "UPFORIT Open Graph image"
+        url: "https://www.upforitevents.co.uk/new-flyer/poster.png",
+        width: 1054,
+        height: 1492,
+        alt: "UPFORIT Multi Genre Day Festival flyer"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "UPFORIT | Underground Bass Music",
+    title: "UPFORIT Multi Genre Day Festival | 27 June 2026",
     description:
-      "A heavyweight UK bass event built around drum & bass culture showcasing local and established artists from the 3 counties area and beyond",
-    images: ["https://www.upforitevents.co.uk/opengraph-image.jpg"]
+      "UPFORIT Multi Genre Day Festival at McCarthys Sports Bar, Bletchley on Saturday 27 June 2026, midday to 10PM.",
+    images: ["https://www.upforitevents.co.uk/new-flyer/poster.png"]
   }
 };
 
