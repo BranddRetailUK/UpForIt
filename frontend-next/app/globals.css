@@ -492,7 +492,7 @@ button {
 
 .video-player {
   position: relative;
-  width: min(720px, 100%);
+  width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 2px solid rgba(255, 212, 0, 0.72);
@@ -537,8 +537,9 @@ button {
   transform: translate(-50%, -50%) scale(1.06);
 }
 
-.video-player.is-playing:not(.needs-user-start):not(:hover):not(:focus-within) .video-player__button {
+.video-player.is-playing .video-player__button {
   opacity: 0;
+  pointer-events: none;
   transform: translate(-50%, -50%) scale(0.92);
 }
 
