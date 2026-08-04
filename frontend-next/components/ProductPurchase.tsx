@@ -1,0 +1,83 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import type { MerchProduct } from "../lib/merch";
+import { useCart } from "./CartProvider";
+
+export default function ProductPurchase({ product }: { product: MerchProduct }) {
+  const available = product.variants.filter((variant) => variant.available);
+  const [variantId, setVariantId] = useState(available[0]?.id || "");
+  const [quantity, setQuantity] = useState(1);
+  const { addLine } = useCart();
+  const variant = useMemo(
+    () => available.find((entry) => entry.id === variantId) || available[0],
+    [available, variantId]
+  );
+  const options = useMemo(() => {
+    if (product.options?.length) return product.options;
+    return [1, 2, 3].map((position) => ({
+      position,
+      name: `Option ${position}`,
+      values: Array.from(new Set(available.map((entry) => String(entry[`option${position}` as "option1"] || "")).filter(Boolean)))
+    })).filter((option) => option.values.length > 0);
+  }, [available, product.options]);
+  if (!variant) return <p className="merch-unavailable">Currently unavailable.</p>;
+  const variantLabel = [variant.option1, variant.option2, variant.option3].filter(Boolean).join(" / ");
+  const image = product.images.find((entry) => String(entry.id) === String(variant.imageId)) || product.images[0];
+
+  function optionValue(entry: (typeof available)[number], position: number) {
+    if (position === 1) return String(entry.option1 || "");
+    if (position === 2) return String(entry.option2 || "");
+    return String(entry.option3 || "");
+  }
+
+  function selectOption(position: number, value: string) {
+    const matchingCurrent = available.find((entry) => options.every((option) =>
+      option.position === position
+        ? optionValue(entry, option.position) === value
+        : optionValue(entry, option.position) === optionValue(variant, option.position)
+    ));
+    const next = matchingCurrent || available.find((entry) => optionValue(entry, position) === value);
+    if (next) setVariantId(next.id);
+  }
+
+  return (
+    <div className="product-purchase">
+      {options.map((option) => (
+        <label key={option.position}>
+          <span>{option.name}</span>
+          <select
+            value={optionValue(variant, option.position)}
+            onChange={(event) => selectOption(option.position, event.target.value)}
+          >
+            {option.values.map((value) => <option value={value} key={value}>{value}</option>)}
+          </select>
+        </label>
+      ))}
+      <label>
+        <span>Quantity</span>
+        <select value={quantity} onChange={(event) => setQuantity(Number(event.target.value))}>
+          {[1, 2, 3, 4, 5].map((value) => <option key={value}>{value}</option>)}
+        </select>
+      </label>
+      <button
+        className="pop-button pop-button--pink product-purchase__button"
+        type="button"
+        onClick={() => addLine({
+          productId: product.id,
+          variantId: variant.id,
+          slug: product.slug,
+          title: product.title,
+          variantLabel,
+          imageUrl: image?.src || "",
+          priceMinor: variant.priceMinor,
+          currency: product.currency,
+          quantity
+        })}
+      >
+        Add to cart — {new Intl.NumberFormat("en-GB", { style: "currency", currency: product.currency.toUpperCase() }).format(variant.priceMinor / 100)}
+      </button>
+      <p className="product-purchase__note">Made and fulfilled by Good Game Apparel · UK delivery only</p>
+    </div>
+  );
+}

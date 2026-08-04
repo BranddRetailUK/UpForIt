@@ -1,33 +1,55 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { formatMerchMoney, getMerchCatalogue, type MerchProduct } from "../../lib/merch";
 
 export const metadata: Metadata = {
   title: "Merch",
-  description: "UPFORIT merch is coming soon.",
+  description: "Shop official UPFORIT event merch, made and fulfilled in the UK.",
   alternates: { canonical: "/merch" }
 };
 
-export default function MerchPage() {
+export default async function MerchPage() {
+  let products: MerchProduct[] = [];
+  let unavailable = false;
+  try {
+    products = await getMerchCatalogue();
+  } catch {
+    unavailable = true;
+  }
   return (
-    <div className="inner-page section-wrap">
-      <header className="page-intro">
-        <p className="comic-kicker comic-kicker--pink">Fresh gear incoming</p>
+    <div className="inner-page section-wrap merch-page">
+      <header className="page-intro merch-intro">
+        <p className="comic-kicker comic-kicker--pink">Wear the good vibes</p>
         <h1>Merch</h1>
+        <p>Official UPFORIT pieces, made to order and fulfilled by Good Game Apparel.</p>
       </header>
 
-      <section className="placeholder-card" aria-labelledby="merch-status">
-        <div className="placeholder-card__splat" aria-hidden="true">!</div>
-        <p className="placeholder-card__small">Watch this space</p>
-        <h2 id="merch-status">Merch dropping soon</h2>
-        <p>
-          We&apos;re getting the first UPFORIT pieces ready. Products, sizing and
-          ordering will appear here when the drop is live.
-        </p>
-        <Link className="pop-button pop-button--pink" href="/socials">
-          Follow the drop
-        </Link>
-      </section>
+      {products.length > 0 ? (
+        <section className="merch-grid" aria-label="UPFORIT products">
+          {products.map((product) => (
+            <Link className="merch-card" href={`/merch/${product.slug}`} key={product.id}>
+              <div className="merch-card__image">
+                <img src={product.images[0]?.src} alt={product.images[0]?.alt || product.title} />
+                <span>Shop it!</span>
+              </div>
+              <div className="merch-card__copy">
+                <h2>{product.title}</h2>
+                <p>From {formatMerchMoney(product.priceMinor, product.currency)}</p>
+              </div>
+            </Link>
+          ))}
+        </section>
+      ) : (
+        <section className="placeholder-card" aria-labelledby="merch-status">
+          <div className="placeholder-card__splat" aria-hidden="true">!</div>
+          <p className="placeholder-card__small">{unavailable ? "Tiny technical timeout" : "Watch this space"}</p>
+          <h2 id="merch-status">{unavailable ? "The merch rack is refreshing" : "Merch dropping soon"}</h2>
+          <p>{unavailable ? "Give it a moment and try again — the drop will be back shortly." : "The first UPFORIT pieces are getting ready. Follow us so you catch the drop."}</p>
+          <Link className="pop-button pop-button--pink" href={unavailable ? "/merch" : "/socials"}>
+            {unavailable ? "Try again" : "Follow the drop"}
+          </Link>
+        </section>
+      )}
     </div>
   );
 }
-

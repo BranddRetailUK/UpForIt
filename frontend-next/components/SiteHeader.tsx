@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import { NAV_ITEMS } from "../lib/site";
 import CloudinaryImage from "./CloudinaryImage";
+import CartHeaderButton from "./CartHeaderButton";
 
 export default function SiteHeader() {
   const pathname = usePathname();
@@ -143,6 +144,7 @@ export default function SiteHeader() {
             })}
           </ul>
         </nav>
+        <CartHeaderButton />
       </div>
     </header>
   );

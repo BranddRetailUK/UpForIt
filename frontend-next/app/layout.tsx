@@ -3,6 +3,7 @@ import { Archivo_Black, Bangers, Space_Grotesk } from "next/font/google";
 import PopArtScene from "../components/PopArtScene";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import { CartProvider } from "../components/CartProvider";
 import "./globals.css";
 
 const SOCIAL_SHARE_IMAGE =
@@ -76,12 +77,14 @@ export default function RootLayout({
       className={`${display.variable} ${heavy.variable} ${body.variable}`}
     >
       <body>
-        <div className="site-shell">
-          <PopArtScene />
-          <SiteHeader />
-          <main className="site-main">{children}</main>
-          <SiteFooter />
-        </div>
+        <CartProvider>
+          <div className="site-shell">
+            <PopArtScene />
+            <SiteHeader />
+            <main className="site-main">{children}</main>
+            <SiteFooter />
+          </div>
+        </CartProvider>
       </body>
     </html>
   );

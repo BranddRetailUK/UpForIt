@@ -1,0 +1,67 @@
+import { NextResponse } from "next/server";
+import { goodGamePath, goodGameUrl, signMerchRequest } from "../../../../lib/merch";
+import {
+  MerchCheckoutGuardError,
+  buildCheckoutRequestHash,
+  getCheckoutRequesterKey,
+  reserveCheckoutAttempt
+} from "../../../../lib/merch-checkout-guard";
+
+export const runtime = "nodejs";
+
+export async function POST(request: Request) {
+  try {
+    const input = await request.json();
+    const items = Array.isArray(input?.items)
+      ? input.items.map((item: { variantId?: unknown; quantity?: unknown }) => ({
+          variantId: String(item?.variantId || ""),
+          quantity: Math.trunc(Number(item?.quantity || 0))
+        }))
+      : [];
+    if (!items.length || items.some((item: { variantId: string; quantity: number }) => !/^\d+$/.test(item.variantId) || item.quantity < 1 || item.quantity > 20)) {
+      return NextResponse.json({ error: "Your cart contains an invalid item" }, { status: 400 });
+    }
+    const idempotencyKey = String(input?.idempotencyKey || "").trim();
+    if (!/^ufi_[0-9a-f-]{36}$/i.test(idempotencyKey)) {
+      return NextResponse.json({ error: "A valid checkout intent is required" }, { status: 400 });
+    }
+    await reserveCheckoutAttempt({
+      idempotencyKey,
+      requestHash: buildCheckoutRequestHash(items),
+      requesterKey: getCheckoutRequesterKey(request.headers)
+    });
+    const origin = new URL(request.url).origin;
+    const body = JSON.stringify({
+      items,
+      idempotencyKey,
+      successUrl: `${origin}/cart/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origin}/cart?checkout=cancelled`
+    });
+    const path = goodGamePath("/checkout-session");
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const response = await fetch(goodGameUrl("/checkout-session"), {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-storefront-timestamp": timestamp,
+        "x-storefront-signature": signMerchRequest({ timestamp, method: "POST", path, body })
+      },
+      body,
+      cache: "no-store"
+    });
+    const payload = await response.json().catch(() => ({}));
+    return NextResponse.json(payload, { status: response.status });
+  } catch (error) {
+    if (error instanceof MerchCheckoutGuardError) {
+      return NextResponse.json(
+        { error: error.message },
+        {
+          status: error.status,
+          headers: error.retryAfterSeconds ? { "retry-after": String(error.retryAfterSeconds) } : undefined
+        }
+      );
+    }
+    console.error("[merch-checkout]", error);
+    return NextResponse.json({ error: "Secure checkout is temporarily unavailable" }, { status: 503 });
+  }
+}
