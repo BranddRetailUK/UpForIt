@@ -37,7 +37,7 @@ export default async function MerchPage() {
                 <MerchImage
                   src={product.images[0]?.src || ""}
                   alt={product.images[0]?.alt || product.title}
-                  sizes="(max-width: 760px) calc(100vw - 26px), (max-width: 900px) 50vw, 360px"
+                  sizes="(max-width: 900px) 50vw, 360px"
                   priority={index === 0}
                 />
                 <span>Shop it!</span>

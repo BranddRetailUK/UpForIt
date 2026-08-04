@@ -50,7 +50,9 @@ export default function ProductDisplay({
   const available = product.variants.filter((variant) => variant.available);
   const [variantId, setVariantId] = useState(available[0]?.id || "");
   const variant = available.find((entry) => entry.id === variantId) || available[0];
-  const focusImage = imageForVariant(product, variant);
+  const variantImage = imageForVariant(product, variant);
+  const [activeImageId, setActiveImageId] = useState(variantImage?.id || "");
+  const focusImage = product.images.find((image) => String(image.id) === String(activeImageId)) || variantImage;
   const additionalImages = product.images.filter((image) => String(image.id) !== String(focusImage?.id));
 
   useEffect(() => {
@@ -60,17 +62,38 @@ export default function ProductDisplay({
     });
   }, [product.images]);
 
+  function selectVariant(nextVariantId: string) {
+    const nextVariant = available.find((entry) => entry.id === nextVariantId);
+    setVariantId(nextVariantId);
+    setActiveImageId(imageForVariant(product, nextVariant)?.id || "");
+  }
+
+  function moveImage(direction: -1 | 1) {
+    if (product.images.length < 2) return;
+    const currentIndex = product.images.findIndex((image) => String(image.id) === String(focusImage?.id));
+    const nextIndex = (Math.max(0, currentIndex) + direction + product.images.length) % product.images.length;
+    setActiveImageId(product.images[nextIndex].id);
+  }
+
   return (
     <div className="product-layout">
       <section className="product-gallery" aria-label={`${product.title} images`}>
         {focusImage && (
-          <ResponsiveMerchImage
-            className="product-gallery__focus"
-            src={focusImage.src}
-            alt={focusImage.alt || `${product.title} main view`}
-            sizes="(max-width: 900px) calc(100vw - 26px), 570px"
-            priority
-          />
+          <div className="product-gallery__focus-frame">
+            <ResponsiveMerchImage
+              className="product-gallery__focus"
+              src={focusImage.src}
+              alt={focusImage.alt || `${product.title} main view`}
+              sizes="(max-width: 900px) calc(100vw - 26px), 570px"
+              priority
+            />
+            {product.images.length > 1 && (
+              <>
+                <button type="button" className="product-gallery__arrow is-previous" onClick={() => moveImage(-1)} aria-label="Show previous product image">←</button>
+                <button type="button" className="product-gallery__arrow is-next" onClick={() => moveImage(1)} aria-label="Show next product image">→</button>
+              </>
+            )}
+          </div>
         )}
         {additionalImages.length > 0 && (
           <div className="product-gallery__thumbnails" aria-label={`More ${product.title} images`}>
@@ -94,8 +117,8 @@ export default function ProductDisplay({
         <ProductPurchase
           product={product}
           variantId={variant?.id || ""}
-          selectedImage={focusImage}
-          onVariantChange={setVariantId}
+          selectedImage={variantImage}
+          onVariantChange={selectVariant}
         />
       </section>
     </div>
