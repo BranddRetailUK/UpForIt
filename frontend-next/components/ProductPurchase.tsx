@@ -1,12 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { MerchProduct } from "../lib/merch";
+import { useMemo } from "react";
+import type { MerchImage, MerchProduct } from "../lib/merch";
 import { useCart } from "./CartProvider";
 
-export default function ProductPurchase({ product }: { product: MerchProduct }) {
+export default function ProductPurchase({
+  product,
+  variantId,
+  selectedImage,
+  onVariantChange
+}: {
+  product: MerchProduct;
+  variantId: string;
+  selectedImage?: MerchImage;
+  onVariantChange: (variantId: string) => void;
+}) {
   const available = product.variants.filter((variant) => variant.available);
-  const [variantId, setVariantId] = useState(available[0]?.id || "");
   const { addLine } = useCart();
   const variant = useMemo(
     () => available.find((entry) => entry.id === variantId) || available[0],
@@ -22,7 +31,6 @@ export default function ProductPurchase({ product }: { product: MerchProduct }) 
   }, [available, product.options]);
   if (!variant) return <p className="merch-unavailable">Currently unavailable.</p>;
   const variantLabel = [variant.option1, variant.option2, variant.option3].filter(Boolean).join(" / ");
-  const image = product.images.find((entry) => String(entry.id) === String(variant.imageId)) || product.images[0];
 
   function optionValue(entry: (typeof available)[number], position: number) {
     if (position === 1) return String(entry.option1 || "");
@@ -37,7 +45,7 @@ export default function ProductPurchase({ product }: { product: MerchProduct }) 
         : optionValue(entry, option.position) === optionValue(variant, option.position)
     ));
     const next = matchingCurrent || available.find((entry) => optionValue(entry, position) === value);
-    if (next) setVariantId(next.id);
+    if (next) onVariantChange(next.id);
   }
 
   const formattedPrice = new Intl.NumberFormat("en-GB", {
@@ -69,7 +77,7 @@ export default function ProductPurchase({ product }: { product: MerchProduct }) 
           slug: product.slug,
           title: product.title,
           variantLabel,
-          imageUrl: image?.src || "",
+          imageUrl: selectedImage?.src || product.images[0]?.src || "",
           priceMinor: variant.priceMinor,
           currency: product.currency,
           quantity: 1

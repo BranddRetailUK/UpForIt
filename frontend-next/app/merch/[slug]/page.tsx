@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ProductPurchase from "../../../components/ProductPurchase";
+import ProductDisplay from "../../../components/ProductDisplay";
 import { getMerchProduct } from "../../../lib/merch";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -27,32 +27,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="inner-page section-wrap product-page">
-      <div className="product-layout">
-        <section className="product-gallery" aria-label={`${product.title} images`}>
-          {product.images[0] && (
-            <img
-              className="product-gallery__focus"
-              src={product.images[0].src}
-              alt={product.images[0].alt || `${product.title} main view`}
-            />
-          )}
-          {product.images.length > 1 && (
-            <div className="product-gallery__thumbnails" aria-label={`More ${product.title} images`}>
-              {product.images.slice(1).map((image, index) => (
-                <img key={`${image.id}-${index}`} src={image.src} alt={image.alt || `${product.title} view ${index + 2}`} />
-              ))}
-            </div>
-          )}
-        </section>
-        <section className="product-summary">
-          <p className="comic-kicker comic-kicker--pink">Official UPFORIT gear</p>
-          <h1>
-            <span className="product-summary__title">{productTitle}</span>
-            {productSubtitle && <span className="product-summary__subtitle">{productSubtitle}</span>}
-          </h1>
-          <ProductPurchase product={product} />
-        </section>
-      </div>
+      <ProductDisplay product={product} productTitle={productTitle} productSubtitle={productSubtitle} />
       {product.description && (
         <section className="product-description" aria-labelledby="product-description-title">
           <h2 id="product-description-title">Product details</h2>
