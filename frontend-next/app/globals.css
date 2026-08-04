@@ -588,6 +588,10 @@ a {
   transform: rotate(1deg);
 }
 
+.home-hero > .button-row {
+  margin-top: clamp(54px, 5vw, 76px);
+}
+
 .values {
   padding-block: 40px clamp(90px, 11vw, 140px);
 }

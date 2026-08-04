@@ -6,8 +6,8 @@ export const size = { width: 512, height: 512 };
 export const contentType = "image/png";
 
 export default function Icon() {
-  const logo = cloudinaryUrl(CLOUDINARY_ASSETS.roundLogo, {
-    width: 460,
+  const smiley = cloudinaryUrl(CLOUDINARY_ASSETS.smiley, {
+    width: 385,
     format: "png"
   });
 
@@ -20,16 +20,14 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          border: "18px solid #050505",
-          borderRadius: 96,
-          background: "#008ef0"
+          background: "transparent"
         }}
       >
         <img
-          src={logo}
+          src={smiley}
           alt=""
-          width="438"
-          height="428"
+          width="385"
+          height="492"
           style={{ objectFit: "contain" }}
         />
       </div>
@@ -37,4 +35,3 @@ export default function Icon() {
     size
   );
 }
-
