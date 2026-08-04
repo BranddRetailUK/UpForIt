@@ -299,7 +299,8 @@ a {
     rotate(var(--smiley-rotation));
   transform-origin: center;
   backface-visibility: hidden;
-  contain: layout paint;
+  contain: layout style;
+  overflow: visible;
   will-change: transform;
 }
 
