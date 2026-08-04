@@ -23,29 +23,53 @@ export default function PopArtScene() {
     );
     if (reducedMotion.matches) return;
 
+    const mobileViewport = window.matchMedia("(max-width: 720px)");
+
     const layers = Array.from(
       scene.querySelectorAll<HTMLElement>("[data-parallax-depth]")
     );
     let frame = 0;
+    let lastFrameTime = 0;
+    let currentShift = Math.max(-240, Math.min(0, window.scrollY * -0.22));
 
-    const paint = () => {
-      const scrollShift = Math.max(-240, Math.min(0, window.scrollY * -0.22));
+    const getScrollShift = () =>
+      Math.max(-240, Math.min(0, window.scrollY * -0.22));
+
+    const paint = (time: number) => {
+      const targetShift = getScrollShift();
+
+      if (mobileViewport.matches) {
+        const elapsed = lastFrameTime ? Math.min(time - lastFrameTime, 64) : 16;
+        const easing = 1 - Math.exp(-elapsed / 55);
+        currentShift += (targetShift - currentShift) * easing;
+      } else {
+        currentShift = targetShift;
+      }
+
       layers.forEach((layer) => {
         const depth = Number(layer.dataset.parallaxDepth ?? 0);
-        layer.style.setProperty("--smiley-y", `${scrollShift * depth}px`);
+        layer.style.setProperty("--smiley-y", `${currentShift * depth}px`);
       });
+
+      lastFrameTime = time;
       frame = 0;
+
+      if (Math.abs(targetShift - currentShift) > 0.1) {
+        frame = window.requestAnimationFrame(paint);
+      }
     };
 
     const requestPaint = () => {
       if (!frame) frame = window.requestAnimationFrame(paint);
     };
 
-    paint();
+    requestPaint();
     window.addEventListener("scroll", requestPaint, { passive: true });
+    mobileViewport.addEventListener("change", requestPaint);
 
     return () => {
       window.removeEventListener("scroll", requestPaint);
+      mobileViewport.removeEventListener("change", requestPaint);
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, []);

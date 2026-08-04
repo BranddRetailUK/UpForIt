@@ -285,12 +285,17 @@ a {
   z-index: 2;
   transform: translate3d(var(--smiley-x), var(--smiley-y), 0)
     rotate(var(--smiley-rotation));
+  transform-origin: center;
+  backface-visibility: hidden;
+  contain: layout paint;
   will-change: transform;
 }
 
 .parallax-smiley__image {
   width: 100%;
   height: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   filter:
     drop-shadow(8px 11px 0 var(--ink))
     drop-shadow(0 4px 14px rgba(0, 0, 0, 0.26));
