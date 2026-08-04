@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductPurchase from "../../../components/ProductPurchase";
-import { formatMerchMoney, getMerchProduct } from "../../../lib/merch";
+import { getMerchProduct } from "../../../lib/merch";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const product = await getMerchProduct(params.slug).catch(() => null);
@@ -28,7 +27,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="inner-page section-wrap product-page">
-      <Link className="merch-back" href="/merch">← Back to merch</Link>
       <div className="product-layout">
         <section className="product-gallery" aria-label={`${product.title} images`}>
           {product.images[0] && (
@@ -52,7 +50,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <span className="product-summary__title">{productTitle}</span>
             {productSubtitle && <span className="product-summary__subtitle">{productSubtitle}</span>}
           </h1>
-          <p className="product-summary__price">From {formatMerchMoney(product.priceMinor, product.currency)}</p>
           <ProductPurchase product={product} />
         </section>
       </div>

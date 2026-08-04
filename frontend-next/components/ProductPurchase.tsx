@@ -40,8 +40,15 @@ export default function ProductPurchase({ product }: { product: MerchProduct }) 
     if (next) setVariantId(next.id);
   }
 
+  const formattedPrice = new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: product.currency.toUpperCase()
+  }).format(variant.priceMinor / 100);
+
   return (
     <div className="product-purchase">
+      <p className="product-summary__price">{formattedPrice}</p>
+      <div className="product-purchase__divider" aria-hidden="true" />
       {options.map((option) => (
         <label key={option.position}>
           <span>{option.name}</span>
