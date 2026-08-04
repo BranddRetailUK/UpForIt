@@ -21,7 +21,10 @@ export default async function MerchPage() {
       <header className="page-intro merch-intro">
         <div className="merch-title-lockup">
           <h1>Merch</h1>
-          <p className="merch-powered-banner">Powered by Good Game Apparel</p>
+          <p className="merch-powered-banner">
+            <span>Powered by</span>{" "}
+            <strong>Good Game Apparel</strong>
+          </p>
         </div>
       </header>
 

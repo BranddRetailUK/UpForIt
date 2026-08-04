@@ -228,6 +228,14 @@ a {
   transform: rotate(-12deg);
 }
 
+@media (min-width: 721px) {
+  .site-shell:has(.merch-page) .scene-burst--one {
+    top: 17%;
+    right: auto;
+    left: calc(50% + 105px);
+  }
+}
+
 .scene-star {
   position: absolute;
   z-index: 1;
@@ -619,8 +627,9 @@ a {
   right: -30px;
   bottom: -18px;
   padding: 10px 10px 7px;
-  border: 4px solid var(--ink);
-  background: var(--paper);
+  border: 4px solid var(--yellow);
+  background: var(--ink);
+  color: var(--paper);
   font-family: var(--font-heavy), Impact, sans-serif;
   font-size: clamp(.62rem, 1.3vw, .9rem);
   line-height: 1.05;
@@ -628,8 +637,12 @@ a {
   text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: var(--shadow-small);
+  box-shadow: 5px 5px 0 var(--pink);
   transform: rotate(-3deg);
+}
+
+.merch-powered-banner strong {
+  color: var(--yellow);
 }
 
 .merch-grid {
