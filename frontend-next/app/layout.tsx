@@ -1,56 +1,64 @@
 import type { Metadata } from "next";
-import { Oswald, Rubik_Glitch, Space_Grotesk } from "next/font/google";
+import { Archivo_Black, Bangers, Space_Grotesk } from "next/font/google";
+import PopArtScene from "../components/PopArtScene";
+import SiteFooter from "../components/SiteFooter";
+import SiteHeader from "../components/SiteHeader";
 import "./globals.css";
 
-const display = Rubik_Glitch({
+const display = Bangers({
   weight: "400",
   subsets: ["latin"],
-  variable: "--font-display"
+  variable: "--font-display",
+  display: "swap"
+});
+
+const heavy = Archivo_Black({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-heavy",
+  display: "swap"
 });
 
 const body = Space_Grotesk({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-body"
-});
-
-const condensed = Oswald({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-condensed"
+  variable: "--font-body",
+  display: "swap"
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.upforitevents.co.uk"),
-  title: "UPFORIT Multi Genre Day Festival | 27 June 2026",
+  title: {
+    default: "UPFORIT | Events, Music & Good Vibes",
+    template: "%s | UPFORIT"
+  },
   description:
-    "UPFORIT Multi Genre Day Festival at McCarthys Sports Bar, Bletchley on Saturday 27 June 2026, midday to 10PM.",
+    "UPFORIT brings big sounds, good people and no bad energy together on the dancefloor.",
   alternates: {
-    canonical: "https://www.upforitevents.co.uk"
+    canonical: "/"
   },
   openGraph: {
-    title: "UPFORIT Multi Genre Day Festival | 27 June 2026",
+    title: "UPFORIT | Events, Music & Good Vibes",
     description:
-      "UPFORIT Multi Genre Day Festival at McCarthys Sports Bar, Bletchley on Saturday 27 June 2026, midday to 10PM.",
+      "Big sounds, good people and no bad energy. Discover what is next from UPFORIT.",
     type: "website",
-    url: "https://www.upforitevents.co.uk",
+    url: "/",
     siteName: "UPFORIT",
     locale: "en_GB",
     images: [
       {
-        url: "https://www.upforitevents.co.uk/new-flyer/poster.png",
-        width: 1054,
-        height: 1492,
-        alt: "UPFORIT Multi Genre Day Festival flyer"
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "UPFORIT"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "UPFORIT Multi Genre Day Festival | 27 June 2026",
-    description:
-      "UPFORIT Multi Genre Day Festival at McCarthys Sports Bar, Bletchley on Saturday 27 June 2026, midday to 10PM.",
-    images: ["https://www.upforitevents.co.uk/new-flyer/poster.png"]
+    title: "UPFORIT | Events, Music & Good Vibes",
+    description: "Good vibes only. Respect the ravers. No bad energy.",
+    images: ["/opengraph-image"]
   }
 };
 
@@ -62,9 +70,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} ${condensed.variable}`}
+      className={`${display.variable} ${heavy.variable} ${body.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <div className="site-shell">
+          <PopArtScene />
+          <SiteHeader />
+          <main className="site-main">{children}</main>
+          <SiteFooter />
+        </div>
+      </body>
     </html>
   );
 }
