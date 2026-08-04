@@ -5,10 +5,10 @@ import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import CloudinaryImage from "./CloudinaryImage";
 
 const SMILEYS = [
-  { className: "parallax-smiley--one", depth: 0.45, maxWidth: 360 },
-  { className: "parallax-smiley--two", depth: 0.9, maxWidth: 300 },
-  { className: "parallax-smiley--three", depth: 0.62, maxWidth: 260 },
-  { className: "parallax-smiley--four", depth: 1.1, maxWidth: 220 }
+  { className: "parallax-smiley--one", depth: 0.7, maxWidth: 360 },
+  { className: "parallax-smiley--two", depth: 1.2, maxWidth: 300 },
+  { className: "parallax-smiley--three", depth: 0.95, maxWidth: 260 },
+  { className: "parallax-smiley--four", depth: 1.45, maxWidth: 220 }
 ];
 
 export default function PopArtScene() {
@@ -32,7 +32,7 @@ export default function PopArtScene() {
     let pointerY = 0;
 
     const paint = () => {
-      const scrollShift = Math.max(-150, Math.min(0, window.scrollY * -0.05));
+      const scrollShift = Math.max(-240, Math.min(0, window.scrollY * -0.22));
       layers.forEach((layer) => {
         const depth = Number(layer.dataset.parallaxDepth ?? 0);
         layer.style.setProperty("--smiley-x", `${pointerX * depth}px`);
@@ -50,8 +50,8 @@ export default function PopArtScene() {
 
     const onPointerMove = (event: PointerEvent) => {
       if (!finePointer) return;
-      pointerX = (event.clientX / window.innerWidth - 0.5) * 20;
-      pointerY = (event.clientY / window.innerHeight - 0.5) * 14;
+      pointerX = (event.clientX / window.innerWidth - 0.5) * 38;
+      pointerY = (event.clientY / window.innerHeight - 0.5) * 26;
       requestPaint();
     };
 

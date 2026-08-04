@@ -588,19 +588,6 @@ a {
   transform: rotate(1deg);
 }
 
-.home-hero__intro {
-  max-width: 720px;
-  margin: 12px auto 28px;
-  color: var(--paper);
-  font-family: var(--font-display), Impact, sans-serif;
-  font-size: clamp(2rem, 5vw, 3.8rem);
-  line-height: 0.98;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-  -webkit-text-stroke: 2px var(--ink);
-  text-shadow: 4px 5px 0 var(--ink);
-}
-
 .values {
   padding-block: 40px clamp(90px, 11vw, 140px);
 }
@@ -1518,11 +1505,6 @@ a {
 
   .home-hero__lockup {
     width: min(430px, 90vw);
-  }
-
-  .home-hero__intro {
-    margin-top: 18px;
-    -webkit-text-stroke-width: 1.2px;
   }
 
   .button-row {

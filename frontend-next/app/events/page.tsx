@@ -16,7 +16,6 @@ export default function EventsPage() {
       <header className="page-intro">
         <p className="comic-kicker comic-kicker--yellow">Save the date</p>
         <h1>Events</h1>
-        <p>The next UPFORIT gathering is taking shape.</p>
       </header>
 
       <article className="event-card">
@@ -69,4 +68,3 @@ export default function EventsPage() {
     </div>
   );
 }
-

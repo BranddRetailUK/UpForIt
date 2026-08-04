@@ -26,9 +26,6 @@ export default function Home() {
         <h1 className="sr-only" id="home-title">
           UPFORIT events
         </h1>
-        <p className="home-hero__intro">
-          Big sounds. Good people. All the energy you came for.
-        </p>
         <div className="button-row">
           <Link className="pop-button pop-button--pink" href="/events">
             See what&apos;s next
