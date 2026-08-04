@@ -5,6 +5,9 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import "./globals.css";
 
+const SOCIAL_SHARE_IMAGE =
+  "https://res.cloudinary.com/brandduk/image/upload/v1785833927/UPFORIT_Summer_Round_Up_PP_hjq2nh.png";
+
 const display = Bangers({
   weight: "400",
   subsets: ["latin"],
@@ -33,32 +36,32 @@ export const metadata: Metadata = {
     template: "%s | UPFORIT"
   },
   description:
-    "UPFORIT brings big sounds, good people and no bad energy together on the dancefloor.",
+    "Discover upcoming UPFORIT events, event news and future merch.",
   alternates: {
     canonical: "/"
   },
   openGraph: {
     title: "UPFORIT | Events, Music & Good Vibes",
     description:
-      "Big sounds, good people and no bad energy. Discover what is next from UPFORIT.",
+      "Discover upcoming UPFORIT events, event news and future merch.",
     type: "website",
     url: "/",
     siteName: "UPFORIT",
     locale: "en_GB",
     images: [
       {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "UPFORIT"
+        url: SOCIAL_SHARE_IMAGE,
+        width: 1254,
+        height: 1254,
+        alt: "UPFORIT Summer Roundup"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
     title: "UPFORIT | Events, Music & Good Vibes",
-    description: "Good vibes only. Respect the ravers. No bad energy.",
-    images: ["/opengraph-image"]
+    description: "Discover upcoming UPFORIT events, event news and future merch.",
+    images: [SOCIAL_SHARE_IMAGE]
   }
 };
 
