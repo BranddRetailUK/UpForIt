@@ -134,6 +134,7 @@ export default function SiteHeader() {
                     className={active ? "is-active" : undefined}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
+                    onClick={() => setMenuOpen(false)}
                   >
                     {item.label}
                   </Link>
