@@ -26,20 +26,13 @@ export default function PopArtScene() {
     const layers = Array.from(
       scene.querySelectorAll<HTMLElement>("[data-parallax-depth]")
     );
-    const finePointer = window.matchMedia("(pointer: fine)").matches;
     let frame = 0;
-    let pointerX = 0;
-    let pointerY = 0;
 
     const paint = () => {
       const scrollShift = Math.max(-240, Math.min(0, window.scrollY * -0.22));
       layers.forEach((layer) => {
         const depth = Number(layer.dataset.parallaxDepth ?? 0);
-        layer.style.setProperty("--smiley-x", `${pointerX * depth}px`);
-        layer.style.setProperty(
-          "--smiley-y",
-          `${(scrollShift + pointerY) * depth}px`
-        );
+        layer.style.setProperty("--smiley-y", `${scrollShift * depth}px`);
       });
       frame = 0;
     };
@@ -48,20 +41,11 @@ export default function PopArtScene() {
       if (!frame) frame = window.requestAnimationFrame(paint);
     };
 
-    const onPointerMove = (event: PointerEvent) => {
-      if (!finePointer) return;
-      pointerX = (event.clientX / window.innerWidth - 0.5) * 38;
-      pointerY = (event.clientY / window.innerHeight - 0.5) * 26;
-      requestPaint();
-    };
-
     paint();
     window.addEventListener("scroll", requestPaint, { passive: true });
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", requestPaint);
-      window.removeEventListener("pointermove", onPointerMove);
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, []);

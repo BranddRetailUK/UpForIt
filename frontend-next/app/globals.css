@@ -21,7 +21,8 @@
 html {
   width: 100%;
   min-width: 320px;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: auto;
   overscroll-behavior-y: none;
   background: var(--blue);
   scroll-behavior: smooth;
@@ -30,7 +31,8 @@ html {
 body {
   min-height: 100vh;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   overscroll-behavior-y: none;
   background: var(--blue);
   color: var(--ink);
@@ -371,10 +373,6 @@ a {
 .brand-link__image {
   width: 100%;
   height: auto;
-}
-
-.brand-link__image--mobile {
-  display: none;
 }
 
 .primary-nav ul {
@@ -1399,30 +1397,6 @@ a {
     margin-left: auto;
   }
 
-  .site-header__inner {
-    position: relative;
-    justify-content: flex-end;
-  }
-
-  .brand-link {
-    position: absolute;
-    left: 50%;
-    width: 64px;
-    transform: translateX(-50%);
-  }
-
-  .brand-link:hover {
-    transform: translateX(-50%) scale(1.04);
-  }
-
-  .brand-link__image--desktop {
-    display: none;
-  }
-
-  .brand-link__image--mobile {
-    display: block;
-  }
-
   .primary-nav {
     position: fixed;
     inset: 0;
@@ -1503,7 +1477,7 @@ a {
   }
 
   .brand-link {
-    width: 62px;
+    width: 145px;
   }
 
   .pop-art-backdrop::before {
@@ -1690,7 +1664,7 @@ a {
   }
 
   .brand-link {
-    width: 58px;
+    width: 130px;
   }
 
   .menu-toggle {

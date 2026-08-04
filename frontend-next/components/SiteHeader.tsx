@@ -69,7 +69,11 @@ export default function SiteHeader() {
   }, [menuOpen]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    document.body.classList.toggle("nav-open", menuOpen);
+
+    if (!menuOpen) {
+      return () => document.body.classList.remove("nav-open");
+    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -77,7 +81,6 @@ export default function SiteHeader() {
       }
     };
 
-    document.body.classList.add("nav-open");
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
@@ -92,18 +95,10 @@ export default function SiteHeader() {
         <Link className="brand-link" href="/" aria-label="UPFORIT home">
           <CloudinaryImage
             asset={CLOUDINARY_ASSETS.navLogo}
-            alt=""
-            className="brand-link__image brand-link__image--desktop"
-            sizes="180px"
+            alt="UPFORIT"
+            className="brand-link__image"
+            sizes="(max-width: 760px) 142px, 180px"
             maxWidth={360}
-            priority
-          />
-          <CloudinaryImage
-            asset={CLOUDINARY_ASSETS.roundLogo}
-            alt=""
-            className="brand-link__image brand-link__image--mobile"
-            sizes="64px"
-            maxWidth={240}
             priority
           />
         </Link>
