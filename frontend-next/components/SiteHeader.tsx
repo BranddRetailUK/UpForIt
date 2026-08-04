@@ -10,10 +10,63 @@ import CloudinaryImage from "./CloudinaryImage";
 export default function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
+    setHeaderHidden(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (menuOpen) {
+      setHeaderHidden(false);
+      return;
+    }
+
+    let previousY = window.scrollY;
+    let direction: -1 | 0 | 1 = 0;
+    let distance = 0;
+    let frame = 0;
+
+    const updateHeader = () => {
+      const currentY = Math.max(0, window.scrollY);
+      const delta = currentY - previousY;
+
+      if (currentY <= 8) {
+        setHeaderHidden(false);
+        direction = 0;
+        distance = 0;
+      } else if (Math.abs(delta) >= 1) {
+        const nextDirection: -1 | 1 = delta > 0 ? 1 : -1;
+
+        if (nextDirection !== direction) {
+          direction = nextDirection;
+          distance = 0;
+        }
+
+        distance += Math.abs(delta);
+
+        if (distance >= 16) {
+          setHeaderHidden(nextDirection === 1);
+          distance = 0;
+        }
+      }
+
+      previousY = currentY;
+      frame = 0;
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateHeader);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -34,15 +87,23 @@ export default function SiteHeader() {
   }, [menuOpen]);
 
   return (
-    <header className="site-header">
+    <header className={`site-header${headerHidden ? " is-hidden" : ""}`}>
       <div className="site-header__inner">
         <Link className="brand-link" href="/" aria-label="UPFORIT home">
           <CloudinaryImage
             asset={CLOUDINARY_ASSETS.navLogo}
-            alt="UPFORIT"
-            className="brand-link__image"
-            sizes="(max-width: 760px) 142px, 180px"
+            alt=""
+            className="brand-link__image brand-link__image--desktop"
+            sizes="180px"
             maxWidth={360}
+            priority
+          />
+          <CloudinaryImage
+            asset={CLOUDINARY_ASSETS.roundLogo}
+            alt=""
+            className="brand-link__image brand-link__image--mobile"
+            sizes="64px"
+            maxWidth={240}
             priority
           />
         </Link>
@@ -90,4 +151,3 @@ export default function SiteHeader() {
     </header>
   );
 }
-
