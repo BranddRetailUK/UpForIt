@@ -7,7 +7,6 @@ import { useCart } from "./CartProvider";
 export default function ProductPurchase({ product }: { product: MerchProduct }) {
   const available = product.variants.filter((variant) => variant.available);
   const [variantId, setVariantId] = useState(available[0]?.id || "");
-  const [quantity, setQuantity] = useState(1);
   const { addLine } = useCart();
   const variant = useMemo(
     () => available.find((entry) => entry.id === variantId) || available[0],
@@ -54,12 +53,6 @@ export default function ProductPurchase({ product }: { product: MerchProduct }) 
           </select>
         </label>
       ))}
-      <label>
-        <span>Quantity</span>
-        <select value={quantity} onChange={(event) => setQuantity(Number(event.target.value))}>
-          {[1, 2, 3, 4, 5].map((value) => <option key={value}>{value}</option>)}
-        </select>
-      </label>
       <button
         className="pop-button pop-button--pink product-purchase__button"
         type="button"
@@ -72,10 +65,10 @@ export default function ProductPurchase({ product }: { product: MerchProduct }) 
           imageUrl: image?.src || "",
           priceMinor: variant.priceMinor,
           currency: product.currency,
-          quantity
+          quantity: 1
         })}
       >
-        Add to cart — {new Intl.NumberFormat("en-GB", { style: "currency", currency: product.currency.toUpperCase() }).format(variant.priceMinor / 100)}
+        Add to cart
       </button>
       <p className="product-purchase__note">Made and fulfilled by Good Game Apparel · UK delivery only</p>
     </div>

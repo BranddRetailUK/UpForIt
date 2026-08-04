@@ -22,6 +22,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const product = await getMerchProduct(params.slug).catch(() => null);
   if (!product) notFound();
+  const titleParts = product.title.split("|").map((part) => part.trim()).filter(Boolean);
+  const productTitle = titleParts[0] || product.title;
+  const productSubtitle = titleParts.length > 1 ? titleParts.slice(1).join(" ") : "";
+
   return (
     <div className="inner-page section-wrap product-page">
       <Link className="merch-back" href="/merch">← Back to merch</Link>
@@ -44,7 +48,10 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </section>
         <section className="product-summary">
           <p className="comic-kicker comic-kicker--pink">Official UPFORIT gear</p>
-          <h1>{product.title}</h1>
+          <h1>
+            <span className="product-summary__title">{productTitle}</span>
+            {productSubtitle && <span className="product-summary__subtitle">{productSubtitle}</span>}
+          </h1>
           <p className="product-summary__price">From {formatMerchMoney(product.priceMinor, product.currency)}</p>
           <ProductPurchase product={product} />
         </section>
