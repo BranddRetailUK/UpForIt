@@ -19,7 +19,6 @@ export default async function MerchPage() {
   return (
     <div className="inner-page section-wrap merch-page">
       <header className="page-intro merch-intro">
-        <p className="comic-kicker comic-kicker--pink">Wear the good vibes</p>
         <div className="merch-title-lockup">
           <h1>Merch</h1>
           <p className="merch-powered-banner">Powered by Good Game Apparel</p>
