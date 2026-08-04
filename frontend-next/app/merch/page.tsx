@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import MerchImage from "../../components/MerchImage";
 import { formatMerchMoney, getMerchCatalogue, type MerchProduct } from "../../lib/merch";
 
 export const metadata: Metadata = {
@@ -30,10 +31,15 @@ export default async function MerchPage() {
 
       {products.length > 0 ? (
         <section className="merch-grid" aria-label="UPFORIT products">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <Link className="merch-card" href={`/merch/${product.slug}`} key={product.id}>
               <div className="merch-card__image">
-                <img src={product.images[0]?.src} alt={product.images[0]?.alt || product.title} />
+                <MerchImage
+                  src={product.images[0]?.src || ""}
+                  alt={product.images[0]?.alt || product.title}
+                  sizes="(max-width: 760px) calc(100vw - 26px), (max-width: 900px) 50vw, 360px"
+                  priority={index === 0}
+                />
                 <span>Shop it!</span>
               </div>
               <div className="merch-card__copy">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MerchImage, MerchProduct, MerchVariant } from "../lib/merch";
+import ResponsiveMerchImage, { optimizedMerchImageUrl } from "./MerchImage";
 import ProductPurchase from "./ProductPurchase";
 
 function optionValue(variant: MerchVariant, position: number) {
@@ -52,20 +53,34 @@ export default function ProductDisplay({
   const focusImage = imageForVariant(product, variant);
   const additionalImages = product.images.filter((image) => String(image.id) !== String(focusImage?.id));
 
+  useEffect(() => {
+    product.images.forEach((image) => {
+      const preload = new Image();
+      preload.src = optimizedMerchImageUrl(image.src, 960);
+    });
+  }, [product.images]);
+
   return (
     <div className="product-layout">
       <section className="product-gallery" aria-label={`${product.title} images`}>
         {focusImage && (
-          <img
+          <ResponsiveMerchImage
             className="product-gallery__focus"
             src={focusImage.src}
             alt={focusImage.alt || `${product.title} main view`}
+            sizes="(max-width: 900px) calc(100vw - 26px), 570px"
+            priority
           />
         )}
         {additionalImages.length > 0 && (
           <div className="product-gallery__thumbnails" aria-label={`More ${product.title} images`}>
             {additionalImages.map((image, index) => (
-              <img key={`${image.id}-${index}`} src={image.src} alt={image.alt || `${product.title} view ${index + 2}`} />
+              <ResponsiveMerchImage
+                key={`${image.id}-${index}`}
+                src={image.src}
+                alt={image.alt || `${product.title} view ${index + 2}`}
+                sizes="(max-width: 760px) 43vw, 180px"
+              />
             ))}
           </div>
         )}

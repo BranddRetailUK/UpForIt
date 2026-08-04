@@ -22,15 +22,18 @@ export default function ProductPurchase({
     [available, variantId]
   );
   const options = useMemo(() => {
-    if (product.options?.length) return product.options;
-    return [1, 2, 3].map((position) => ({
+    const productOptions = product.options?.length ? product.options : [1, 2, 3].map((position) => ({
       position,
       name: `Option ${position}`,
       values: Array.from(new Set(available.map((entry) => String(entry[`option${position}` as "option1"] || "")).filter(Boolean)))
     })).filter((option) => option.values.length > 0);
+
+    return [...productOptions].sort((first, second) => {
+      const rank = (name: string) => /colou?r/i.test(name) ? 0 : /^size$/i.test(name) ? 1 : 2;
+      return rank(first.name) - rank(second.name) || first.position - second.position;
+    });
   }, [available, product.options]);
   if (!variant) return <p className="merch-unavailable">Currently unavailable.</p>;
-  const variantLabel = [variant.option1, variant.option2, variant.option3].filter(Boolean).join(" / ");
 
   function optionValue(entry: (typeof available)[number], position: number) {
     if (position === 1) return String(entry.option1 || "");
@@ -47,6 +50,8 @@ export default function ProductPurchase({
     const next = matchingCurrent || available.find((entry) => optionValue(entry, position) === value);
     if (next) onVariantChange(next.id);
   }
+
+  const variantLabel = options.map((option) => optionValue(variant, option.position)).filter(Boolean).join(" / ");
 
   const formattedPrice = new Intl.NumberFormat("en-GB", {
     style: "currency",

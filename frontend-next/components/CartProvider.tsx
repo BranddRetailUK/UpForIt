@@ -9,6 +9,7 @@ import {
   useMemo,
   useState
 } from "react";
+import MerchImage from "./MerchImage";
 
 export type CartLine = {
   productId: string;
@@ -207,7 +208,9 @@ export function CartLines({ compact = false }: { compact?: boolean }) {
     <div className={`cart-lines${compact ? " is-compact" : ""}`}>
       {lines.map((line) => (
         <article className="cart-line" key={line.variantId}>
-          {line.imageUrl ? <img src={line.imageUrl} alt="" /> : <div className="cart-line__empty-image" />}
+          {line.imageUrl ? (
+            <MerchImage src={line.imageUrl} alt="" sizes={compact ? "92px" : "180px"} />
+          ) : <div className="cart-line__empty-image" />}
           <div className="cart-line__copy">
             <Link href={`/merch/${line.slug}`}>{line.title}</Link>
             {line.variantLabel && <p>{line.variantLabel}</p>}
