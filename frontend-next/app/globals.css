@@ -711,7 +711,10 @@ a {
   font-size: clamp(1.15rem, 2vw, 1.5rem);
   line-height: 1.05;
   text-transform: uppercase;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
 }
 
 .merch-card__copy p {
@@ -811,10 +814,13 @@ a {
   margin-top: 20px;
   max-width: 100%;
   font-family: var(--font-heavy), Impact, sans-serif;
-  font-size: clamp(1.9rem, 3.2vw, 3.2rem);
+  font-size: clamp(1.75rem, 2.9vw, 2.9rem);
   line-height: .92;
   text-transform: uppercase;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
 }
 
 .product-summary__title,

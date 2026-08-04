@@ -31,7 +31,7 @@ export default function Home() {
             See what&apos;s next
           </Link>
           <Link className="pop-button pop-button--yellow" href="/merch">
-            Merch loading
+            Check the merch
           </Link>
         </div>
       </section>
