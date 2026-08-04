@@ -9,6 +9,18 @@ import {
 
 export const runtime = "nodejs";
 
+const DEFAULT_CHECKOUT_ORIGIN = "https://www.upforitevents.co.uk";
+
+function checkoutReturnOrigin() {
+  const configuredOrigin = String(process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_CHECKOUT_ORIGIN).trim();
+  const url = new URL(configuredOrigin);
+  const isLocalDevelopment = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+  if (url.protocol !== "https:" && !isLocalDevelopment) {
+    throw new Error("Checkout return origin must use HTTPS");
+  }
+  return url.origin;
+}
+
 export async function POST(request: Request) {
   try {
     const input = await request.json();
@@ -30,7 +42,7 @@ export async function POST(request: Request) {
       requestHash: buildCheckoutRequestHash(items),
       requesterKey: getCheckoutRequesterKey(request.headers)
     });
-    const origin = new URL(request.url).origin;
+    const origin = checkoutReturnOrigin();
     const body = JSON.stringify({
       items,
       idempotencyKey,
