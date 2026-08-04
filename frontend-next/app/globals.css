@@ -792,7 +792,7 @@ a {
 .product-summary__subtitle {
   margin-top: 10px;
   color: var(--yellow);
-  font-size: .56em;
+  font-size: .45em;
   line-height: 1.05;
   -webkit-text-stroke: 1px var(--ink);
   text-shadow: 2px 2px 0 var(--ink);
