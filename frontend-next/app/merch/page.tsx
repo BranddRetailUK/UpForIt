@@ -20,8 +20,10 @@ export default async function MerchPage() {
     <div className="inner-page section-wrap merch-page">
       <header className="page-intro merch-intro">
         <p className="comic-kicker comic-kicker--pink">Wear the good vibes</p>
-        <h1>Merch</h1>
-        <p>Official UPFORIT pieces, made to order and fulfilled by Good Game Apparel.</p>
+        <div className="merch-title-lockup">
+          <h1>Merch</h1>
+          <p className="merch-powered-banner">Powered by Good Game Apparel</p>
+        </div>
       </header>
 
       {products.length > 0 ? (

@@ -27,18 +27,37 @@ export default async function ProductPage({ params }: { params: { slug: string }
       <Link className="merch-back" href="/merch">← Back to merch</Link>
       <div className="product-layout">
         <section className="product-gallery" aria-label={`${product.title} images`}>
-          {product.images.map((image, index) => (
-            <img key={`${image.id}-${index}`} src={image.src} alt={image.alt || `${product.title} view ${index + 1}`} />
-          ))}
+          {product.images[0] && (
+            <img
+              className="product-gallery__focus"
+              src={product.images[0].src}
+              alt={product.images[0].alt || `${product.title} main view`}
+            />
+          )}
+          {product.images.length > 1 && (
+            <div className="product-gallery__thumbnails" aria-label={`More ${product.title} images`}>
+              {product.images.slice(1).map((image, index) => (
+                <img key={`${image.id}-${index}`} src={image.src} alt={image.alt || `${product.title} view ${index + 2}`} />
+              ))}
+            </div>
+          )}
         </section>
         <section className="product-summary">
           <p className="comic-kicker comic-kicker--pink">Official UPFORIT gear</p>
           <h1>{product.title}</h1>
           <p className="product-summary__price">From {formatMerchMoney(product.priceMinor, product.currency)}</p>
-          {product.description && <div className="product-summary__description">{product.description}</div>}
           <ProductPurchase product={product} />
         </section>
       </div>
+      {product.description && (
+        <section className="product-description" aria-labelledby="product-description-title">
+          <h2 id="product-description-title">Product details</h2>
+          <div
+            className="product-description__content"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
+        </section>
+      )}
     </div>
   );
 }
