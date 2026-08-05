@@ -110,7 +110,7 @@ export default function ProductDisplay({
       </section>
       <section className="product-summary">
         <p className="comic-kicker comic-kicker--pink">Official UPFORIT gear</p>
-        <h1>
+        <h1 className={productSubtitle ? "product-summary__heading--split" : undefined}>
           <span className="product-summary__title">{productTitle}</span>
           {productSubtitle && <span className="product-summary__subtitle">{productSubtitle}</span>}
         </h1>

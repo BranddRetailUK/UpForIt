@@ -722,8 +722,8 @@ a {
   display: block;
 }
 
-.merch-card__title-subtitle {
-  margin-top: 3px;
+.merch-card__heading--split .merch-card__title-main {
+  margin-bottom: 3px;
   color: var(--yellow);
   font-size: .8em;
   line-height: 1.08;
@@ -844,8 +844,8 @@ a {
   display: block;
 }
 
-.product-summary__subtitle {
-  margin-top: 0;
+.product-summary__heading--split .product-summary__title {
+  margin-bottom: 3px;
   color: var(--yellow);
   font-size: .45em;
   line-height: 1.05;

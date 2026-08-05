@@ -48,7 +48,7 @@ export default async function MerchPage() {
                   <span>Shop it!</span>
                 </div>
                 <div className="merch-card__copy">
-                  <h2>
+                  <h2 className={subtitle ? "merch-card__heading--split" : undefined}>
                     <span className="merch-card__title-main">{mainTitle}</span>
                     {subtitle && <span className="merch-card__title-subtitle">{subtitle}</span>}
                   </h2>
