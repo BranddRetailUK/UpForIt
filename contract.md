@@ -147,6 +147,7 @@ style=bold pop-art/comic; thick black borders; offset shadows; halftone/radial b
 event_ticket_selector=Summer Roundup ticket module uses a cyan radial/halftone field, heavy outlined white/yellow tier panels, global heavy uppercase tier typography, and diagonal pink `Coming soon` ribbons over upcoming tiers
 event_ticket_summary=event detail uses one outlined date/time/venue banner with distinct yellow/pink/blue rows and global heavy typography
 event_ticket_mobile_order=at 720px and below the ticket selector appears before the date/time/venue summary banner; desktop retains the summary before ticket selection
+event_ticket_frame=ticket detail uses reduced page/card top spacing; mobile card is narrowed within the section wrapper so its yellow/black offset shadow retains a visible right gutter
 responsive_breakpoints=900px,760px,720px,430px
 motion=PopArtScene scroll parallax; desktop direct and mobile eased; disabled for prefers-reduced-motion
 header=sticky; hides after 16px accumulated downward scroll; reappears upward/top/focus; mobile menu locks body and closes on Escape/route change

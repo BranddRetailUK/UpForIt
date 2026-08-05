@@ -61,7 +61,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const activeSortOrder = tierResult.rows.find((tier) => tier.is_active)?.sort_order;
 
   return (
-    <div className="inner-page section-wrap">
+    <div className="inner-page section-wrap event-detail-page">
       <article className="event-card event-card--tickets">
         <p className="event-card__eyebrow">UPFORIT presents</p>
         <h1 className="event-card__title">

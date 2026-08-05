@@ -209,7 +209,14 @@ select {
 .ticket-wallet__ticket { align-items: flex-start; background: var(--yellow); }
 .ticket-wallet__ticket img { width: min(220px, 45vw); border: 2px solid var(--ink); }
 
-.event-card--tickets { max-width: 980px; }
+.inner-page.event-detail-page {
+  padding-top: clamp(28px, 3vw, 46px);
+}
+
+.event-detail-page .event-card--tickets {
+  max-width: 980px;
+  margin-top: 18px;
+}
 .event-description { max-width: 700px; margin: 0 auto; text-align: center; font-size: 1.1rem; font-weight: 700; }
 .event-summary-banner {
   position: relative;
@@ -588,6 +595,15 @@ select {
 }
 
 @media (max-width: 720px) {
+  .inner-page.event-detail-page {
+    padding-top: 26px;
+  }
+
+  .event-detail-page .event-card--tickets {
+    width: calc(100% - 18px);
+    margin-top: 12px;
+  }
+
   .event-card--tickets .ticket-selector {
     order: 1;
   }
