@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const CANONICAL_HOST = "www.upforitevents.co.uk";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (request.nextUrl.hostname !== "upforitevents.co.uk") {
     return NextResponse.next();
   }

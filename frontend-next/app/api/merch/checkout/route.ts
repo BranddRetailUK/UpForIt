@@ -23,6 +23,9 @@ function checkoutReturnOrigin() {
 
 export async function POST(request: Request) {
   try {
+    if (process.env.MERCH_CHECKOUT_ENABLED === "false") {
+      return NextResponse.json({ error: "Merch checkout is disabled in this environment" }, { status: 503 });
+    }
     const input = await request.json();
     const items = Array.isArray(input?.items)
       ? input.items.map((item: { variantId?: unknown; quantity?: unknown }) => ({

@@ -58,11 +58,11 @@ export default function EventsPage() {
 
         <div className="coming-soon-strip">
           <span aria-hidden="true">★</span>
-          Lineup &amp; tickets coming soon
+          Tickets from £5 — on sale now
           <span aria-hidden="true">★</span>
         </div>
-        <Link className="pop-button pop-button--yellow" href="/socials">
-          Follow for updates
+        <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026">
+          View tickets
         </Link>
       </article>
     </div>

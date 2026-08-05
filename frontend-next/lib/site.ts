@@ -3,7 +3,8 @@ export const NAV_ITEMS = [
   { href: "/events", label: "Events" },
   { href: "/merch", label: "Merch" },
   { href: "/socials", label: "Socials" },
-  { href: "/contact", label: "Contact" }
+  { href: "/contact", label: "Contact" },
+  { href: "/account", label: "Account" }
 ] as const;
 
 export const SOCIAL_LINKS = [
@@ -26,4 +27,3 @@ export const SOCIAL_LINKS = [
     shortLabel: "IG"
   }
 ] as const;
-

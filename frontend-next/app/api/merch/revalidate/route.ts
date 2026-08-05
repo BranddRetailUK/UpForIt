@@ -29,8 +29,8 @@ export async function POST(request: Request) {
   }
   let productId = "";
   try { productId = String(JSON.parse(body)?.productId || ""); } catch {}
-  revalidateTag("upforit-merch");
+  revalidateTag("upforit-merch", "max");
   revalidatePath("/merch", "layout");
-  if (productId) revalidateTag(`upforit-product:${productId}`);
+  if (productId) revalidateTag(`upforit-product:${productId}`, "max");
   return NextResponse.json({ revalidated: true });
 }

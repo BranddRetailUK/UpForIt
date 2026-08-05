@@ -1,0 +1,70 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+type Tier = { id: string; name: string; priceMinor: number; maxPerOrder: number; active: boolean };
+
+export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; signedIn: boolean }) {
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const activeTiers = tiers.filter((tier) => tier.active);
+  const total = tiers.reduce((sum, tier) => sum + (quantities[tier.id] ?? 0) * tier.priceMinor, 0);
+
+  async function checkout() {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/tickets/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          idempotencyKey: crypto.randomUUID(),
+          items: activeTiers
+            .map((tier) => ({ ticketTypeId: tier.id, quantity: quantities[tier.id] ?? 0 }))
+            .filter((item) => item.quantity > 0)
+        })
+      });
+      const result = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error || "Checkout could not be started.");
+      window.location.assign(result.url);
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error ? checkoutError.message : "Checkout could not be started.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="ticket-selector">
+      <h2>Tickets</h2>
+      <div className="ticket-tier-list">
+        {tiers.map((tier) => (
+          <div className={`ticket-tier${tier.active ? "" : " is-inactive"}`} key={tier.id}>
+            <span><strong>{tier.name}</strong><small>{tier.active ? "On sale" : "Not currently on sale"}</small></span>
+            <strong>£{(tier.priceMinor / 100).toFixed(2)}</strong>
+            {tier.active ? (
+              <select
+                aria-label={`${tier.name} quantity`}
+                value={quantities[tier.id] ?? 0}
+                onChange={(event) => setQuantities((current) => ({ ...current, [tier.id]: Number(event.target.value) }))}
+              >
+                {Array.from({ length: tier.maxPerOrder + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}
+              </select>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
+      {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
+      {signedIn ? (
+        <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
+          {busy ? "Opening checkout…" : "Buy tickets"}
+        </button>
+      ) : (
+        <Link className="pop-button pop-button--yellow" href="/account/login">Sign in to buy tickets</Link>
+      )}
+      <p className="ticket-selector__note">You’ll pay exactly the ticket total shown. No booking fee.</p>
+    </section>
+  );
+}

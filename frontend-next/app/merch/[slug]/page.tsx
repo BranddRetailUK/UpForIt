@@ -4,8 +4,9 @@ import ProductDisplay from "../../../components/ProductDisplay";
 import { getMerchProduct } from "../../../lib/merch";
 import { splitMerchProductTitle } from "../../../lib/product-title";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const product = await getMerchProduct(params.slug).catch(() => null);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getMerchProduct(slug).catch(() => null);
   if (!product) return { title: "Merch" };
   return {
     title: product.title,
@@ -19,8 +20,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getMerchProduct(params.slug).catch(() => null);
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getMerchProduct(slug).catch(() => null);
   if (!product) notFound();
   const { mainTitle: productTitle, subtitle: productSubtitle } = splitMerchProductTitle(product.title);
 

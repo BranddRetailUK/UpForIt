@@ -1,22 +1,22 @@
 [contract]
 format=ai_context_v1
 purpose=canonical repository context for future coding agents; prefer this file over inference; verify source/runtime state before destructive or production actions
-scope=BranddRetailUK/UpForIt repository plus its explicit Good Game Apparel merch dependency
-last_source_audit=2026-08-04
+scope=BranddRetailUK/UpForIt repository, its native event-ticketing system, plus its explicit Good Game Apparel merch dependency
+last_source_audit=2026-08-05
 upforit_revision_at_audit=6df223c
 good_game_revision_at_audit=7a04cb08
 secrets_policy=never write secret values, Stripe keys, database URLs, Railway tokens, or HMAC secrets into source/docs/client bundles/logs
 
 [priority_invariants]
-MUST=keep Good Game Apparel as commerce source of truth for products, variants, SKU, canonical price, weight, availability, stock, shipping, Stripe, orders, fulfilment, refunds, admin operations, and transactional email
-MUST=keep UpForIt as presentation/cart-intent/server-proxy layer; no duplicated product/order database in this repository
-MUST=perform all Stripe operations through Good Game; UpForIt browser/server must not use UpForIt-local Stripe credentials even if present in an untracked environment
+MUST=keep Good Game Apparel as merch commerce source of truth for products, variants, SKU, canonical merch price, weight, availability, stock, shipping, merch Stripe payments, merch orders, fulfilment, refunds, admin operations, and merch transactional email
+MUST=keep UpForIt as presentation/cart-intent/server-proxy layer for merch; no duplicated merch product/order database in this repository
+MUST=perform all merch Stripe operations through Good Game; native event-ticket Stripe Checkout and event-ticket webhooks are the explicit exception owned by UpForIt
 MUST=send only variant IDs, quantities, idempotency key, and registered return URLs into checkout; never trust or forward browser prices
 MUST=keep `STANDALONE_STOREFRONT_UPFORIT_SECRET` server-only and identical on UpForIt + Good Game
 MUST=use Good Game LIVE admin/service for UpForIt work; do not implement/deploy this feature through the separate Good Game Railway Testing admin UI
 MUST=preserve `www.upforitevents.co.uk` as canonical public origin
 MUST_NOT=model UpForIt as a fake creator, create creator commission/rewards, or store UpForIt products in local JSON/DB copies
-MUST_NOT=allocate a UFI order number before successful payment
+MUST_NOT=allocate a Good Game merch UFI order number before successful payment; native ticket reservation references may exist while Stripe Checkout is pending
 MUST_NOT=expose product costs/admin fields/storefront secret/database URL to browser code
 
 [repository]
@@ -25,8 +25,8 @@ default_branch=main
 application_root=frontend-next
 root_package_json=absent
 start_note=Start Commands.md contains `npm run dev`; execute from `frontend-next`
-framework=Next.js 14.2.35 App Router + React 18.2 + strict TypeScript
-runtime_dependencies=next,react,react-dom,pg,sharp
+framework=Next.js 16.3.0 App Router + React 19.2.4 + strict TypeScript
+runtime_dependencies=next,react,react-dom,pg,sharp,stripe,bcryptjs,@sendgrid/mail,qrcode,pdf-lib,@zxing/browser
 styles=single global stylesheet at frontend-next/app/globals.css
 tests=none in this repository at audit time
 generated_dirs=frontend-next/.next,frontend-next/node_modules; ignored; never commit
@@ -61,7 +61,17 @@ STANDALONE_STOREFRONT_KEY=server-only registry key; default/upforit production v
 STANDALONE_STOREFRONT_UPFORIT_SECRET=server-only shared HMAC secret; required for checkout, confirmation, cache revalidation, and checkout requester hashing
 DATABASE_URL=server-only Postgres connection; required for email signup persistence and durable checkout intent/rate limiting
 NODE_ENV=production enables Postgres TLS with rejectUnauthorized=false
-STRIPE_*=intentionally unused by this application; Good Game owns Stripe
+STRIPE_SECRET_KEY=server-only; used exclusively for native event tickets; Testing must use an sk_test key and APP_ENV=testing rejects live keys
+STRIPE_TICKETS_WEBHOOK_SECRET=server-only signing secret for the dedicated native ticket webhook endpoint
+APP_ENV=testing or production; controls Stripe livemode guard independently of NODE_ENV
+TICKETING_ENABLED=explicit ticket-sales feature switch
+MERCH_CHECKOUT_ENABLED=environment guard; false in Testing to prevent accidental calls into Good Game LIVE merch checkout
+TICKET_QR_SIGNING_SECRET=server-only HMAC secret for regenerable, non-PII admission QR tokens
+AUTH_RATE_LIMIT_SECRET=server-only salt for login/signup/reset rate-limit buckets
+EMAIL_JOB_ENCRYPTION_KEY=server-only encryption key for durable email outbox payloads
+ADMIN_BOOTSTRAP_EMAIL=verified account email promoted to admin on initial registration
+SENDGRID_API_KEY=server-only worker credential; legacy misspelling SNEDGRID_ACCESS_KEY is accepted temporarily
+EMAIL_FORCE_RECIPIENT=Testing safety override; all outbound mail is redirected to this address
 failure_without_GOOD_GAME_API_BASE=catalog/product helpers return empty/null; checkout construction throws and API returns unavailable
 failure_without_secret=signed operations fail; checkout guard returns secure checkout not configured/unavailable
 failure_without_DATABASE_URL=signup fails; checkout guard fails closed with 503; static pages/catalog rendering can still work
@@ -78,7 +88,14 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 
 [public_routes]
 /=home hero, round logo, event/merch CTAs, three house rules, email signup
-/events=static Summer Roundup card; 26 September 2026; noon-11PM; McCarthys Sports Bar; tickets/lineup pending
+/events=Summer Roundup card; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
+/events/summer-roundup-2026=database-backed event detail and native ticket selector; confirmed tiers Early Bird £5, Tier 1 £7.50, Tier 2 £10; no booking fee
+/account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email
+/account=authenticated ticket-order wallet
+/account/orders/:id=owner/staff ticket detail, QR display, printable PDF download
+/tickets/confirmation=Stripe return page polling webhook fulfilment status
+/admin=staff/admin testing control centre for metrics, tier activation, orders, emails, Stripe events, and ticket resend
+/admin/check-in=staff/admin camera QR and manual ticket-number check-in
 /merch=server-rendered live Good Game catalogue grid; friendly empty/error placeholder
 /merch/[slug]=server-rendered product gallery, description, price, options, quantity, add-to-cart; missing product -> Next notFound
 /cart=client cart review, canonical refresh, cancellation notice, totals, secure checkout
@@ -88,6 +105,18 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 
 [api_routes]
 POST_/api/signup=accept JSON or form email; trim/lowercase; regex validate; create `signups` table on demand; unique insert with ON CONFLICT DO NOTHING
+POST_/api/auth/register=validated account creation; bcrypt cost 12; queues one-day verification link
+POST_/api/auth/login=verified-account login; opaque 30-day HttpOnly Secure SameSite=Lax database session
+POST_/api/auth/logout=revokes current session
+GET_/api/auth/verify=single-use email verification and signed-in redirect
+POST_/api/auth/forgot-password=enumeration-safe one-hour reset email request
+POST_/api/auth/reset-password=single-use password replacement and all-session revocation
+POST_/api/tickets/checkout=authenticated server-priced event-ticket reservation and Stripe-hosted Checkout Session
+POST_/api/stripe/tickets-webhook=raw-body verified, livemode-guarded, idempotent native ticket fulfilment/refund processing
+GET_/api/tickets/orders/:id/pdf=owner/staff printable per-admission QR PDF
+POST_/api/admin/check-in=staff-only atomic one-use QR/manual ticket check-in
+PATCH_/api/admin/ticket-types/:id=staff-only tier sale-state toggle
+POST_/api/admin/orders/:id/resend=staff-only confirmation email requeue
 POST_/api/merch/cart=public dynamic canonical cart refresh; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs
 POST_/api/merch/checkout=node runtime; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; reserve/rate-limit in Postgres; HMAC-sign server request to Good Game; return upstream Stripe Checkout URL/payload
 GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload
@@ -252,9 +281,9 @@ current_scope=collect email only; no ESP/newsletter sync, consent ledger, confir
 module=frontend-next/lib/db.ts
 driver=pg Pool
 pool_lifetime=development cached on globalThis; production creates module/runtime pool without global cache
-schema_management=runtime CREATE TABLE IF NOT EXISTS in signup/checkout paths; no migration framework at audit time
 production_tls=ssl rejectUnauthorized=false
-tables_owned_here=signups,merch_checkout_requests
+schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds the confirmed event/tiers without resetting admin sale-state choices
+tables_owned_here=signups,merch_checkout_requests,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,ticket_audit_log,schema_migrations
 tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilment,email events; all Good Game
 
 [security]

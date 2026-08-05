@@ -60,8 +60,189 @@ svg {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
+}
+
+/* Accounts, native ticketing and testing admin */
+.account-page,
+.admin-shell {
+  padding-block: clamp(42px, 7vw, 90px);
+}
+
+.account-panel,
+.admin-panel {
+  position: relative;
+  width: min(620px, 100%);
+  margin-inline: auto;
+  padding: clamp(24px, 5vw, 48px);
+  border: 4px solid var(--ink);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.account-panel--wide,
+.admin-panel {
+  width: 100%;
+}
+
+.account-panel h1,
+.admin-shell h1 {
+  margin-block: 8px 16px;
+  font-family: var(--font-heavy), sans-serif;
+  font-size: clamp(2.1rem, 5vw, 4.5rem);
+  line-height: .92;
+  text-transform: uppercase;
+}
+
+.account-panel h2,
+.admin-panel h2,
+.ticket-selector h2 {
+  margin-block: 32px 16px;
+  font-family: var(--font-heavy), sans-serif;
+  text-transform: uppercase;
+}
+
+.account-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.account-form label,
+.check-in-manual label {
+  display: grid;
+  gap: 7px;
+  font-weight: 800;
+}
+
+.account-form input,
+.check-in-manual input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 3px solid var(--ink);
+  border-radius: 0;
+  background: #fff;
+}
+
+.account-form small,
+.order-list small,
+.admin-table small,
+.ticket-wallet small,
+.ticket-tier small {
+  display: block;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.account-form__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  text-decoration: underline;
+}
+
+.form-message {
+  padding: 12px;
+  border: 2px solid var(--ink);
+  font-weight: 700;
+}
+
+.form-message--error { background: #ffd5e7; }
+.form-message--success { background: #bdffcb; }
+
+.text-button {
+  border: 0;
+  background: transparent;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.account-heading,
+.admin-header,
+.ticket-selector__total {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.order-list,
+.ticket-wallet,
+.ticket-tier-list {
+  display: grid;
+  gap: 14px;
+}
+
+.order-list__item,
+.ticket-wallet__ticket,
+.ticket-tier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 3px solid var(--ink);
+  background: var(--muted);
+}
+
+.order-list__item:hover { background: var(--yellow); }
+
+.ticket-wallet { margin-top: 28px; }
+.ticket-wallet__ticket { align-items: flex-start; background: var(--yellow); }
+.ticket-wallet__ticket img { width: min(220px, 45vw); border: 2px solid var(--ink); }
+
+.event-card--tickets { max-width: 980px; }
+.event-description { max-width: 700px; margin: 0 auto 24px; text-align: center; font-size: 1.1rem; font-weight: 700; }
+.ticket-selector { width: min(760px, 100%); margin: 32px auto 0; padding: clamp(18px, 4vw, 32px); border: 4px solid var(--ink); background: var(--paper); box-shadow: 7px 7px 0 var(--pink); text-align: left; }
+.ticket-selector h2 { margin-top: 0; font-size: 2rem; }
+.ticket-tier { background: var(--yellow); }
+.ticket-tier.is-inactive { background: #ddd; color: #555; }
+.ticket-tier select { min-width: 64px; padding: 8px; border: 2px solid var(--ink); background: var(--paper); }
+.ticket-selector__total { margin-block: 22px; border-top: 3px solid var(--ink); padding-top: 16px; font-size: 1.35rem; }
+.ticket-selector__note { margin-top: 16px; font-size: .9rem; }
+
+.admin-shell { width: min(1480px, calc(100% - 32px)); }
+.admin-header { margin-bottom: 28px; padding: clamp(20px, 4vw, 38px); border: 4px solid var(--ink); background: var(--paper); box-shadow: var(--shadow); }
+.admin-header nav { display: flex; flex-wrap: wrap; gap: 15px; font-weight: 800; text-decoration: underline; }
+.admin-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
+.admin-metrics article { display: grid; gap: 4px; padding: 20px; border: 3px solid var(--ink); background: var(--yellow); box-shadow: var(--shadow-small); }
+.admin-metrics strong { font-family: var(--font-heavy), sans-serif; font-size: clamp(1.5rem, 3vw, 2.7rem); }
+.admin-panel { margin-bottom: 28px; padding: clamp(18px, 3vw, 30px); overflow: hidden; }
+.admin-panel h2 { margin-top: 0; }
+.admin-table-wrap { width: 100%; margin-top: 18px; overflow-x: auto; }
+.admin-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: .88rem; }
+.admin-table th, .admin-table td { padding: 11px 10px; border: 1px solid #aaa; text-align: left; vertical-align: top; }
+.admin-table th { background: var(--ink); color: var(--paper); }
+.admin-table tbody tr:nth-child(even) { background: #f0f7fb; }
+.admin-table a { text-decoration: underline; font-weight: 800; }
+.admin-error { max-width: 280px; overflow-wrap: anywhere; }
+.admin-status, .status-toggle { display: inline-block; padding: 6px 9px; border: 2px solid var(--ink); background: #ddd; font-weight: 800; text-transform: uppercase; font-size: .75rem; }
+.admin-status--paid, .status-toggle.is-active { background: #74ed94; }
+.admin-status--failed, .admin-status--refund_review { background: #ff92ba; }
+.admin-status--refunded, .admin-status--expired { background: #bbb; }
+.status-toggle { cursor: pointer; }
+
+.check-in-tool { display: grid; gap: 22px; }
+.check-in-video { width: min(620px, 100%); aspect-ratio: 1; margin-inline: auto; border: 4px solid var(--ink); background: #111; object-fit: cover; }
+.check-in-manual { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 14px; }
+.check-in-result { padding: 22px; border: 4px solid var(--ink); font-size: 1.15rem; }
+.check-in-result.is-success { background: #74ed94; }
+.check-in-result.is-error { background: #ff92ba; }
+
+@media (max-width: 900px) {
+  .admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .account-heading, .admin-header, .ticket-wallet__ticket { flex-direction: column; }
+  .ticket-wallet__ticket img { width: 100%; }
+  .ticket-tier { display: grid; grid-template-columns: 1fr auto; }
+  .ticket-tier select { grid-column: 1 / -1; width: 100%; }
+  .check-in-manual { grid-template-columns: 1fr; }
+  .admin-metrics { grid-template-columns: 1fr 1fr; }
 }
 
 button,

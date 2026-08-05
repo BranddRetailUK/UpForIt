@@ -6,8 +6,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }
 };
 
-export default function ConfirmationPage({ searchParams }: { searchParams: { session_id?: string } }) {
-  const sessionId = String(searchParams.session_id || "");
+export default async function ConfirmationPage({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
+  const query = await searchParams;
+  const sessionId = String(query.session_id || "");
   return (
     <div className="inner-page section-wrap confirmation-page">
       {/^cs_[A-Za-z0-9_]+$/.test(sessionId) ? (
