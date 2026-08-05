@@ -145,6 +145,8 @@ source=frontend-next/app/globals.css + frontend-next/components/PopArtScene.tsx
 tokens=ink #050505; paper #ffffff; blue #008ef0; blue-light #29c6f5; blue-deep #0065d9; yellow #ffdf00; pink #d90062; muted #dfeef8
 style=bold pop-art/comic; thick black borders; offset shadows; halftone/radial blue scene; pink/yellow accents; rotated cards/stickers
 event_ticket_selector=Summer Roundup ticket module uses a cyan radial/halftone field, heavy outlined white/yellow tier panels, global heavy uppercase tier typography, and diagonal pink `Coming soon` ribbons over upcoming tiers
+event_ticket_summary=event detail uses one outlined date/time/venue banner with distinct yellow/pink/blue rows and global heavy typography
+event_ticket_mobile_order=at 720px and below the ticket selector appears before the date/time/venue summary banner; desktop retains the summary before ticket selection
 responsive_breakpoints=900px,760px,720px,430px
 motion=PopArtScene scroll parallax; desktop direct and mobile eased; disabled for prefers-reduced-motion
 header=sticky; hides after 16px accumulated downward scroll; reappears upward/top/focus; mobile menu locks body and closes on Escape/route change
@@ -312,6 +314,7 @@ concurrency=checkout and admin simulation lock tier rows and count paid plus une
 monotonicity=once the sale advances to a later tier it does not reopen a cheaper tier after refunds
 customer_flow=/events Buy tickets -> dedicated ticket selector -> required verified account -> native ticket Stripe Checkout -> webhook fulfilment -> email/PDF/QR -> persistent account wallet
 cart_isolation=native tickets never enter the Good Game merch cart; merch and tickets always use separate checkout sessions
+quantity_ui=active ticket tier starts at quantity 1 and uses accessible left/right stepper buttons; customers may decrease to 0 or increase to the tier availability/per-order limit
 admin_simulation=Testing admin can create one or more paid-equivalent tickets for their own admin account; fulfilment and email are real, Stripe payment is skipped, and the order is visibly marked as a simulation in admin
 
 [security]

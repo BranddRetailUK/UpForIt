@@ -58,8 +58,6 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const eventDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeZone: event.timezone }).format(new Date(event.starts_at));
   const eventTime = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at));
   const endTime = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at));
-  const eventDay = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at));
-  const eventHour = eventTime.split(":")[0];
   const activeSortOrder = tierResult.rows.find((tier) => tier.is_active)?.sort_order;
 
   return (
@@ -70,29 +68,20 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           <CloudinaryImage asset={CLOUDINARY_ASSETS.summerRoundup} alt={event.title} className="event-card__wordmark" sizes="(max-width: 720px) 86vw, 760px" maxWidth={1476} priority />
         </h1>
         <p className="event-description">{event.description}</p>
-        <div className="event-facts">
-          <div className="event-fact event-fact--yellow">
-            <span className="event-fact__icon" aria-hidden="true">{eventDay}</span>
-            <div>
-              <span className="event-fact__label">Date</span>
-              <time dateTime={new Date(event.starts_at).toISOString()}>{eventDate}</time>
-            </div>
+        <dl className="event-summary-banner" aria-label="Event details">
+          <div className="event-summary-banner__item event-summary-banner__item--date">
+            <dt>Date</dt>
+            <dd><time dateTime={new Date(event.starts_at).toISOString()}>{eventDate}</time></dd>
           </div>
-          <div className="event-fact event-fact--pink">
-            <span className="event-fact__icon" aria-hidden="true">{eventHour}</span>
-            <div>
-              <span className="event-fact__label">Time</span>
-              <time dateTime={new Date(event.starts_at).toISOString()}>{eventTime}–{endTime}</time>
-            </div>
+          <div className="event-summary-banner__item event-summary-banner__item--time">
+            <dt>Time</dt>
+            <dd><time dateTime={new Date(event.starts_at).toISOString()}>{eventTime}–{endTime}</time></dd>
           </div>
-          <div className="event-fact event-fact--blue">
-            <span className="event-fact__icon event-fact__icon--pin" aria-hidden="true">●</span>
-            <div>
-              <span className="event-fact__label">Venue</span>
-              <span>{event.venue_name}</span>
-            </div>
+          <div className="event-summary-banner__item event-summary-banner__item--venue">
+            <dt>Venue</dt>
+            <dd>{event.venue_name}</dd>
           </div>
-        </div>
+        </dl>
         <TicketSelector
           signedIn={Boolean(user)}
           tiers={tierResult.rows.map((tier) => {

@@ -14,7 +14,9 @@ type Tier = {
 };
 
 export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; signedIn: boolean }) {
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries(
+    tiers.filter((tier) => tier.active).map((tier) => [tier.id, 1])
+  ));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const activeTiers = tiers.filter((tier) => tier.active);
@@ -49,6 +51,7 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
       <div className="ticket-tier-list">
         {tiers.map((tier) => {
           const maximum = Math.min(tier.maxPerOrder, tier.remaining ?? tier.maxPerOrder);
+          const quantity = quantities[tier.id] ?? 0;
           const status = tier.status === "sold_out"
             ? "Sold out"
             : tier.status === "reserved"
@@ -64,14 +67,31 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
             </span>
             <strong className="ticket-tier__price">£{(tier.priceMinor / 100).toFixed(2)}</strong>
             {tier.active ? (
-              <select
-                className="ticket-tier__quantity"
-                aria-label={`${tier.name} quantity`}
-                value={quantities[tier.id] ?? 0}
-                onChange={(event) => setQuantities((current) => ({ ...current, [tier.id]: Number(event.target.value) }))}
-              >
-                {Array.from({ length: maximum + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}
-              </select>
+              <div className="ticket-tier__quantity" role="group" aria-label={`${tier.name} quantity`}>
+                <button
+                  type="button"
+                  aria-label={`Decrease ${tier.name} quantity`}
+                  disabled={busy || quantity === 0}
+                  onClick={() => setQuantities((current) => ({
+                    ...current,
+                    [tier.id]: Math.max(0, (current[tier.id] ?? 1) - 1)
+                  }))}
+                >
+                  ←
+                </button>
+                <output aria-live="polite" aria-label={`${tier.name} ticket count`}>{quantity}</output>
+                <button
+                  type="button"
+                  aria-label={`Increase ${tier.name} quantity`}
+                  disabled={busy || quantity >= maximum}
+                  onClick={() => setQuantities((current) => ({
+                    ...current,
+                    [tier.id]: Math.min(maximum, (current[tier.id] ?? 1) + 1)
+                  }))}
+                >
+                  →
+                </button>
+              </div>
             ) : null}
             {tier.status === "upcoming" ? <span className="ticket-tier__coming-soon">Coming soon</span> : null}
           </div>
