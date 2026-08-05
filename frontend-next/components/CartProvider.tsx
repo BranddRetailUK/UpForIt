@@ -215,7 +215,10 @@ export function CartLines({ compact = false }: { compact?: boolean }) {
               <MerchImage src={line.imageUrl} alt="" sizes={compact ? "92px" : "180px"} />
             ) : <div className="cart-line__empty-image" />}
             <div className="cart-line__copy">
-              <Link className="cart-line__title" href={`/merch/${line.slug}`}>
+              <Link
+                className={`cart-line__title${subtitle ? " cart-line__title--split" : ""}`}
+                href={`/merch/${line.slug}`}
+              >
                 <span className="cart-line__title-main">{mainTitle}</span>
                 {subtitle && <span className="cart-line__title-subtitle">{subtitle}</span>}
               </Link>
