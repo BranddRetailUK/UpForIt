@@ -178,7 +178,7 @@ unavailable_state=no available variant -> Currently unavailable; no add button
 
 [cart_contract]
 storage_key=upforit.merch.cart.v1 in localStorage
-stored_shape=productId,variantId,slug,title,variantLabel,imageUrl,priceMinor,currency,quantity
+stored_shape=productId,productKind,variantId,slug,title,variantLabel,imageUrl,priceMinor,currency,quantity
 title_display=drawer and full cart use the shared product-title split; separator hidden and product-type subtitle shown beneath the main title
 storage_security=display cache only; never authoritative for price/availability/checkout
 hydrate=normalize numeric variant IDs; quantity cap 1..20; fetch canonical cart once after restore
@@ -187,8 +187,8 @@ add_same_variant=merge quantity; cap total 20; open drawer
 remove=quantity below 1 or explicit Remove deletes line
 count=sum quantities
 cart_page_refresh=once on mount; replaces all lines with canonical response; unavailable lines removed with notice; refresh error shown
-display_total=sum canonical/refreshed line priceMinor*quantity; shipping excluded
-shipping_copy=calculated securely by Good Game; UK only
+display_total=sum canonical/refreshed line priceMinor*quantity; delivery displayed separately
+shipping_copy=£2.99 for exactly one phone case at quantity one; £3.99 for all other products, quantities, and multi-line orders; UK only; display mirrors Good Game canonical checkout calculation
 
 [checkout_intent_and_rate_limit]
 intent_storage_key=upforit.merch.checkout-intent.v1 in sessionStorage
@@ -218,7 +218,7 @@ database_failure=fail closed with 503; never bypass rate/idempotency guard
 [shipping]
 country=GB only via Stripe allowed countries
 calculation=Good Game existing UK small-item/standard shipping helper; never calculate/trust shipping in browser
-small_item_rule=discounted small-item shipping applies only when cart contains exactly one eligible item at quantity one; multiple quantities/lines use standard shipping
+small_item_rule=£2.99 delivery applies only when the cart contains exactly one phone case at quantity one; all other products, multiple quantities, and multi-line orders use £3.99 delivery
 
 [orders]
 registry_display_name=UpForIt Events

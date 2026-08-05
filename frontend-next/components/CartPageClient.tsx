@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getDisplayedMerchDeliveryMinor } from "../lib/merch-delivery";
 import { CartLines, useCart, type CartLine } from "./CartProvider";
 
 const CHECKOUT_INTENT_STORAGE_KEY = "upforit.merch.checkout-intent.v1";
@@ -28,6 +29,11 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.priceMinor * line.quantity, 0), [lines]);
+  const deliveryMinor = useMemo(() => getDisplayedMerchDeliveryMinor(lines), [lines]);
+  const formatMoney = (valueMinor: number) => new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP"
+  }).format(valueMinor / 100);
 
   useEffect(() => {
     if (!lines.length) {
@@ -86,9 +92,8 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
       {lines.length > 0 && (
         <aside className="cart-summary">
           <p className="comic-kicker">Order recap</p>
-          <div><span>Merch subtotal</span><strong>{new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(total / 100)}</strong></div>
-          <div><span>UK delivery</span><strong>Calculated securely</strong></div>
-          <p>Stripe will collect your email, UK delivery address, billing address and payment details.</p>
+          <div><span>Merch subtotal</span><strong>{formatMoney(total)}</strong></div>
+          <div><span>UK delivery</span><strong>{formatMoney(deliveryMinor)}</strong></div>
           <button className="pop-button pop-button--pink" type="button" disabled={checking || submitting} onClick={checkout}>
             {checking ? "Checking your cart…" : submitting ? "Opening secure checkout…" : "Secure checkout"}
           </button>

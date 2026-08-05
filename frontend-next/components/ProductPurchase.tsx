@@ -78,6 +78,7 @@ export default function ProductPurchase({
         type="button"
         onClick={() => addLine({
           productId: product.id,
+          productKind: product.productKind || "",
           variantId: variant.id,
           slug: product.slug,
           title: product.title,

@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       const image = match.product.images.find((entry) => String(entry.id) === String(match.variant.imageId)) || match.product.images[0];
       return [{
         productId: match.product.id,
+        productKind: match.product.productKind || "",
         variantId: match.variant.id,
         slug: match.product.slug,
         title: match.product.title,

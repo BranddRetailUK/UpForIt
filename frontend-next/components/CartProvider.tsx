@@ -14,6 +14,7 @@ import MerchImage from "./MerchImage";
 
 export type CartLine = {
   productId: string;
+  productKind: string;
   variantId: string;
   slug: string;
   title: string;
@@ -47,6 +48,7 @@ function normalizeLines(value: unknown): CartLine[] {
     .filter((line) => /^\d+$/.test(String(line.variantId || "")))
     .map((line) => ({
       productId: String(line.productId || ""),
+      productKind: String(line.productKind || ""),
       variantId: String(line.variantId || ""),
       slug: String(line.slug || ""),
       title: String(line.title || "Merch item"),
