@@ -6,7 +6,7 @@ import { FormEvent, useState } from "react";
 
 type Mode = "signup" | "login" | "forgot" | "reset";
 
-export default function AuthForm({ mode, token }: { mode: Mode; token?: string }) {
+export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?: string; nextPath?: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -38,7 +38,8 @@ export default function AuthForm({ mode, token }: { mode: Mode; token?: string }
       if (!response.ok) throw new Error(result.error || "Something went wrong.");
 
       if (mode === "login") {
-        router.push("/account");
+        const destination = nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/account";
+        router.push(destination);
         router.refresh();
       } else if (mode === "reset") {
         router.push("/account/login?reset=1");
@@ -98,10 +99,9 @@ export default function AuthForm({ mode, token }: { mode: Mode; token?: string }
       </button>
       <div className="account-form__links">
         {mode === "login" ? <Link href="/account/forgot-password">Forgot password?</Link> : null}
-        {mode !== "login" ? <Link href="/account/login">Already have an account?</Link> : null}
-        {mode === "login" ? <Link href="/account/signup">Create an account</Link> : null}
+        {mode !== "login" ? <Link href={nextPath ? `/account/login?next=${encodeURIComponent(nextPath)}` : "/account/login"}>Already have an account?</Link> : null}
+        {mode === "login" ? <Link href={nextPath ? `/account/signup?next=${encodeURIComponent(nextPath)}` : "/account/signup"}>Create an account</Link> : null}
       </div>
     </form>
   );
 }
-

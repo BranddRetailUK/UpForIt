@@ -41,7 +41,11 @@ export default async function AccountPage() {
           <LogoutButton />
         </div>
         <p>{user.email}</p>
-        {user.role !== "customer" ? <Link className="pop-button pop-button--pink" href="/staff/events">Open staff tools</Link> : null}
+        <div className="account-actions">
+          <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026#tickets">Buy tickets</Link>
+          {user.role === "admin" ? <Link className="pop-button pop-button--pink" href="/admin">Open ticket admin</Link> : null}
+          {user.role !== "customer" ? <Link className="pop-button pop-button--pink" href="/staff/events">Open staff tools</Link> : null}
+        </div>
         <h2>Your ticket orders</h2>
         {orders.rows.length ? (
           <div className="order-list">

@@ -61,8 +61,8 @@ export default function EventsPage() {
           Tickets from £5 — on sale now
           <span aria-hidden="true">★</span>
         </div>
-        <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026">
-          View tickets
+        <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026#tickets">
+          Buy tickets
         </Link>
       </article>
     </div>

@@ -28,7 +28,7 @@ start_note=Start Commands.md contains `npm run dev`; execute from `frontend-next
 framework=Next.js 16.3.0 App Router + React 19.2.4 + strict TypeScript
 runtime_dependencies=next,react,react-dom,pg,sharp,stripe,bcryptjs,@sendgrid/mail,qrcode,pdf-lib,@zxing/browser
 styles=single global stylesheet at frontend-next/app/globals.css
-tests=none in this repository at audit time
+tests=Vitest coverage for ticket/email security helpers and automatic ticket-tier progression policy
 generated_dirs=frontend-next/.next,frontend-next/node_modules; ignored; never commit
 environment_files=.env/.env.* ignored except tracked `.env.example`; never commit actual env files
 
@@ -96,12 +96,12 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 [public_routes]
 /=home hero, round logo, event/merch CTAs, three house rules, email signup
 /events=Summer Roundup card; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
-/events/summer-roundup-2026=database-backed event detail and native ticket selector; confirmed tiers Early Bird £5, Tier 1 £7.50, Tier 2 £10; no booking fee
+/events/summer-roundup-2026=database-backed event detail and dedicated native ticket selector; multiple tickets go directly to ticket Stripe Checkout and never enter the merch cart; no booking fee
 /account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email
-/account=authenticated ticket-order wallet
+/account=authenticated ticket-order wallet with purchase history and links to every issued QR ticket/PDF
 /account/orders/:id=owner/staff ticket detail, QR display, printable PDF download
 /tickets/confirmation=Stripe return page polling webhook fulfilment status
-/admin=staff/admin testing control centre for metrics, tier activation, orders, emails, Stripe events, and ticket resend
+/admin=staff/admin testing control centre for metrics, automatic tier status, orders, emails, Stripe events, ticket resend, and an admin-only Testing purchase simulator
 /admin/check-in=staff/admin camera QR and manual ticket-number check-in
 /merch=server-rendered live Good Game catalogue grid; friendly empty/error placeholder
 /merch/[slug]=server-rendered product gallery, description, price, options, quantity, add-to-cart; missing product -> Next notFound
@@ -123,7 +123,8 @@ POST_/api/tickets/checkout=authenticated server-priced event-ticket reservation 
 POST_/api/stripe/tickets-webhook=raw-body verified, livemode-guarded, idempotent native ticket fulfilment/refund processing
 GET_/api/tickets/orders/:id/pdf=owner/staff printable per-admission QR PDF
 POST_/api/admin/check-in=staff-only atomic one-use QR/manual ticket check-in
-PATCH_/api/admin/ticket-types/:id=staff-only tier sale-state toggle
+PATCH_/api/admin/ticket-types/:id=deprecated guard returning 409 because tier activation is automatic
+POST_/api/admin/simulated-purchase=admin-only and APP_ENV=testing-only purchase simulator; uses real order/ticket/PDF/email fulfilment without calling Stripe
 POST_/api/admin/orders/:id/resend=staff-only confirmation email requeue
 POST_/api/merch/cart=public dynamic canonical cart refresh; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs
 POST_/api/merch/checkout=node runtime; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; reserve/rate-limit in Postgres; HMAC-sign server request to Good Game; return upstream Stripe Checkout URL/payload
@@ -299,9 +300,18 @@ module=frontend-next/lib/db.ts
 driver=pg Pool
 pool_lifetime=development cached on globalThis; production creates module/runtime pool without global cache
 production_tls=ssl rejectUnauthorized=false
-schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds the confirmed event/tiers without resetting admin sale-state choices
+schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds prices/capacities and advances rather than regresses the current tier
 tables_owned_here=signups,merch_checkout_requests,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,ticket_audit_log,schema_migrations
 tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilment,email events; all Good Game
+
+[native_ticket_sales]
+prices=Early Bird £5; Tier 1 £7.50; Tier 2 £10; exact displayed total with no booking fee
+progression=Early Bird is capped at 50 paid tickets; Tier 1 then activates for 100 paid tickets; Tier 2 then activates with no capacity limit
+concurrency=checkout and admin simulation lock tier rows and count paid plus unexpired pending reservations before allocating tickets
+monotonicity=once the sale advances to a later tier it does not reopen a cheaper tier after refunds
+customer_flow=/events Buy tickets -> dedicated ticket selector -> required verified account -> native ticket Stripe Checkout -> webhook fulfilment -> email/PDF/QR -> persistent account wallet
+cart_isolation=native tickets never enter the Good Game merch cart; merch and tickets always use separate checkout sessions
+admin_simulation=Testing admin can create one or more paid-equivalent tickets for their own admin account; fulfilment and email are real, Stripe payment is skipped, and the order is visibly marked as a simulation in admin
 
 [security]
 server_only_modules=lib/merch.ts and lib/merch-checkout-guard.ts import server-only
@@ -339,7 +349,7 @@ check_2=shared storefront secret exists and matches Good Game
 check_3=GOOD_GAME_API_BASE points to https://dashboard.ggapparel.co.uk
 check_4=public cart refresh returns canonical lines
 check_5=Good Game checkout rejects stale/unavailable/zero-weight/price-tampered items and invalid return origin
-check_6=Stripe webhook remains enabled on Good Game; never add a separate UpForIt Stripe webhook/account
+check_6=Good Game merch Stripe webhook remains enabled; native ticket Stripe uses its separate UpForIt ticket webhook and must not process merch
 check_7=confirmation returns paid status/UFI number before cart clears
 check_8=verify order in Good Game LIVE admin and verify lifecycle email/stock update
 

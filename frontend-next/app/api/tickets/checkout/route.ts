@@ -4,6 +4,7 @@ import { getUserForSessionToken, SESSION_COOKIE } from "../../../../lib/auth";
 import { getPool } from "../../../../lib/db";
 import { assertSameOrigin } from "../../../../lib/request";
 import { assertTicketingEnabled, getStripe } from "../../../../lib/stripe";
+import { lockTicketTiersForCheckout, type TicketCheckoutTier } from "../../../../lib/ticket-tiers";
 
 type CheckoutItem = { ticketTypeId: string; quantity: number };
 
@@ -41,53 +42,17 @@ export async function POST(request: NextRequest) {
     }
 
     const client = await getPool().connect();
-    let checkoutRows: Array<{
-      id: string; name: string; price_minor: number; currency: string; max_per_order: number;
-      capacity: number | null; event_id: string; event_slug: string; event_title: string;
-    }> = [];
+    let checkoutRows: TicketCheckoutTier[] = [];
     let totalMinor = 0;
     let orderNumber = "";
     try {
       await client.query("BEGIN");
-      const ids = normalizedItems.map((item) => item.ticketTypeId);
-      const tiers = await client.query<{
-        id: string; name: string; price_minor: number; currency: string; max_per_order: number;
-        capacity: number | null; event_id: string; event_slug: string; event_title: string;
-      }>(
-        `SELECT tt.id, tt.name, tt.price_minor, tt.currency, tt.max_per_order, tt.capacity,
-                e.id AS event_id, e.slug AS event_slug, e.title AS event_title
-           FROM ticket_types tt JOIN events e ON e.id = tt.event_id
-          WHERE tt.id = ANY($1::uuid[]) AND tt.is_active = true AND e.status = 'published'
-            AND (tt.sales_start_at IS NULL OR tt.sales_start_at <= now())
-            AND (tt.sales_end_at IS NULL OR tt.sales_end_at > now())
-          FOR UPDATE OF tt`,
-        [ids]
+      const locked = await lockTicketTiersForCheckout(client, normalizedItems);
+      checkoutRows = locked.tiers;
+      totalMinor = normalizedItems.reduce(
+        (sum, item, index) => sum + checkoutRows[index].price_minor * item.quantity,
+        0
       );
-      if (tiers.rowCount !== normalizedItems.length || new Set(tiers.rows.map((row) => row.event_id)).size !== 1) {
-        throw new Error("One or more ticket tiers are unavailable.");
-      }
-      checkoutRows = normalizedItems.map((item) => {
-        const tier = tiers.rows.find((row) => row.id === item.ticketTypeId);
-        if (!tier) throw new Error("A ticket tier is unavailable.");
-        if (item.quantity > tier.max_per_order) throw new Error(`Maximum ${tier.max_per_order} ${tier.name} tickets per order.`);
-        return tier;
-      });
-
-      for (let index = 0; index < normalizedItems.length; index += 1) {
-        const item = normalizedItems[index];
-        const tier = checkoutRows[index];
-        if (tier.capacity !== null) {
-          const reserved = await client.query<{ quantity: string }>(
-            `SELECT COALESCE(sum(i.quantity), 0)::text AS quantity
-               FROM ticket_order_items i JOIN ticket_orders o ON o.id = i.order_id
-              WHERE i.ticket_type_id = $1
-                AND (o.status = 'paid' OR (o.status = 'pending' AND o.reserved_until > now()))`,
-            [tier.id]
-          );
-          if (Number(reserved.rows[0].quantity) + item.quantity > tier.capacity) throw new Error(`${tier.name} has sold out.`);
-        }
-        totalMinor += tier.price_minor * item.quantity;
-      }
 
       orderId = randomUUID();
       const numberResult = await client.query<{ value: string }>(

@@ -1,9 +1,15 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
+import { advanceTicketTierProgression } from "./ticket-tiers";
 
 export type FulfilledOrder = { orderId: string; userId: string; email: string; displayName: string };
 
-export async function fulfilPaidOrder(client: PoolClient, orderId: string, paymentIntentId?: string | null) {
+export async function fulfilPaidOrder(
+  client: PoolClient,
+  orderId: string,
+  paymentIntentId?: string | null,
+  source: "stripe" | "admin_simulation" = "stripe"
+) {
   const result = await client.query<{
     id: string;
     user_id: string;
@@ -56,11 +62,12 @@ export async function fulfilPaidOrder(client: PoolClient, orderId: string, payme
       );
     }
   }
+  const eventId = items.rows[0]?.event_id;
+  if (eventId) await advanceTicketTierProgression(client, eventId);
   await client.query(
     `INSERT INTO ticket_audit_log (id, order_id, action, details)
      VALUES ($1, $2, 'order_paid', $3::jsonb)`,
-    [randomUUID(), orderId, JSON.stringify({ paymentIntentId: paymentIntentId ?? null })]
+    [randomUUID(), orderId, JSON.stringify({ paymentIntentId: paymentIntentId ?? null, source })]
   );
   return { orderId, userId: order.user_id, email: order.email, displayName: order.display_name } satisfies FulfilledOrder;
 }
-

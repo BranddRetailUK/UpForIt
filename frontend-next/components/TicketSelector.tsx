@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 
-type Tier = { id: string; name: string; priceMinor: number; maxPerOrder: number; active: boolean };
+type Tier = {
+  id: string;
+  name: string;
+  priceMinor: number;
+  maxPerOrder: number;
+  remaining: number | null;
+  active: boolean;
+  status: "on_sale" | "sold_out" | "reserved" | "upcoming";
+};
 
 export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; signedIn: boolean }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -36,12 +44,23 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
   }
 
   return (
-    <section className="ticket-selector">
+    <section className="ticket-selector" id="tickets">
       <h2>Tickets</h2>
       <div className="ticket-tier-list">
-        {tiers.map((tier) => (
-          <div className={`ticket-tier${tier.active ? "" : " is-inactive"}`} key={tier.id}>
-            <span><strong>{tier.name}</strong><small>{tier.active ? "On sale" : "Not currently on sale"}</small></span>
+        {tiers.map((tier) => {
+          const maximum = Math.min(tier.maxPerOrder, tier.remaining ?? tier.maxPerOrder);
+          const status = tier.status === "sold_out"
+            ? "Sold out"
+            : tier.status === "reserved"
+              ? "All remaining tickets are currently held"
+              : tier.status === "upcoming"
+                ? "Coming next"
+                : tier.remaining === null
+                  ? "On sale — unlimited allocation"
+                  : `On sale — ${tier.remaining} remaining`;
+          return (
+          <div className={`ticket-tier${tier.active ? "" : " is-inactive"}${tier.status === "sold_out" ? " is-sold-out" : ""}`} key={tier.id}>
+            <span><strong>{tier.name}</strong><small>{status}</small></span>
             <strong>£{(tier.priceMinor / 100).toFixed(2)}</strong>
             {tier.active ? (
               <select
@@ -49,11 +68,12 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
                 value={quantities[tier.id] ?? 0}
                 onChange={(event) => setQuantities((current) => ({ ...current, [tier.id]: Number(event.target.value) }))}
               >
-                {Array.from({ length: tier.maxPerOrder + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}
+                {Array.from({ length: maximum + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}
               </select>
             ) : null}
           </div>
-        ))}
+          );
+        })}
       </div>
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
@@ -62,9 +82,9 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
           {busy ? "Opening checkout…" : "Buy tickets"}
         </button>
       ) : (
-        <Link className="pop-button pop-button--yellow" href="/account/login">Sign in to buy tickets</Link>
+        <Link className="pop-button pop-button--yellow" href="/account/login?next=%2Fevents%2Fsummer-roundup-2026%23tickets">Sign in to buy tickets</Link>
       )}
-      <p className="ticket-selector__note">You’ll pay exactly the ticket total shown. No booking fee.</p>
+      <p className="ticket-selector__note">Tickets use their own secure checkout and are never added to the merchandise cart. You’ll pay exactly the ticket total shown, with no booking fee.</p>
     </section>
   );
 }
