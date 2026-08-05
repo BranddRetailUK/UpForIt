@@ -348,16 +348,6 @@ select {
   text-transform: uppercase;
 }
 
-.ticket-selector__note {
-  margin-top: 20px;
-  padding: 12px 14px;
-  border: 3px solid var(--ink);
-  background: var(--paper);
-  box-shadow: 4px 4px 0 var(--ink);
-  font-size: .9rem;
-  font-weight: 700;
-}
-
 .admin-shell { width: min(1480px, calc(100% - 32px)); }
 .admin-header { margin-bottom: 28px; padding: clamp(20px, 4vw, 38px); border: 4px solid var(--ink); background: var(--paper); box-shadow: var(--shadow); }
 .admin-header nav { display: flex; flex-wrap: wrap; gap: 15px; font-weight: 800; text-decoration: underline; }

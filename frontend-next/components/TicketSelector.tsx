@@ -87,7 +87,6 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
       ) : (
         <Link className="pop-button pop-button--yellow" href="/account/login?next=%2Fevents%2Fsummer-roundup-2026%23tickets">Sign in to buy tickets</Link>
       )}
-      <p className="ticket-selector__note">Tickets use their own secure checkout and are never added to the merchandise cart. You’ll pay exactly the ticket total shown, with no booking fee.</p>
     </section>
   );
 }
