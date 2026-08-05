@@ -9,6 +9,7 @@ import {
   useMemo,
   useState
 } from "react";
+import { splitMerchProductTitle } from "../lib/product-title";
 import MerchImage from "./MerchImage";
 
 export type CartLine = {
@@ -206,24 +207,30 @@ export function CartLines({ compact = false }: { compact?: boolean }) {
   }
   return (
     <div className={`cart-lines${compact ? " is-compact" : ""}`}>
-      {lines.map((line) => (
-        <article className="cart-line" key={line.variantId}>
-          {line.imageUrl ? (
-            <MerchImage src={line.imageUrl} alt="" sizes={compact ? "92px" : "180px"} />
-          ) : <div className="cart-line__empty-image" />}
-          <div className="cart-line__copy">
-            <Link href={`/merch/${line.slug}`}>{line.title}</Link>
-            {line.variantLabel && <p>{line.variantLabel}</p>}
-            <strong>{new Intl.NumberFormat("en-GB", { style: "currency", currency: line.currency.toUpperCase() }).format(line.priceMinor / 100)}</strong>
-            <div className="cart-line__controls">
-              <button type="button" onClick={() => updateQuantity(line.variantId, line.quantity - 1)} aria-label={`Reduce ${line.title} quantity`}>−</button>
-              <span>{line.quantity}</span>
-              <button type="button" onClick={() => updateQuantity(line.variantId, line.quantity + 1)} aria-label={`Increase ${line.title} quantity`}>+</button>
-              <button type="button" className="cart-line__remove" onClick={() => removeLine(line.variantId)}>Remove</button>
+      {lines.map((line) => {
+        const { mainTitle, subtitle } = splitMerchProductTitle(line.title);
+        return (
+          <article className="cart-line" key={line.variantId}>
+            {line.imageUrl ? (
+              <MerchImage src={line.imageUrl} alt="" sizes={compact ? "92px" : "180px"} />
+            ) : <div className="cart-line__empty-image" />}
+            <div className="cart-line__copy">
+              <Link className="cart-line__title" href={`/merch/${line.slug}`}>
+                <span className="cart-line__title-main">{mainTitle}</span>
+                {subtitle && <span className="cart-line__title-subtitle">{subtitle}</span>}
+              </Link>
+              {line.variantLabel && <p>{line.variantLabel}</p>}
+              <strong>{new Intl.NumberFormat("en-GB", { style: "currency", currency: line.currency.toUpperCase() }).format(line.priceMinor / 100)}</strong>
+              <div className="cart-line__controls">
+                <button type="button" onClick={() => updateQuantity(line.variantId, line.quantity - 1)} aria-label={`Reduce ${line.title} quantity`}>−</button>
+                <span>{line.quantity}</span>
+                <button type="button" onClick={() => updateQuantity(line.variantId, line.quantity + 1)} aria-label={`Increase ${line.title} quantity`}>+</button>
+                <button type="button" className="cart-line__remove" onClick={() => removeLine(line.variantId)}>Remove</button>
+              </div>
             </div>
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }

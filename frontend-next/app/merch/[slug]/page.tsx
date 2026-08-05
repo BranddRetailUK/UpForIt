@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductDisplay from "../../../components/ProductDisplay";
 import { getMerchProduct } from "../../../lib/merch";
+import { splitMerchProductTitle } from "../../../lib/product-title";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const product = await getMerchProduct(params.slug).catch(() => null);
@@ -21,9 +22,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const product = await getMerchProduct(params.slug).catch(() => null);
   if (!product) notFound();
-  const titleParts = product.title.split("|").map((part) => part.trim()).filter(Boolean);
-  const productTitle = titleParts[0] || product.title;
-  const productSubtitle = titleParts.length > 1 ? titleParts.slice(1).join(" ") : "";
+  const { mainTitle: productTitle, subtitle: productSubtitle } = splitMerchProductTitle(product.title);
 
   return (
     <div className="inner-page section-wrap product-page">

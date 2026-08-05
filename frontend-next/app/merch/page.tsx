@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import MerchImage from "../../components/MerchImage";
 import { formatMerchMoney, getMerchCatalogue, type MerchProduct } from "../../lib/merch";
+import { splitMerchProductTitle } from "../../lib/product-title";
 
 export const metadata: Metadata = {
   title: "Merch",
@@ -9,11 +10,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/merch" }
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function MerchPage() {
   let products: MerchProduct[] = [];
   let unavailable = false;
   try {
-    products = await getMerchCatalogue();
+    products = await getMerchCatalogue({ noStore: true });
   } catch {
     unavailable = true;
   }
@@ -31,23 +34,29 @@ export default async function MerchPage() {
 
       {products.length > 0 ? (
         <section className="merch-grid" aria-label="UPFORIT products">
-          {products.map((product, index) => (
-            <Link className="merch-card" href={`/merch/${product.slug}`} key={product.id}>
-              <div className="merch-card__image">
-                <MerchImage
-                  src={product.images[0]?.src || ""}
-                  alt={product.images[0]?.alt || product.title}
-                  sizes="(max-width: 900px) 50vw, 360px"
-                  priority={index === 0}
-                />
-                <span>Shop it!</span>
-              </div>
-              <div className="merch-card__copy">
-                <h2>{product.title}</h2>
-                <p>From {formatMerchMoney(product.priceMinor, product.currency)}</p>
-              </div>
-            </Link>
-          ))}
+          {products.map((product, index) => {
+            const { mainTitle, subtitle } = splitMerchProductTitle(product.title);
+            return (
+              <Link className="merch-card" href={`/merch/${product.slug}`} key={product.id}>
+                <div className="merch-card__image">
+                  <MerchImage
+                    src={product.images[0]?.src || ""}
+                    alt={product.images[0]?.alt || product.title}
+                    sizes="(max-width: 900px) 50vw, 360px"
+                    priority={index === 0}
+                  />
+                  <span>Shop it!</span>
+                </div>
+                <div className="merch-card__copy">
+                  <h2>
+                    <span className="merch-card__title-main">{mainTitle}</span>
+                    {subtitle && <span className="merch-card__title-subtitle">{subtitle}</span>}
+                  </h2>
+                  <p>{formatMerchMoney(product.priceMinor, product.currency)}</p>
+                </div>
+              </Link>
+            );
+          })}
         </section>
       ) : (
         <section className="placeholder-card" aria-labelledby="merch-status">

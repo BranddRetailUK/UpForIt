@@ -153,13 +153,14 @@ artwork_folder=standalone_storefront_artwork/upforit; never shared creator_artwo
 admin_features=collection totals, live/draft/attention counts, search by title/id, publication filter, reorder, attach existing product as draft, edit, publish, hide, public view
 publish_requirements=product listing not globally/dashboard hidden; image exists; at least one variant has SKU + positive canonical price + positive weight
 catalog_visibility=mapping status live + valid visible product; draft/hidden mappings absent from public API
-publication_side_effect=signed callback to UpForIt `/api/merch/revalidate`; 60-second frontend cache remains fallback
+publication_side_effect=signed callback to UpForIt `/api/merch/revalidate`; product fetches retain a 60-second fallback while the `/merch` grid is no-store
 existing_product_attachment=admin can attach Good Game product ID as draft; internal standalone marker added
 authorization=Good Game admins only; regular creator sessions cannot forge standalone destination/header or publish
 product_removal=hide/unpublish; do not delete product automatically
 
 [merch_catalog_cache]
-catalog_fetch=Next fetch revalidate 60 seconds; tag `upforit-merch`
+catalog_grid_fetch=Next dynamic render + no-store fetch; catalogue changes are visible on the next `/merch` request without a stale Next response
+catalog_other_fetches=Next fetch revalidate 60 seconds; tag `upforit-merch`; no-store callers such as cart refresh remain canonical at request time
 product_fetch=Next fetch revalidate 60 seconds; tags `upforit-merch`,`upforit-product:<slug>`
 revalidation=callback invalidates shared `upforit-merch` tag and `/merch` layout; optional body productId also invalidates `upforit-product:<productId>`
 implementation_note=specific callback tag uses product ID while product fetch tag uses slug; shared `upforit-merch` tag currently guarantees correctness; if shared invalidation is narrowed, reconcile ID/slug tagging first
@@ -170,13 +171,15 @@ available_variants=filter upstream variants where available=true
 default_variant=first available
 options=prefer upstream option definitions; otherwise derive Option 1/2/3 unique values
 option_change=prefer variant preserving other selected option values; fall back to first available variant matching changed option
-quantity_selector=1..5 per add action
+title_split=shared `splitMerchProductTitle` helper splits on `|`; first segment is the main title and remaining segments form the smaller product-type subtitle
+quantity_selector=absent on product page; each add action adds one unit and quantity is adjusted in cart
 line_image=variant image ID match else first product image
 unavailable_state=no available variant -> Currently unavailable; no add button
 
 [cart_contract]
 storage_key=upforit.merch.cart.v1 in localStorage
 stored_shape=productId,variantId,slug,title,variantLabel,imageUrl,priceMinor,currency,quantity
+title_display=drawer and full cart use the shared product-title split; separator hidden and product-type subtitle shown beneath the main title
 storage_security=display cache only; never authoritative for price/availability/checkout
 hydrate=normalize numeric variant IDs; quantity cap 1..20; fetch canonical cart once after restore
 hydrate_failure=retain normalized stored lines and log generic warning; later cart-page refresh/Good Game checkout still fail closed against canonical state
