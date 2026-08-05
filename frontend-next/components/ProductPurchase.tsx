@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import type { MerchImage, MerchProduct } from "../lib/merch";
 import { useCart } from "./CartProvider";
+import { useMetaTracking } from "./MetaTrackingProvider";
 
 export default function ProductPurchase({
   product,
@@ -17,6 +18,7 @@ export default function ProductPurchase({
 }) {
   const available = product.variants.filter((variant) => variant.available);
   const { addLine } = useCart();
+  const { track } = useMetaTracking();
   const variant = useMemo(
     () => available.find((entry) => entry.id === variantId) || available[0],
     [available, variantId]
@@ -58,6 +60,30 @@ export default function ProductPurchase({
     currency: product.currency.toUpperCase()
   }).format(variant.priceMinor / 100);
 
+  function addToCart() {
+    addLine({
+      productId: product.id,
+      productKind: product.productKind || "",
+      variantId: variant.id,
+      slug: product.slug,
+      title: product.title,
+      variantLabel,
+      imageUrl: selectedImage?.src || product.images[0]?.src || "",
+      priceMinor: variant.priceMinor,
+      currency: product.currency,
+      quantity: 1
+    });
+    track("AddToCart", {
+      content_ids: [variant.id],
+      content_name: product.title,
+      content_category: "merch",
+      content_type: "product",
+      contents: [{ id: variant.id, quantity: 1, item_price: variant.priceMinor / 100 }],
+      value: variant.priceMinor / 100,
+      currency: product.currency.toUpperCase()
+    });
+  }
+
   return (
     <div className="product-purchase">
       <p className="product-summary__price">{formattedPrice}</p>
@@ -76,18 +102,7 @@ export default function ProductPurchase({
       <button
         className="pop-button pop-button--pink product-purchase__button"
         type="button"
-        onClick={() => addLine({
-          productId: product.id,
-          productKind: product.productKind || "",
-          variantId: variant.id,
-          slug: product.slug,
-          title: product.title,
-          variantLabel,
-          imageUrl: selectedImage?.src || product.images[0]?.src || "",
-          priceMinor: variant.priceMinor,
-          currency: product.currency,
-          quantity: 1
-        })}
+        onClick={addToCart}
       >
         Add to cart
       </button>

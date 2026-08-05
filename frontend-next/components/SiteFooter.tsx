@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import { NAV_ITEMS, SOCIAL_LINKS } from "../lib/site";
 import CloudinaryImage from "./CloudinaryImage";
+import CookieSettingsButton from "./CookieSettingsButton";
 
 export default function SiteFooter() {
   return (
@@ -40,7 +41,11 @@ export default function SiteFooter() {
           ))}
         </div>
       </div>
-      <p className="site-footer__legal">© 2026 UPFORIT. All good vibes reserved.</p>
+      <p className="site-footer__legal">
+        <span>© 2026 UPFORIT. All good vibes reserved.</span>
+        <Link href="/privacy">Privacy</Link>
+        <CookieSettingsButton />
+      </p>
     </footer>
   );
 }

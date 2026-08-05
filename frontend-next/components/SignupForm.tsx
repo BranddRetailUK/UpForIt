@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMetaTracking } from "./MetaTrackingProvider";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
 
 export default function SignupForm() {
+  const { createEventId, getBrowserContext, track } = useMetaTracking();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
   const [message, setMessage] = useState("");
@@ -33,17 +35,18 @@ export default function SignupForm() {
     setMessage("");
 
     try {
+      const eventId = createEventId("newsletter_lead");
       const response = await fetch("/api/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, meta: getBrowserContext(eventId) })
       });
 
       const text = await response.text();
       const data = text
-        ? (JSON.parse(text) as { ok?: boolean; error?: string })
+        ? (JSON.parse(text) as { ok?: boolean; created?: boolean; error?: string })
         : null;
 
       if (!response.ok) {
@@ -51,6 +54,7 @@ export default function SignupForm() {
       }
 
       setStatus("success");
+      if (data?.created !== false) track("Lead", { content_name: "UPFORIT newsletter" }, eventId);
       setMessage("");
       setEmail("");
     } catch (error) {
