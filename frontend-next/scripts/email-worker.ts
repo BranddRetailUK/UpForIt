@@ -39,8 +39,8 @@ async function claimJob() {
 
 async function deliver(job: Job) {
   const payload = decryptJson<Payload>(job.encrypted_payload);
-  const apiKey = process.env.SENDGRID_API_KEY || process.env.SNEDGRID_ACCESS_KEY;
-  if (!apiKey) throw new Error("SENDGRID_API_KEY (or legacy SNEDGRID_ACCESS_KEY) is not set");
+  const apiKey = process.env.SENDGRID_API_KEY || process.env.SENDGRID_ACCESS_KEY || process.env.SNEDGRID_ACCESS_KEY;
+  if (!apiKey) throw new Error("SENDGRID_API_KEY (or a legacy SendGrid access-key alias) is not set");
   const fromEmail = process.env.SENDGRID_FROM_EMAIL;
   if (!fromEmail) throw new Error("SENDGRID_FROM_EMAIL is not set");
   sgMail.setApiKey(apiKey);
