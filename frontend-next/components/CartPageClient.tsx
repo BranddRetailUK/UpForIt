@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getDisplayedMerchDeliveryMinor } from "../lib/merch-delivery";
 import { CartLines, useCart, type CartLine } from "./CartProvider";
+import { useMetaTracking } from "./MetaTrackingProvider";
 
 const CHECKOUT_INTENT_STORAGE_KEY = "upforit.merch.checkout-intent.v1";
 
@@ -24,6 +25,7 @@ function getCheckoutIntentKey(lines: CartLine[]) {
 
 export default function CartPageClient({ cancelled = false }: { cancelled?: boolean }) {
   const { lines, replaceLines } = useCart();
+  const { createEventId, track } = useMetaTracking();
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -64,6 +66,7 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
     setSubmitting(true);
     setError("");
     try {
+      const eventId = createEventId("merch_checkout");
       const response = await fetch("/api/merch/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -74,6 +77,15 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
       });
       const payload = await response.json();
       if (!response.ok || !payload.url) throw new Error(payload.error || "Unable to start checkout");
+      track("InitiateCheckout", {
+        content_ids: lines.map((line) => line.variantId),
+        content_category: "merch",
+        content_type: "product",
+        contents: lines.map((line) => ({ id: line.variantId, quantity: line.quantity, item_price: line.priceMinor / 100 })),
+        num_items: lines.reduce((sum, line) => sum + line.quantity, 0),
+        value: (total + deliveryMinor) / 100,
+        currency: "GBP"
+      }, eventId);
       window.location.assign(payload.url);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to start checkout");

@@ -60,6 +60,13 @@ GOOD_GAME_API_BASE=server-only Good Game API origin; production value https://da
 STANDALONE_STOREFRONT_KEY=server-only registry key; default/upforit production value `upforit`
 STANDALONE_STOREFRONT_UPFORIT_SECRET=server-only shared HMAC secret; required for checkout, confirmation, cache revalidation, and checkout requester hashing
 DATABASE_URL=server-only Postgres connection; required for email signup persistence and durable checkout intent/rate limiting
+NEXT_PUBLIC_META_PIXEL_ID=public Meta dataset/pixel identifier; the only Meta value allowed in the browser bundle
+META_CONVERSIONS_API_ACCESS_TOKEN=server-only token for consent-gated Lead and merch Purchase events
+META_AD_ACCOUNT_ID=server-only `act_...` identifier used by the Meta Ads Insights helper
+META_MARKETING_API_ACCESS_TOKEN=server-only `ads_read` token used by the Meta Ads Insights helper
+META_APP_ID,META_APP_SECRET=server-only Meta developer app credentials; app secret is used to generate Insights appsecret_proof
+META_GRAPH_API_VERSION=pinned Graph API version; production currently uses v25.0
+META_TEST_EVENT_CODE=optional temporary Events Manager test code; keep unset for normal production traffic
 NODE_ENV=production enables Postgres TLS with rejectUnauthorized=false
 STRIPE_*=intentionally unused by this application; Good Game owns Stripe
 failure_without_GOOD_GAME_API_BASE=catalog/product helpers return empty/null; checkout construction throws and API returns unavailable
@@ -68,7 +75,7 @@ failure_without_DATABASE_URL=signup fails; checkout guard fails closed with 503;
 
 [global_layout]
 file=frontend-next/app/layout.tsx
-composition=CartProvider > site-shell > PopArtScene + SiteHeader + main route content + SiteFooter
+composition=MetaTrackingProvider > CartProvider > site-shell > PopArtScene + SiteHeader + main route content + SiteFooter
 fonts=Google Bangers(display), Archivo Black(heavy), Space Grotesk(body) via next/font
 metadata_base=https://www.upforitevents.co.uk
 default_title=UPFORIT | Events, Music & Good Vibes
@@ -85,12 +92,13 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 /cart/confirmation=Stripe return page; validates session_id shape; polls settlement; noindex
 /socials=TikTok/Facebook/Instagram profile cards
 /contact=social-profile contact links only; no contact form/email endpoint
+/privacy=Meta advertising measurement disclosure and consent-management guidance
 
 [api_routes]
-POST_/api/signup=accept JSON or form email; trim/lowercase; regex validate; create `signups` table on demand; unique insert with ON CONFLICT DO NOTHING
+POST_/api/signup=accept JSON or form email; trim/lowercase; regex validate; create `signups` table on demand; unique insert with ON CONFLICT DO NOTHING; consent-gated new signups send deduplicated Meta Lead CAPI event
 POST_/api/merch/cart=public dynamic canonical cart refresh; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs
 POST_/api/merch/checkout=node runtime; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; reserve/rate-limit in Postgres; HMAC-sign server request to Good Game; return upstream Stripe Checkout URL/payload
-GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload
+GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload; paid consented sessions send deduplicated Meta Purchase CAPI event
 POST_/api/merch/revalidate=node runtime; Good Game callback; read exact raw body; require timestamp within 300 seconds + constant-time HMAC; invalidate merch tag/path
 
 [site_content_sources]
@@ -247,6 +255,15 @@ table=signups(id serial PK,email unique not null,created_at timestamptz)
 normalization=trim+lowercase
 duplicate_behavior=success without duplicate row
 current_scope=collect email only; no ESP/newsletter sync, consent ledger, confirmation email, unsubscribe route, or admin UI in this repo
+
+[meta_ads_measurement]
+consent_cookie=upforit_meta_consent; granted or denied for 180 days; Meta script and server events remain disabled until granted
+browser_events=PageView,merch ViewContent,AddToCart,InitiateCheckout,newsletter Lead,merch Purchase
+server_events=new newsletter Lead and paid merch Purchase; shared event_id deduplicates matching Pixel/CAPI events
+user_data=email is normalised and SHA-256 hashed server-side for new Lead; `_fbp`,`_fbc`,IP,user-agent used only after consent
+sensitive_url_rule=never send checkout session query parameters to Meta; confirmation pages scrub the browser URL before tracking
+ads_reporting=server-only last-30-day account Insights helper; protected UI ownership remains outside the production main branch until an authenticated admin surface exists
+secrets_rule=only NEXT_PUBLIC_META_PIXEL_ID may reach client code; all access tokens and app credentials remain server-only and ignored locally
 
 [database_runtime]
 module=frontend-next/lib/db.ts

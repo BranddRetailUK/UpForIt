@@ -1,20 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
+import { useMetaTracking } from "./MetaTrackingProvider";
 
 type Confirmation = {
   paid: boolean;
   status: string;
   orderNumber?: string | null;
   totalMinor?: number;
+  currency?: string;
+  meta?: { eventId: string; valueMinor: number; currency: string };
 };
 
 export default function CheckoutConfirmation({ sessionId }: { sessionId: string }) {
   const { clearCart } = useCart();
+  const { track } = useMetaTracking();
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [error, setError] = useState("");
+  const trackedEventId = useRef("");
+
+  useLayoutEffect(() => {
+    window.history.replaceState({}, "", "/cart/confirmation");
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -28,6 +37,14 @@ export default function CheckoutConfirmation({ sessionId }: { sessionId: string 
         if (!active) return;
         setConfirmation(payload);
         if (payload.paid) {
+          if (payload.meta?.eventId && trackedEventId.current !== payload.meta.eventId) {
+            track("Purchase", {
+              content_category: "merch",
+              value: payload.meta.valueMinor / 100,
+              currency: payload.meta.currency.toUpperCase()
+            }, payload.meta.eventId);
+            trackedEventId.current = payload.meta.eventId;
+          }
           clearCart();
           return;
         }

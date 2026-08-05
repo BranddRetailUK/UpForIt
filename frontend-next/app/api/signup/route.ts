@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import { getPool } from "../../../lib/db";
+import { getMetaRequestContext, metaSiteUrl, sendMetaConversion } from "../../../lib/meta";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   let email = "";
+  let meta: unknown;
 
   try {
     if (contentType.includes("application/json")) {
-      const body = (await request.json()) as { email?: string };
+      const body = (await request.json()) as { email?: string; meta?: unknown };
       email = body?.email ?? "";
+      meta = body?.meta;
     } else {
       const formData = await request.formData();
       const value = formData.get("email");
@@ -54,12 +57,29 @@ export async function POST(request: Request) {
       );
     `);
 
-    await client.query(
-      "INSERT INTO signups (email) VALUES ($1) ON CONFLICT (email) DO NOTHING",
+    const inserted = await client.query<{ id: number }>(
+      "INSERT INTO signups (email) VALUES ($1) ON CONFLICT (email) DO NOTHING RETURNING id",
       [normalized]
     );
 
-    return NextResponse.json({ ok: true });
+    const metaContext = getMetaRequestContext(request, meta);
+    if (inserted.rows[0] && metaContext.consent && metaContext.eventId) {
+      await sendMetaConversion({
+        eventName: "Lead",
+        eventId: metaContext.eventId,
+        eventSourceUrl: metaSiteUrl("/"),
+        contentName: "UPFORIT newsletter",
+        userData: {
+          email: normalized,
+          fbp: metaContext.fbp,
+          fbc: metaContext.fbc,
+          clientIp: metaContext.clientIp,
+          clientUserAgent: metaContext.clientUserAgent
+        }
+      });
+    }
+
+    return NextResponse.json({ ok: true, created: Boolean(inserted.rows[0]) });
   } catch (error) {
     console.error("Signup insert failed", error);
     return NextResponse.json(

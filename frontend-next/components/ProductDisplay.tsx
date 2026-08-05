@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { MerchImage, MerchProduct, MerchVariant } from "../lib/merch";
 import ResponsiveMerchImage, { optimizedMerchImageUrl } from "./MerchImage";
+import { useMetaTracking } from "./MetaTrackingProvider";
 import ProductPurchase from "./ProductPurchase";
 
 function optionValue(variant: MerchVariant, position: number) {
@@ -47,6 +48,7 @@ export default function ProductDisplay({
   productTitle: string;
   productSubtitle: string;
 }) {
+  const { consent, track } = useMetaTracking();
   const available = product.variants.filter((variant) => variant.available);
   const [variantId, setVariantId] = useState(available[0]?.id || "");
   const variant = available.find((entry) => entry.id === variantId) || available[0];
@@ -61,6 +63,18 @@ export default function ProductDisplay({
       preload.src = optimizedMerchImageUrl(image.src, 960);
     });
   }, [product.images]);
+
+  useEffect(() => {
+    if (consent !== "granted") return;
+    track("ViewContent", {
+      content_ids: [product.id],
+      content_name: product.title,
+      content_category: "merch",
+      content_type: "product",
+      value: product.priceMinor / 100,
+      currency: product.currency.toUpperCase()
+    });
+  }, [consent, product.currency, product.id, product.priceMinor, product.title, track]);
 
   function selectVariant(nextVariantId: string) {
     const nextVariant = available.find((entry) => entry.id === nextVariantId);

@@ -4,6 +4,7 @@ import PopArtScene from "../components/PopArtScene";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { CartProvider } from "../components/CartProvider";
+import { MetaTrackingProvider } from "../components/MetaTrackingProvider";
 import "./globals.css";
 
 const SOCIAL_SHARE_IMAGE =
@@ -77,14 +78,16 @@ export default function RootLayout({
       className={`${display.variable} ${heavy.variable} ${body.variable}`}
     >
       <body>
-        <CartProvider>
-          <div className="site-shell">
-            <PopArtScene />
-            <SiteHeader />
-            <main className="site-main">{children}</main>
-            <SiteFooter />
-          </div>
-        </CartProvider>
+        <MetaTrackingProvider pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID || ""}>
+          <CartProvider>
+            <div className="site-shell">
+              <PopArtScene />
+              <SiteHeader />
+              <main className="site-main">{children}</main>
+              <SiteFooter />
+            </div>
+          </CartProvider>
+        </MetaTrackingProvider>
       </body>
     </html>
   );
