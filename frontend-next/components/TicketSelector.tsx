@@ -80,13 +80,15 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
       </div>
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
-      {signedIn ? (
-        <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
-          {busy ? "Opening checkout…" : "Buy tickets"}
-        </button>
-      ) : (
-        <Link className="pop-button pop-button--yellow" href="/account/login?next=%2Fevents%2Fsummer-roundup-2026%23tickets">Sign in to buy tickets</Link>
-      )}
+      <div className="ticket-selector__action">
+        {signedIn ? (
+          <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
+            {busy ? "Opening checkout…" : "Buy tickets"}
+          </button>
+        ) : (
+          <Link className="pop-button pop-button--yellow" href="/account/login?next=%2Fevents%2Fsummer-roundup-2026%23tickets">Sign in to buy tickets</Link>
+        )}
+      </div>
     </section>
   );
 }

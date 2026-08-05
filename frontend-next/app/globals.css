@@ -356,6 +356,11 @@ select {
   text-transform: uppercase;
 }
 
+.ticket-selector__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .admin-shell { width: min(1480px, calc(100% - 32px)); }
 .admin-header { margin-bottom: 28px; padding: clamp(20px, 4vw, 38px); border: 4px solid var(--ink); background: var(--paper); box-shadow: var(--shadow); }
 .admin-header nav { display: flex; flex-wrap: wrap; gap: 15px; font-weight: 800; text-decoration: underline; }
@@ -471,6 +476,7 @@ select {
   }
   .ticket-tier select { grid-column: 1 / -1; width: 100%; }
   .ticket-selector__total { margin-block: 19px; padding: 13px 14px 11px; }
+  .ticket-selector__action .pop-button { width: 100%; }
   .check-in-manual { grid-template-columns: 1fr; }
   .admin-metrics { grid-template-columns: 1fr 1fr; }
   .admin-simulated-purchase__controls { grid-template-columns: 1fr; }

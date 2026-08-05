@@ -58,6 +58,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const eventDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeZone: event.timezone }).format(new Date(event.starts_at));
   const eventTime = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at));
   const endTime = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at));
+  const eventDay = new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: event.timezone }).format(new Date(event.starts_at));
+  const eventHour = eventTime.split(":")[0];
   const activeSortOrder = tierResult.rows.find((tier) => tier.is_active)?.sort_order;
 
   return (
@@ -69,9 +71,27 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
         </h1>
         <p className="event-description">{event.description}</p>
         <div className="event-facts">
-          <div className="event-fact event-fact--yellow"><div><span className="event-fact__label">Date</span><span>{eventDate}</span></div></div>
-          <div className="event-fact event-fact--pink"><div><span className="event-fact__label">Time</span><span>{eventTime}–{endTime}</span></div></div>
-          <div className="event-fact event-fact--blue"><div><span className="event-fact__label">Venue</span><span>{event.venue_name}</span></div></div>
+          <div className="event-fact event-fact--yellow">
+            <span className="event-fact__icon" aria-hidden="true">{eventDay}</span>
+            <div>
+              <span className="event-fact__label">Date</span>
+              <time dateTime={new Date(event.starts_at).toISOString()}>{eventDate}</time>
+            </div>
+          </div>
+          <div className="event-fact event-fact--pink">
+            <span className="event-fact__icon" aria-hidden="true">{eventHour}</span>
+            <div>
+              <span className="event-fact__label">Time</span>
+              <time dateTime={new Date(event.starts_at).toISOString()}>{eventTime}–{endTime}</time>
+            </div>
+          </div>
+          <div className="event-fact event-fact--blue">
+            <span className="event-fact__icon event-fact__icon--pin" aria-hidden="true">●</span>
+            <div>
+              <span className="event-fact__label">Venue</span>
+              <span>{event.venue_name}</span>
+            </div>
+          </div>
         </div>
         <TicketSelector
           signedIn={Boolean(user)}
