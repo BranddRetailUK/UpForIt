@@ -32,11 +32,10 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
   if (!order || order.status === "pending") return <p>Payment received. We’re issuing your tickets now…</p>;
   if (order.status !== "paid") return <p>Your order status is {order.status}. Please contact us if this looks wrong.</p>;
   return (
-    <div>
-      <p className="form-message form-message--success">Your tickets are ready. A confirmation email is on its way.</p>
-      <p>Order <strong>{order.order_number}</strong></p>
-      <Link className="pop-button pop-button--yellow" href={`/account/orders/${order.id}`}>View tickets</Link>
+    <div className="ticket-confirmation">
+      <p className="form-message form-message--success ticket-confirmation__message">Your tickets are ready. A confirmation email is on its way.</p>
+      <p className="ticket-confirmation__order">Order <strong>{order.order_number}</strong></p>
+      <Link className="pop-button pop-button--yellow ticket-confirmation__action" href={`/account/orders/${order.id}`}>View tickets</Link>
     </div>
   );
 }
-

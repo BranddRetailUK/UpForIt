@@ -14,10 +14,11 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setError("");
     setMessage("");
     setBusy(true);
-    const data = new FormData(event.currentTarget);
+    const data = new FormData(form);
     const endpoints: Record<Mode, string> = {
       signup: "/api/auth/register",
       login: "/api/auth/login",
@@ -45,10 +46,10 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
         router.push("/account/login?reset=1");
       } else if (mode === "signup") {
         setMessage("Account created. Check your email to verify it before signing in.");
-        event.currentTarget.reset();
+        form.reset();
       } else {
         setMessage("If that email belongs to an account, a reset link is on its way.");
-        event.currentTarget.reset();
+        form.reset();
       }
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : "Something went wrong.");

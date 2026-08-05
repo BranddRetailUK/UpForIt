@@ -167,6 +167,25 @@ select {
 .form-message--error { background: #ffd5e7; }
 .form-message--success { background: #bdffcb; }
 
+.ticket-confirmation {
+  display: grid;
+}
+
+.ticket-confirmation__message {
+  text-align: center;
+}
+
+.ticket-confirmation__order {
+  padding: clamp(22px, 4vw, 30px) 8px;
+  font-size: clamp(1.2rem, 3vw, 1.45rem);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.ticket-confirmation__action {
+  justify-self: center;
+}
+
 .text-button {
   border: 0;
   background: transparent;
@@ -207,7 +226,13 @@ select {
 
 .ticket-wallet { margin-top: 28px; }
 .ticket-wallet__ticket { align-items: flex-start; background: var(--yellow); }
-.ticket-wallet__ticket img { width: min(220px, 45vw); border: 2px solid var(--ink); }
+.ticket-wallet__ticket img {
+  width: min(220px, 45vw);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--ink);
+  object-fit: contain;
+}
 
 .inner-page.event-detail-page {
   padding-top: clamp(28px, 3vw, 46px);
@@ -523,6 +548,7 @@ select {
 @media (max-width: 620px) {
   .account-heading, .admin-header, .ticket-wallet__ticket { flex-direction: column; }
   .ticket-wallet__ticket img { width: 100%; }
+  .ticket-confirmation__action { width: 100%; }
   .account-logout { justify-content: stretch; }
   .account-logout .pop-button { width: 100%; }
   .event-description { font-size: 1rem; line-height: 1.45; }
