@@ -6,7 +6,7 @@ export default function LogoutButton() {
   const router = useRouter();
   return (
     <button
-      className="text-button"
+      className="pop-button pop-button--pink"
       type="button"
       onClick={async () => {
         await fetch("/api/auth/logout", { method: "POST" });
@@ -14,8 +14,7 @@ export default function LogoutButton() {
         router.refresh();
       }}
     >
-      Sign out
+      Log out
     </button>
   );
 }
-

@@ -38,7 +38,6 @@ export default async function AccountPage() {
       <section className="account-panel account-panel--wide">
         <div className="account-heading">
           <div><p className="comic-kicker comic-kicker--yellow">Your backstage pass</p><h1>Hi, {user.displayName}</h1></div>
-          <LogoutButton />
         </div>
         <p>{user.email}</p>
         <div className="account-actions">
@@ -57,6 +56,9 @@ export default async function AccountPage() {
             ))}
           </div>
         ) : <p>You don’t have any ticket orders yet. <Link href="/events">See events</Link>.</p>}
+        <div className="account-logout">
+          <LogoutButton />
+        </div>
       </section>
     </div>
   );
