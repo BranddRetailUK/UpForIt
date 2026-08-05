@@ -53,17 +53,19 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
             ? "Sold out"
             : tier.status === "reserved"
               ? "All remaining tickets are currently held"
-              : tier.status === "upcoming"
-                ? "Coming next"
-                : tier.remaining === null
-                  ? "On sale — unlimited allocation"
-                  : `On sale — ${tier.remaining} remaining`;
+              : tier.remaining === null
+                ? "On sale — unlimited allocation"
+                : `On sale — ${tier.remaining} remaining`;
           return (
-          <div className={`ticket-tier${tier.active ? "" : " is-inactive"}${tier.status === "sold_out" ? " is-sold-out" : ""}`} key={tier.id}>
-            <span><strong>{tier.name}</strong><small>{status}</small></span>
-            <strong>£{(tier.priceMinor / 100).toFixed(2)}</strong>
+          <div className={`ticket-tier ticket-tier--${tier.status}${tier.active ? "" : " is-inactive"}${tier.status === "sold_out" ? " is-sold-out" : ""}${tier.status === "upcoming" ? " has-coming-soon" : ""}`} key={tier.id}>
+            <span className="ticket-tier__copy">
+              <strong className="ticket-tier__name">{tier.name}</strong>
+              {tier.status === "upcoming" ? null : <small className="ticket-tier__status">{status}</small>}
+            </span>
+            <strong className="ticket-tier__price">£{(tier.priceMinor / 100).toFixed(2)}</strong>
             {tier.active ? (
               <select
+                className="ticket-tier__quantity"
                 aria-label={`${tier.name} quantity`}
                 value={quantities[tier.id] ?? 0}
                 onChange={(event) => setQuantities((current) => ({ ...current, [tier.id]: Number(event.target.value) }))}
@@ -71,6 +73,7 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
                 {Array.from({ length: maximum + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}
               </select>
             ) : null}
+            {tier.status === "upcoming" ? <span className="ticket-tier__coming-soon">Coming soon</span> : null}
           </div>
           );
         })}

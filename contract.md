@@ -144,6 +144,7 @@ contact_method=social links only
 source=frontend-next/app/globals.css + frontend-next/components/PopArtScene.tsx
 tokens=ink #050505; paper #ffffff; blue #008ef0; blue-light #29c6f5; blue-deep #0065d9; yellow #ffdf00; pink #d90062; muted #dfeef8
 style=bold pop-art/comic; thick black borders; offset shadows; halftone/radial blue scene; pink/yellow accents; rotated cards/stickers
+event_ticket_selector=Summer Roundup ticket module uses a cyan radial/halftone field, heavy outlined white/yellow tier panels, global heavy uppercase tier typography, and diagonal pink `Coming soon` ribbons over upcoming tiers
 responsive_breakpoints=900px,760px,720px,430px
 motion=PopArtScene scroll parallax; desktop direct and mobile eased; disabled for prefers-reduced-motion
 header=sticky; hides after 16px accumulated downward scroll; reappears upward/top/focus; mobile menu locks body and closes on Escape/route change
