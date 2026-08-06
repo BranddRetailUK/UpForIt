@@ -71,10 +71,13 @@ export default async function AdminPage() {
   const activeSortOrder = tiers.rows.find((tier) => tier.is_active)?.sort_order;
 
   return (
-    <div className="admin-shell section-wrap">
+    <div className="admin-shell admin-dashboard section-wrap">
       <header className="admin-header">
         <div><p className="comic-kicker comic-kicker--yellow">{process.env.APP_ENV === "testing" ? "Testing control centre" : "Operations control centre"}</p><h1>Ticket admin</h1><p>Signed in as {user.email}</p></div>
-        <nav><Link href="/admin/check-in">Open check-in</Link><Link href="/account">My account</Link></nav>
+        <nav>
+          <Link className="admin-header__check-in" href="/admin/check-in"><span className="admin-label--desktop">Open check-in</span><span className="admin-label--mobile">Scan QR</span></Link>
+          <Link className="admin-header__account-link" href="/account">My account</Link>
+        </nav>
       </header>
 
       <section className="admin-metrics" aria-label="Ticket metrics">
@@ -82,10 +85,10 @@ export default async function AdminPage() {
         <article><strong>£{(Number(metrics.revenue_minor) / 100).toFixed(2)}</strong><span>Revenue</span></article>
         <article><strong>{metrics.issued_tickets}</strong><span>Issued tickets</span></article>
         <article><strong>{metrics.checked_in}</strong><span>Checked in</span></article>
-        <article><strong>{metrics.accounts}</strong><span>Accounts</span></article>
+        <article className="admin-metric--accounts"><strong>{metrics.accounts}</strong><span>Accounts</span></article>
       </section>
 
-      <section className="admin-panel meta-ads-panel">
+      <section className="admin-panel meta-ads-panel admin-section--ads">
         <div className="meta-ads-panel__header">
           <div>
             <p className="comic-kicker comic-kicker--pink">Meta Marketing API</p>
@@ -121,7 +124,7 @@ export default async function AdminPage() {
       </section>
 
       {user.role === "admin" && process.env.APP_ENV === "testing" ? (
-        <section className="admin-panel">
+        <section className="admin-panel admin-section--simulation">
           <AdminSimulatedPurchase tiers={tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
             const reserved = Number(tier.reserved_quantity);
@@ -138,10 +141,10 @@ export default async function AdminPage() {
         </section>
       ) : null}
 
-      <section className="admin-panel">
+      <section className="admin-panel admin-section--tiers">
         <h2>Ticket tiers</h2>
-        <p>Sales advance automatically: 50 Early Bird tickets, then 100 Tier 1 tickets, then unlimited Tier 2 tickets.</p>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Tier</th><th>Price</th><th>Capacity</th><th>Paid</th><th>Reserved</th><th>Remaining</th><th>Status</th></tr></thead><tbody>
+        <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 Tier 1 tickets, then unlimited Tier 2 tickets.</p>
+        <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--reserved">Reserved</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
           {tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
             const reserved = Number(tier.reserved_quantity);
@@ -150,31 +153,31 @@ export default async function AdminPage() {
               paid >= tier.capacity || (activeSortOrder !== undefined && tier.sort_order < activeSortOrder)
             );
             const status = soldOut ? "Sold out" : tier.is_active ? (remaining === 0 ? "Fully reserved" : "On sale") : "Coming next";
-            return <tr key={tier.id}><td>{tier.name}</td><td>£{(tier.price_minor / 100).toFixed(2)}</td><td>{tier.capacity ?? "Unlimited"}</td><td>{paid}</td><td>{reserved}</td><td>{remaining ?? "Unlimited"}</td><td><span className={`admin-status${tier.is_active ? " admin-status--paid" : ""}`}>{status}</span></td></tr>;
+            return <tr key={tier.id}><td className="admin-tier-col--tier">{tier.name}</td><td className="admin-tier-col--price">£{(tier.price_minor / 100).toFixed(2)}</td><td className="admin-tier-col--capacity">{tier.capacity ?? "Unlimited"}</td><td className="admin-tier-col--paid">{paid}</td><td className="admin-tier-col--reserved">{reserved}</td><td className="admin-tier-col--remaining">{remaining ?? "Unlimited"}</td><td className="admin-tier-col--status"><span className={`admin-status${tier.is_active ? " admin-status--paid" : ""}`}>{status}</span></td></tr>;
           })}
         </tbody></table></div>
       </section>
 
-      <section className="admin-panel">
+      <section className="admin-panel admin-section--orders">
         <h2>Latest orders</h2>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Order</th><th>Buyer</th><th>Status</th><th>Tickets</th><th>Total</th><th>Email</th><th>Created</th><th /></tr></thead><tbody>
+        <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
           {orders.rows.map((order) => <tr key={order.id}>
-            <td><Link href={`/account/orders/${order.id}`}>{order.order_number}</Link>{order.simulated ? <small>Test simulation</small> : null}</td><td>{order.display_name}<small>{order.email}</small></td>
-            <td><span className={`admin-status admin-status--${order.status}`}>{order.status}</span></td><td>{order.ticket_count}</td><td>£{(order.total_minor / 100).toFixed(2)}</td>
-            <td>{order.confirmation_email_sent_at ? "Sent" : order.status === "paid" ? "Queued/pending" : "—"}</td><td>{new Date(order.created_at).toLocaleString("en-GB")}</td>
-            <td>{order.status === "paid" ? <AdminResendButton orderId={order.id} /> : null}</td>
+            <td className="admin-orders-col--order"><Link href={`/account/orders/${order.id}`}>{order.order_number}</Link>{order.simulated ? <small>Test simulation</small> : null}</td><td className="admin-orders-col--buyer">{order.display_name}<small>{order.email}</small></td>
+            <td className="admin-orders-col--status"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span></td><td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
+            <td className="admin-orders-col--mobile-hidden">{order.confirmation_email_sent_at ? "Sent" : order.status === "paid" ? "Queued/pending" : "—"}</td><td className="admin-orders-col--mobile-hidden">{new Date(order.created_at).toLocaleString("en-GB")}</td>
+            <td className="admin-orders-col--mobile-hidden">{order.status === "paid" ? <AdminResendButton orderId={order.id} /> : null}</td>
           </tr>)}
         </tbody></table></div>
       </section>
 
-      <section className="admin-panel">
+      <section className="admin-panel admin-section--email">
         <h2>Email delivery</h2>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Type</th><th>Status</th><th>Attempts</th><th>Created</th><th>Error</th></tr></thead><tbody>
           {emailJobs.rows.map((job) => <tr key={job.id}><td>{job.job_type.replace(/_/g, " ")}</td><td>{job.status}</td><td>{job.attempts}</td><td>{new Date(job.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{job.last_error || "—"}</td></tr>)}
         </tbody></table></div>
       </section>
 
-      <section className="admin-panel">
+      <section className="admin-panel admin-section--meta">
         <h2>Meta conversion delivery</h2>
         <p>Ticket checkout and paid Purchase events are delivered asynchronously. A Meta outage cannot hold up tickets or email.</p>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Event</th><th>Status</th><th>Attempts</th><th>API</th><th>Created</th><th>Error</th></tr></thead><tbody>
@@ -182,7 +185,7 @@ export default async function AdminPage() {
         </tbody></table></div>
       </section>
 
-      <section className="admin-panel">
+      <section className="admin-panel admin-section--webhooks">
         <h2>Stripe webhooks</h2>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Event</th><th>Type</th><th>Received</th><th>Result</th></tr></thead><tbody>
           {webhooks.rows.map((event) => <tr key={event.stripe_event_id}><td>{event.stripe_event_id}</td><td>{event.event_type}</td><td>{new Date(event.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{event.error_message || (event.processed_at ? "Processed" : "Pending")}</td></tr>)}

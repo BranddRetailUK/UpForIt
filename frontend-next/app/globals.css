@@ -574,6 +574,7 @@ select {
 .admin-shell { width: min(1480px, calc(100% - 32px)); }
 .admin-header { margin-bottom: 28px; padding: clamp(20px, 4vw, 38px); border: 4px solid var(--ink); background: var(--paper); box-shadow: var(--shadow); }
 .admin-header nav { display: flex; flex-wrap: wrap; gap: 15px; font-weight: 800; text-decoration: underline; }
+.admin-label--mobile { display: none; }
 .admin-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
 .admin-metrics article { display: grid; gap: 4px; padding: 20px; border: 3px solid var(--ink); background: var(--yellow); box-shadow: var(--shadow-small); }
 .admin-metrics strong { font-family: var(--font-heavy), sans-serif; font-size: clamp(1.5rem, 3vw, 2.7rem); }
@@ -3396,6 +3397,171 @@ a {
 
   .social-card__arrow {
     display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-shell {
+    text-align: center;
+  }
+
+  .admin-dashboard {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-dashboard > .admin-header { order: 1; }
+  .admin-dashboard > .admin-metrics { order: 2; }
+  .admin-dashboard > .admin-section--orders { order: 3; }
+  .admin-dashboard > .admin-section--tiers { order: 4; }
+  .admin-dashboard > .admin-section--simulation { order: 5; }
+  .admin-dashboard > .admin-section--meta { order: 6; }
+  .admin-dashboard > .admin-section--ads { order: 99; }
+
+  .admin-header,
+  .meta-ads-panel__header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .admin-header > div,
+  .admin-header nav,
+  .meta-ads-panel__header > div {
+    width: 100%;
+  }
+
+  .admin-header nav {
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .admin-header__account-link,
+  .admin-metric--accounts,
+  .admin-mobile-hidden,
+  .admin-section--email,
+  .admin-section--webhooks,
+  .admin-orders-col--mobile-hidden,
+  .admin-tier-col--reserved,
+  .admin-label--desktop {
+    display: none;
+  }
+
+  .admin-label--mobile {
+    display: inline;
+  }
+
+  .admin-header__check-in {
+    display: inline-flex;
+    width: min(100%, 360px);
+    min-height: 56px;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 24px 13px;
+    border: 4px solid var(--ink);
+    background: var(--yellow);
+    box-shadow: var(--shadow-small);
+    font-family: var(--font-heavy), Impact, sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: .025em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .admin-shell .comic-kicker {
+    display: table;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .admin-metrics article,
+  .meta-ads-metrics article {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .admin-simulated-purchase__controls label,
+  .admin-simulated-purchase__controls select {
+    text-align: center;
+    text-align-last: center;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    text-align: center;
+  }
+
+  .admin-section--orders .admin-table-wrap {
+    overflow: hidden;
+  }
+
+  .admin-orders-table {
+    min-width: 0;
+    table-layout: fixed;
+    font-size: .72rem;
+  }
+
+  .admin-orders-table th,
+  .admin-orders-table td {
+    padding: 8px 4px;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+  }
+
+  .admin-orders-col--order { width: 30%; }
+  .admin-orders-col--buyer { width: 43%; }
+  .admin-orders-col--status { width: 27%; }
+
+  .admin-orders-table small {
+    font-size: .64rem;
+    line-height: 1.25;
+  }
+
+  .admin-orders-table .admin-status {
+    max-width: 100%;
+    padding: 5px 4px;
+    font-size: .62rem;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-tier-table {
+    display: block;
+    min-width: 0;
+    font-size: .68rem;
+  }
+
+  .admin-tier-table thead,
+  .admin-tier-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-tier-table tr {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr .75fr 1fr .55fr 1.25fr;
+    width: 100%;
+  }
+
+  .admin-tier-table th,
+  .admin-tier-table td {
+    width: auto;
+    min-width: 0;
+    padding: 7px 3px;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+  }
+
+  .admin-tier-col--tier { order: 1; }
+  .admin-tier-col--remaining { order: 2; }
+  .admin-tier-col--price { order: 3; }
+  .admin-tier-col--capacity { order: 4; }
+  .admin-tier-col--paid { order: 5; }
+  .admin-tier-col--status { order: 6; }
+
+  .admin-tier-table .admin-status {
+    max-width: 100%;
+    padding: 4px 3px;
+    font-size: .58rem;
+    overflow-wrap: anywhere;
   }
 }
 
