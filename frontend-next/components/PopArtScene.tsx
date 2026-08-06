@@ -30,10 +30,16 @@ export default function PopArtScene() {
     );
     let frame = 0;
     let lastFrameTime = 0;
-    let currentShift = Math.max(-240, Math.min(0, window.scrollY * -0.22));
+    const getScrollShift = () => {
+      const scrollRange = Math.max(
+        1,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
+      return progress * -240;
+    };
 
-    const getScrollShift = () =>
-      Math.max(-240, Math.min(0, window.scrollY * -0.22));
+    let currentShift = getScrollShift();
 
     const paint = (time: number) => {
       const targetShift = getScrollShift();
@@ -65,10 +71,12 @@ export default function PopArtScene() {
 
     requestPaint();
     window.addEventListener("scroll", requestPaint, { passive: true });
+    window.addEventListener("resize", requestPaint, { passive: true });
     mobileViewport.addEventListener("change", requestPaint);
 
     return () => {
       window.removeEventListener("scroll", requestPaint);
+      window.removeEventListener("resize", requestPaint);
       mobileViewport.removeEventListener("change", requestPaint);
       if (frame) window.cancelAnimationFrame(frame);
     };

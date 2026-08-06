@@ -13,7 +13,7 @@ export const revalidate = 60;
 export default async function Home() {
   let featuredProducts: MerchProduct[] = [];
   try {
-    featuredProducts = (await getMerchCatalogue()).slice(0, 4);
+    featuredProducts = (await getMerchCatalogue()).slice(0, 6);
   } catch {
     featuredProducts = [];
   }
@@ -69,6 +69,7 @@ export default async function Home() {
       </section>
 
       <section className="home-merch section-wrap" aria-labelledby="home-merch-title">
+        <div className="home-section-divider" aria-hidden="true" />
         <div className="section-heading">
           <span aria-hidden="true">★</span>
           <h2 id="home-merch-title">Merch</h2>
