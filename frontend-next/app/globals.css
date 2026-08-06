@@ -486,6 +486,9 @@ select {
 
 .ticket-tier {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(84px, auto) 146px;
+  align-items: center;
   min-height: 96px;
   padding: 18px 20px;
   overflow: hidden;
@@ -526,8 +529,11 @@ select {
 }
 
 .ticket-tier__price {
-  flex: 0 0 auto;
+  justify-self: end;
+  min-width: 84px;
   font-size: clamp(1.15rem, 2.7vw, 1.6rem);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .ticket-tier__status {
@@ -541,15 +547,15 @@ select {
 
 .ticket-tier.has-coming-soon {
   min-height: 106px;
-  padding-right: clamp(178px, 32vw, 250px);
+  padding-right: 20px;
 }
 
 .ticket-tier__coming-soon {
   position: absolute;
   top: 50%;
-  right: clamp(-58px, -6vw, -34px);
-  width: clamp(205px, 30vw, 270px);
-  padding: 12px 28px 10px;
+  right: -18px;
+  width: 178px;
+  padding: 12px 20px 10px;
   border: 4px solid var(--ink);
   background: var(--pink);
   box-shadow: 5px 5px 0 var(--yellow), 8px 8px 0 var(--ink);
@@ -1197,6 +1203,53 @@ a {
 .primary-nav a:hover::after,
 .primary-nav a.is-active::after {
   transform: scaleX(1) rotate(-2deg);
+}
+
+.primary-nav__account-icon {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .primary-nav__item--account .primary-nav__account-text {
+    display: none;
+  }
+
+  .primary-nav__item--account a {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 3px solid var(--paper);
+    background: var(--pink);
+    color: var(--paper);
+    box-shadow: 4px 4px 0 var(--yellow);
+    transform: rotate(-2deg);
+  }
+
+  .primary-nav__item--account a::after {
+    display: none;
+  }
+
+  .primary-nav__item--account a:hover,
+  .primary-nav__item--account a.is-active {
+    background: var(--yellow);
+    color: var(--ink);
+    box-shadow: 5px 5px 0 var(--pink);
+    transform: translate(-2px, -2px) rotate(2deg);
+  }
+
+  .primary-nav__account-icon {
+    display: block;
+    width: 24px;
+    height: 24px;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 }
 
 .header-cart {
@@ -2868,12 +2921,16 @@ a {
   margin-inline: auto;
   padding: 47px 0 34px;
   display: grid;
-  grid-template-columns: minmax(220px, 1.3fr) 1fr auto;
+  grid-template-columns: minmax(220px, .9fr) minmax(0, 2fr);
+  grid-template-areas:
+    "brand socials"
+    "brand nav";
   align-items: center;
-  gap: 34px;
+  gap: 18px 34px;
 }
 
 .site-footer__brand {
+  grid-area: brand;
   max-width: 390px;
 }
 
@@ -2893,8 +2950,9 @@ a {
 }
 
 .footer-nav {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-area: nav;
+  display: flex;
+  justify-content: center;
   gap: 8px 25px;
 }
 
@@ -2912,8 +2970,10 @@ a {
 }
 
 .footer-socials {
+  grid-area: socials;
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  gap: 18px;
 }
 
 .footer-socials a {
@@ -2923,14 +2983,21 @@ a {
   place-items: center;
   border: 3px solid var(--paper);
   border-radius: 50%;
-  background: var(--pink);
+  background: var(--paper);
   font-family: var(--font-heavy), Impact, sans-serif;
   font-size: 0.72rem;
   box-shadow: 3px 3px 0 var(--yellow);
   transition: transform 150ms ease;
 }
 
+.footer-socials svg {
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+}
+
 .footer-socials a:hover {
+  background: var(--yellow);
   transform: translateY(-3px) rotate(-5deg);
 }
 
@@ -3134,6 +3201,10 @@ a {
     width: 100%;
   }
 
+  .primary-nav__item--account {
+    margin-top: 14px;
+  }
+
   .primary-nav a {
     width: 100%;
     padding: 14px 20px 10px;
@@ -3168,11 +3239,11 @@ a {
   }
 
   .site-footer__inner {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .footer-socials {
-    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "socials"
+      "nav";
   }
 }
 
@@ -3275,6 +3346,60 @@ a {
     padding-top: 63px;
   }
 
+  .account-dashboard-page .account-panel {
+    text-align: center;
+  }
+
+  .account-dashboard-page .account-heading {
+    align-items: center;
+  }
+
+  .account-dashboard-page .account-actions {
+    justify-content: center;
+  }
+
+  .account-dashboard-page .order-list__item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .events-page.inner-page {
+    padding-top: 26px;
+  }
+
+  .events-page .page-intro {
+    display: none;
+  }
+
+  .events-page .event-card {
+    width: 100%;
+    margin-top: 12px;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--ink);
+  }
+
+  .events-page .event-card__burst {
+    display: none;
+  }
+
+  .events-page .event-card__eyebrow {
+    border-color: var(--ink);
+    background: var(--yellow);
+    color: var(--ink);
+  }
+
+  .events-page .coming-soon-strip {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
   .page-intro h1 {
     font-size: clamp(4.6rem, 25vw, 7rem);
     -webkit-text-stroke-width: 2px;
@@ -3355,11 +3480,18 @@ a {
   .footer-nav {
     width: min(320px, 100%);
     margin-inline: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .footer-nav a {
+    justify-content: center;
+    text-align: center;
   }
 
   .footer-socials {
-    grid-column: auto;
-    justify-content: center;
+    gap: 26px;
   }
 }
 

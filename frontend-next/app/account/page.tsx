@@ -34,7 +34,7 @@ export default async function AccountPage() {
   );
 
   return (
-    <div className="inner-page section-wrap account-page">
+    <div className="inner-page section-wrap account-page account-dashboard-page">
       <section className="account-panel account-panel--wide">
         <div className="account-heading">
           <div><p className="comic-kicker comic-kicker--yellow">Your backstage pass</p><h1>Hi, {user.displayName}</h1></div>

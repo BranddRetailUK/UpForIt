@@ -3,6 +3,7 @@ import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import { NAV_ITEMS, SOCIAL_LINKS } from "../lib/site";
 import CloudinaryImage from "./CloudinaryImage";
 import CookieSettingsButton from "./CookieSettingsButton";
+import SocialBrandIcon from "./SocialBrandIcon";
 
 export default function SiteFooter() {
   return (
@@ -33,10 +34,10 @@ export default function SiteFooter() {
               href={social.href}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`${social.shortLabel}: UPFORIT on ${social.name}`}
+              aria-label={`UPFORIT on ${social.name}`}
               key={social.name}
             >
-              {social.shortLabel}
+              <SocialBrandIcon name={social.name} idPrefix="site-footer" />
             </a>
           ))}
         </div>

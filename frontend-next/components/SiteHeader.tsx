@@ -130,14 +130,31 @@ export default function SiteHeader() {
                   : pathname.startsWith(item.href);
 
               return (
-                <li key={item.href}>
+                <li
+                  className={item.href === "/account" ? "primary-nav__item--account" : undefined}
+                  key={item.href}
+                >
                   <Link
                     className={active ? "is-active" : undefined}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
+                    aria-label={item.href === "/account" ? "Account" : undefined}
                     onClick={() => setMenuOpen(false)}
                   >
-                    {item.label}
+                    {item.href === "/account" ? (
+                      <>
+                        <span className="primary-nav__account-text">{item.label}</span>
+                        <svg
+                          className="primary-nav__account-icon"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M4.5 21c.6-4.2 3.1-6.3 7.5-6.3s6.9 2.1 7.5 6.3" />
+                        </svg>
+                      </>
+                    ) : item.label}
                   </Link>
                 </li>
               );

@@ -97,14 +97,12 @@ export default function TicketSelector({
             ? "Sold out"
             : tier.status === "reserved"
               ? "All remaining tickets are currently held"
-              : tier.remaining === null
-                ? "On sale — unlimited allocation"
-                : `On sale — ${tier.remaining} remaining`;
+              : null;
           return (
           <div className={`ticket-tier ticket-tier--${tier.status}${tier.active ? "" : " is-inactive"}${tier.status === "sold_out" ? " is-sold-out" : ""}${tier.status === "upcoming" ? " has-coming-soon" : ""}`} key={tier.id}>
             <span className="ticket-tier__copy">
               <strong className="ticket-tier__name">{tier.name}</strong>
-              {tier.status === "upcoming" ? null : <small className="ticket-tier__status">{status}</small>}
+              {status ? <small className="ticket-tier__status">{status}</small> : null}
             </span>
             <strong className="ticket-tier__price">£{(tier.priceMinor / 100).toFixed(2)}</strong>
             {tier.active ? (

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function EventsPage() {
   return (
-    <div className="inner-page section-wrap">
+    <div className="inner-page section-wrap events-page">
       <header className="page-intro">
         <p className="comic-kicker comic-kicker--yellow">Save the date</p>
         <h1>Events</h1>
