@@ -7,6 +7,10 @@ export const NAV_ITEMS = [
   { href: "/account", label: "Account" }
 ] as const;
 
+export const PRIMARY_NAV_ITEMS = NAV_ITEMS.filter(
+  (item) => item.href !== "/contact"
+);
+
 export const SOCIAL_LINKS = [
   {
     name: "TikTok",

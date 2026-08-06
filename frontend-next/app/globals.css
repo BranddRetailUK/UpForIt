@@ -326,6 +326,62 @@ select {
   object-fit: contain;
 }
 
+@media (min-width: 721px) {
+  .account-order-panel {
+    text-align: center;
+  }
+
+  .account-order__number {
+    display: table;
+    margin: 0 auto 14px;
+    text-align: center;
+  }
+
+  .account-order__event-details {
+    max-width: 820px;
+    margin: 0 auto 22px;
+    font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+    font-weight: 800;
+    line-height: 1.45;
+  }
+
+  .account-order__download {
+    display: flex;
+    width: fit-content;
+    margin-inline: auto;
+  }
+
+  .account-order-panel .ticket-wallet {
+    grid-template-columns: minmax(0, 480px);
+    justify-content: center;
+  }
+
+  .account-order-panel .ticket-wallet__ticket {
+    width: 100%;
+    padding: 24px;
+  }
+
+  .account-order-panel .ticket-wallet__position {
+    font-size: .9rem;
+  }
+
+  .account-order-panel .ticket-wallet__copy strong {
+    display: block;
+    font-size: 1.4rem;
+    line-height: 1.2;
+  }
+
+  .account-order-panel .ticket-wallet__copy small {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .account-order-panel .ticket-wallet__ticket img {
+    margin-inline: auto;
+  }
+}
+
 .inner-page.event-detail-page {
   padding-top: clamp(28px, 3vw, 46px);
 }
@@ -2667,6 +2723,12 @@ a {
 
 .social-card--3 .social-card__icon {
   background: var(--yellow);
+}
+
+.social-card__icon svg {
+  width: 38px;
+  height: 38px;
+  overflow: visible;
 }
 
 .social-card__copy {

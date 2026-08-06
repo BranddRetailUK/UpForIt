@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
-import { NAV_ITEMS } from "../lib/site";
+import { PRIMARY_NAV_ITEMS } from "../lib/site";
 import CloudinaryImage from "./CloudinaryImage";
 import CartHeaderButton from "./CartHeaderButton";
 
@@ -123,7 +123,7 @@ export default function SiteHeader() {
           aria-label="Primary navigation"
         >
           <ul>
-            {NAV_ITEMS.map((item) => {
+            {PRIMARY_NAV_ITEMS.map((item) => {
               const active =
                 item.href === "/"
                   ? pathname === "/"
