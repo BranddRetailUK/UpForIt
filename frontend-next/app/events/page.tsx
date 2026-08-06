@@ -58,7 +58,7 @@ export default function EventsPage() {
 
         <div className="coming-soon-strip">
           <span aria-hidden="true">★</span>
-          Tickets from £5 — on sale now
+          Early bird tickets now on sale!
           <span aria-hidden="true">★</span>
         </div>
         <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026#tickets">

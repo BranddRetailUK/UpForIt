@@ -1210,46 +1210,48 @@ a {
 }
 
 @media (min-width: 901px) {
-  .primary-nav__item--account .primary-nav__account-text {
+  .primary-nav__item--account {
     display: none;
   }
+}
 
-  .primary-nav__item--account a {
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    display: grid;
-    place-items: center;
-    border: 3px solid var(--paper);
-    background: var(--pink);
-    color: var(--paper);
-    box-shadow: 4px 4px 0 var(--yellow);
-    transform: rotate(-2deg);
-  }
+.header-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
 
-  .primary-nav__item--account a::after {
-    display: none;
-  }
+.header-profile {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--paper);
+  background: var(--pink);
+  color: var(--paper);
+  box-shadow: 4px 4px 0 var(--yellow);
+  transform: rotate(-2deg);
+  transition: color 150ms ease, background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
 
-  .primary-nav__item--account a:hover,
-  .primary-nav__item--account a.is-active {
-    background: var(--yellow);
-    color: var(--ink);
-    box-shadow: 5px 5px 0 var(--pink);
-    transform: translate(-2px, -2px) rotate(2deg);
-  }
+.header-profile:hover,
+.header-profile.is-active {
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: 5px 5px 0 var(--pink);
+  transform: translate(-2px, -2px) rotate(2deg);
+}
 
-  .primary-nav__account-icon {
-    display: block;
-    width: 24px;
-    height: 24px;
-    overflow: visible;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+.header-profile svg {
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .header-cart {
@@ -2516,6 +2518,26 @@ a {
   overflow: hidden;
 }
 
+.events-page .page-intro {
+  display: none;
+}
+
+.events-page .event-card {
+  margin-top: 0;
+}
+
+@media (min-width: 721px) {
+  .events-page .event-card > .pop-button {
+    min-height: 81px;
+    padding: 26px 36px 20px;
+    font-size: 1.44rem;
+  }
+
+  .event-card--tickets .ticket-selector__action {
+    justify-content: center;
+  }
+}
+
 .event-card__burst {
   position: absolute;
   inset: -28%;
@@ -3126,6 +3148,10 @@ a {
     margin-left: auto;
   }
 
+  .header-profile {
+    display: none;
+  }
+
   .primary-nav {
     position: fixed;
     inset: 0;
@@ -3202,7 +3228,8 @@ a {
   }
 
   .primary-nav__item--account {
-    margin-top: 14px;
+    margin-top: 0;
+    padding-top: 22px;
   }
 
   .primary-nav a {
@@ -3228,6 +3255,17 @@ a {
     color: var(--ink);
     background: var(--yellow);
     box-shadow: 7px 7px 0 var(--pink);
+  }
+
+  .primary-nav__item--account a,
+  .primary-nav__item--account a.is-active {
+    border-color: var(--paper);
+    border-inline-color: var(--ink);
+    background: var(--yellow);
+    color: var(--paper);
+    box-shadow: 7px 7px 0 var(--pink);
+    -webkit-text-stroke: 1px var(--ink);
+    text-shadow: 2px 2px 0 var(--ink);
   }
 
   .event-facts {
@@ -3397,7 +3435,14 @@ a {
 
   .events-page .coming-soon-strip {
     border-color: var(--ink);
-    color: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-heavy), Impact, sans-serif;
+    font-weight: 900;
+    text-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .events-page .coming-soon-strip span {
+    color: var(--paper);
   }
 
   .page-intro h1 {
@@ -3516,7 +3561,7 @@ a {
     justify-self: center;
   }
 
-  .header-cart {
+  .header-actions {
     grid-column: 3;
     grid-row: 1;
     justify-self: end;

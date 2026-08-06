@@ -161,7 +161,20 @@ export default function SiteHeader() {
             })}
           </ul>
         </nav>
-        <CartHeaderButton />
+        <div className="header-actions">
+          <Link
+            className={`header-profile${pathname.startsWith("/account") ? " is-active" : ""}`}
+            href="/account"
+            aria-label="Account"
+            aria-current={pathname.startsWith("/account") ? "page" : undefined}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4.5 21c.6-4.2 3.1-6.3 7.5-6.3s6.9 2.1 7.5 6.3" />
+            </svg>
+          </Link>
+          <CartHeaderButton />
+        </div>
       </div>
     </header>
   );
