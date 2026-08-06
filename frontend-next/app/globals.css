@@ -1968,6 +1968,7 @@ a {
 .cart-drawer__actions p {
   font-size: .8rem;
   font-weight: 700;
+  text-align: center;
 }
 
 .cart-empty {
@@ -2019,6 +2020,14 @@ a {
   height: 185px;
 }
 
+.cart-page-lines .cart-line__variant {
+  color: var(--yellow);
+  font-size: 1.05rem;
+  font-weight: 900;
+  -webkit-text-stroke: .35px var(--ink);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
 .cart-summary {
   position: sticky;
   top: 112px;
@@ -2056,6 +2065,7 @@ a {
   display: block;
   margin-top: 15px;
   line-height: 1.45;
+  text-align: center;
 }
 
 .cart-alert {

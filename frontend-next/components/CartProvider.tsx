@@ -224,7 +224,7 @@ export function CartLines({ compact = false }: { compact?: boolean }) {
                 <span className="cart-line__title-main">{mainTitle}</span>
                 {subtitle && <span className="cart-line__title-subtitle">{subtitle}</span>}
               </Link>
-              {line.variantLabel && <p>{line.variantLabel}</p>}
+              {line.variantLabel && <p className="cart-line__variant">{line.variantLabel}</p>}
               <strong>{new Intl.NumberFormat("en-GB", { style: "currency", currency: line.currency.toUpperCase() }).format(line.priceMinor / 100)}</strong>
               <div className="cart-line__controls">
                 <button type="button" onClick={() => updateQuantity(line.variantId, line.quantity - 1)} aria-label={`Reduce ${line.title} quantity`}>−</button>
