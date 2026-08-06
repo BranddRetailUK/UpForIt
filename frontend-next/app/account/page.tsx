@@ -21,6 +21,7 @@ type OrderRow = {
 export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/account/login");
+  const firstName = user.displayName.trim().split(/\s+/)[0] || "there";
   const orders = await getPool().query<OrderRow>(
     `SELECT o.id, o.order_number, o.status, o.total_minor, o.created_at,
             e.title AS event_title, count(t.id)::text AS ticket_count
@@ -37,14 +38,14 @@ export default async function AccountPage() {
     <div className="inner-page section-wrap account-page account-dashboard-page">
       <section className="account-panel account-panel--wide">
         <div className="account-heading">
-          <div><p className="comic-kicker comic-kicker--yellow">Your backstage pass</p><h1>Hi, {user.displayName}</h1></div>
+          <div><p className="comic-kicker comic-kicker--yellow">Your backstage pass</p><h1>Hi, {firstName}!</h1></div>
         </div>
-        <p>{user.email}</p>
-        <div className="account-actions">
-          <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026#tickets">Buy tickets</Link>
-          {user.role === "admin" ? <Link className="pop-button pop-button--pink" href="/admin">Open ticket admin</Link> : null}
-          {user.role !== "customer" ? <Link className="pop-button pop-button--pink" href="/staff/events">Open staff tools</Link> : null}
-        </div>
+        {user.role !== "customer" ? (
+          <div className="account-actions">
+            {user.role === "admin" ? <Link className="pop-button pop-button--pink" href="/admin">Open ticket admin</Link> : null}
+            <Link className="pop-button pop-button--pink" href="/staff/events">Open staff tools</Link>
+          </div>
+        ) : null}
         <h2>Your ticket orders</h2>
         {orders.rows.length ? (
           <div className="order-list">

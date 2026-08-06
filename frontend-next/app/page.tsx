@@ -1,11 +1,23 @@
 import Link from "next/link";
 import CloudinaryImage from "../components/CloudinaryImage";
+import MerchProductCard from "../components/MerchProductCard";
 import SignupForm from "../components/SignupForm";
+import SummerRoundupCard from "../components/SummerRoundupCard";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
+import { getMerchCatalogue, type MerchProduct } from "../lib/merch";
 
 const VALUES = ["Good vibes only", "Respect the ravers", "No bad energy"];
 
-export default function Home() {
+export const revalidate = 60;
+
+export default async function Home() {
+  let featuredProducts: MerchProduct[] = [];
+  try {
+    featuredProducts = (await getMerchCatalogue()).slice(0, 4);
+  } catch {
+    featuredProducts = [];
+  }
+
   return (
     <>
       <section className="home-hero section-wrap" aria-labelledby="home-title">
@@ -49,6 +61,30 @@ export default function Home() {
               <h3>{value}</h3>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="home-events events-page section-wrap" aria-label="Featured event">
+        <SummerRoundupCard />
+      </section>
+
+      <section className="home-merch section-wrap" aria-labelledby="home-merch-title">
+        <div className="section-heading">
+          <span aria-hidden="true">★</span>
+          <h2 id="home-merch-title">Merch</h2>
+          <span aria-hidden="true">★</span>
+        </div>
+        {featuredProducts.length > 0 ? (
+          <div className="merch-grid home-merch__grid" aria-label="Featured UPFORIT products">
+            {featuredProducts.map((product) => (
+              <MerchProductCard product={product} headingLevel="h3" key={product.id} />
+            ))}
+          </div>
+        ) : null}
+        <div className="button-row home-merch__action">
+          <Link className="pop-button pop-button--pink" href="/merch">
+            Check the merch
+          </Link>
         </div>
       </section>
 

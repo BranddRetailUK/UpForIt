@@ -17,7 +17,6 @@ export default function SiteFooter() {
             sizes="180px"
             maxWidth={360}
           />
-          <p>Good vibes only. Respect the ravers. No bad energy.</p>
         </div>
 
         <nav className="footer-nav" aria-label="Footer navigation">

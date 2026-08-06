@@ -158,6 +158,21 @@ select {
   margin-top: 22px;
 }
 
+.account-dashboard-page .account-panel {
+  text-align: center;
+}
+
+.account-dashboard-page .account-heading,
+.account-dashboard-page .account-actions,
+.account-dashboard-page .account-logout {
+  justify-content: center;
+}
+
+.account-dashboard-page .account-heading > div {
+  display: grid;
+  justify-items: center;
+}
+
 .account-logout {
   display: flex;
   justify-content: flex-end;
@@ -265,13 +280,17 @@ select {
 
 .ticket-selector__support {
   margin: 20px 0 0;
+  color: var(--paper);
   text-align: center;
-  font-weight: 700;
+  font-weight: 900;
+  text-shadow: 1px 1px 0 var(--ink);
 }
 
 .ticket-selector__support a {
-  font-weight: 900;
+  color: var(--pink);
+  font-weight: 1000;
   text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 
 .order-list,
@@ -1526,7 +1545,7 @@ a {
   padding: 20px;
 }
 
-.merch-card__copy h2 {
+.merch-card__copy :is(h2, h3) {
   font-family: var(--font-heavy), Impact, sans-serif;
   font-size: clamp(1.15rem, 2vw, 1.5rem);
   line-height: 1.05;
@@ -2142,13 +2161,17 @@ a {
     padding: 12px;
   }
 
-  .merch-card__copy h2 {
+  .merch-card__copy :is(h2, h3) {
     font-size: clamp(.78rem, 3.5vw, 1rem);
   }
 
   .merch-card__copy p {
     margin-top: 8px;
     font-size: .9rem;
+  }
+
+  .home-merch__grid .merch-card:nth-child(4) {
+    display: block;
   }
 
   .product-gallery__thumbnails {
@@ -2236,6 +2259,30 @@ a {
 
 .values {
   padding-block: 40px clamp(90px, 11vw, 140px);
+}
+
+.home-events {
+  padding-bottom: clamp(90px, 11vw, 140px);
+}
+
+.home-events .event-card {
+  margin-top: 0;
+}
+
+.home-merch {
+  padding-bottom: clamp(90px, 11vw, 140px);
+}
+
+.home-merch__grid {
+  margin-top: 0;
+}
+
+.home-merch__grid .merch-card:nth-child(4) {
+  display: none;
+}
+
+.home-merch__action {
+  margin-top: clamp(38px, 5vw, 58px);
 }
 
 .section-heading {
@@ -3384,16 +3431,8 @@ a {
     padding-top: 63px;
   }
 
-  .account-dashboard-page .account-panel {
-    text-align: center;
-  }
-
   .account-dashboard-page .account-heading {
     align-items: center;
-  }
-
-  .account-dashboard-page .account-actions {
-    justify-content: center;
   }
 
   .account-dashboard-page .order-list__item {
