@@ -177,6 +177,7 @@ select {
 
 .account-created {
   display: grid;
+  justify-items: center;
   gap: 14px;
   margin-top: 28px;
   padding: clamp(24px, 5vw, 36px);
@@ -184,6 +185,7 @@ select {
   background: var(--yellow);
   box-shadow: 7px 7px 0 var(--pink);
   outline: none;
+  text-align: center;
 }
 
 .account-created__icon {
@@ -210,6 +212,7 @@ select {
 
 .account-created p {
   max-width: 48ch;
+  margin-inline: auto;
   line-height: 1.5;
 }
 
@@ -218,6 +221,7 @@ select {
 }
 
 .account-created__hint {
+  width: 100%;
   padding-top: 12px;
   border-top: 3px solid var(--ink);
   font-weight: 800;

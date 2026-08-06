@@ -1,4 +1,5 @@
 import sgMail from "@sendgrid/mail";
+import QRCode from "qrcode";
 import { getPool } from "../lib/db";
 import {
   resetPasswordEmailHtml,
@@ -12,8 +13,8 @@ import {
   metaDeliveryError,
   type MetaJobInput
 } from "../lib/meta-jobs";
-import { decryptJson } from "../lib/security";
-import { buildTicketPdf } from "../lib/ticket-document";
+import { createTicketQrToken, decryptJson } from "../lib/security";
+import { buildTicketPdf, getTicketDocumentRows } from "../lib/ticket-document";
 
 type Job = {
   id: string;
@@ -61,7 +62,13 @@ async function deliverEmail(job: Job) {
   let subject: string;
   let text: string;
   let html: string;
-  let attachments: Array<{ content: string; filename: string; type: string; disposition: string }> | undefined;
+  let attachments: Array<{
+    content: string;
+    filename: string;
+    type: string;
+    disposition: string;
+    contentId?: string;
+  }> | undefined;
 
   if (job.job_type === "verify_email") {
     subject = "Verify your UPFORIT account";
@@ -75,21 +82,47 @@ async function deliverEmail(job: Job) {
     html = resetPasswordEmailHtml({ displayName: payload.displayName, url: payload.url, siteUrl, originalRecipient });
   } else {
     if (!payload.orderId) throw new Error("Ticket confirmation job is missing orderId");
-    const pdf = await buildTicketPdf(payload.orderId);
-    subject = "Your UPFORIT tickets";
-    text = `Hi ${payload.displayName},\n\nYour UPFORIT tickets are attached in one PDF, with one page and one unique QR code per admission ticket. Save the PDF to your phone and show each QR code at entry.\n\nView your account: ${new URL("/account", siteUrl).toString()}`;
+    const ticketRows = await getTicketDocumentRows(payload.orderId);
+    const pdf = await buildTicketPdf(payload.orderId, ticketRows);
+    const singleTicket = ticketRows.length === 1 ? ticketRows[0] : undefined;
+    const qrContentId = singleTicket ? `upforit-ticket-${singleTicket.public_id}@upforitevents.co.uk` : undefined;
+    const qrImage = singleTicket
+      ? await QRCode.toBuffer(createTicketQrToken(singleTicket.public_id), {
+          type: "png",
+          width: 600,
+          margin: 2,
+          errorCorrectionLevel: "M"
+        })
+      : undefined;
+    subject = singleTicket ? "Your UPFORIT ticket" : "Your UPFORIT tickets";
+    text = singleTicket
+      ? `Hi ${payload.displayName},\n\nYour UPFORIT ticket is attached as a PDF. Its unique QR code is also included in the HTML email for quick access on your phone. Keep both private and show the QR code at entry.\n\nView your account: ${new URL("/account", siteUrl).toString()}`
+      : `Hi ${payload.displayName},\n\nYour UPFORIT tickets are attached in one PDF, with one page and one unique QR code per admission ticket. Save the PDF to your phone and show each QR code at entry.\n\nView your account: ${new URL("/account", siteUrl).toString()}`;
     html = ticketConfirmationEmailHtml({
       displayName: payload.displayName,
       accountUrl: new URL("/account", siteUrl).toString(),
       siteUrl,
-      originalRecipient
+      originalRecipient,
+      singleTicketQrCid: qrContentId,
+      singleTicketNumber: singleTicket?.ticket_number
     });
-    attachments = [{
-      content: Buffer.from(pdf).toString("base64"),
-      filename: "UPFORIT-tickets.pdf",
-      type: "application/pdf",
-      disposition: "attachment"
-    }];
+    attachments = [
+      {
+        content: Buffer.from(pdf).toString("base64"),
+        filename: singleTicket ? "UPFORIT-ticket.pdf" : "UPFORIT-tickets.pdf",
+        type: "application/pdf",
+        disposition: "attachment"
+      },
+      ...(qrImage && qrContentId
+        ? [{
+            content: qrImage.toString("base64"),
+            filename: "UPFORIT-ticket-QR.png",
+            type: "image/png",
+            disposition: "inline",
+            contentId: qrContentId
+          }]
+        : [])
+    ];
   }
 
   await sgMail.send({

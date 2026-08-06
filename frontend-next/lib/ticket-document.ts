@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { getPool } from "./db";
 import { createTicketQrToken } from "./security";
 
-type TicketDocumentRow = {
+export type TicketDocumentRow = {
   order_number: string;
   display_name: string;
   event_title: string;
@@ -30,8 +30,8 @@ export async function getTicketDocumentRows(orderId: string) {
   return result.rows;
 }
 
-export async function buildTicketPdf(orderId: string) {
-  const tickets = await getTicketDocumentRows(orderId);
+export async function buildTicketPdf(orderId: string, ticketRows?: TicketDocumentRow[]) {
+  const tickets = ticketRows ?? await getTicketDocumentRows(orderId);
   if (!tickets.length) throw new Error("No issued tickets found for this order");
   const document = await PDFDocument.create();
   document.setTitle(`${tickets[0].event_title} tickets — ${tickets[0].order_number}`);
@@ -65,4 +65,3 @@ export async function buildTicketPdf(orderId: string) {
   }
   return document.save();
 }
-
