@@ -29,6 +29,12 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
     for (const [key, value] of data.entries()) payload[key] = String(value);
     if (token) payload.token = token;
 
+    if (mode === "signup" && payload.password !== payload.confirmPassword) {
+      setError("Passwords do not match.");
+      setBusy(false);
+      return;
+    }
+
     try {
       const response = await fetch(endpoints[mode], {
         method: "POST",
@@ -83,6 +89,18 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
             required
           />
           {mode !== "login" ? <small>At least 12 characters.</small> : null}
+        </label>
+      ) : null}
+      {mode === "signup" ? (
+        <label>
+          Confirm password
+          <input
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            required
+          />
         </label>
       ) : null}
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}

@@ -12,12 +12,17 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Record<string, unknown>;
     const email = normalizedEmail(body.email);
     const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
+    const confirmPassword = typeof body.confirmPassword === "string" ? body.confirmPassword : "";
 
-    if (!email.includes("@") || displayName.length < 2 || displayName.length > 80 || !validPassword(body.password)) {
+    if (!email.includes("@") || displayName.length < 2 || displayName.length > 80 || !validPassword(password)) {
       return NextResponse.json(
         { error: "Enter your name, a valid email and a password of at least 12 characters." },
         { status: 400 }
       );
+    }
+    if (password !== confirmPassword) {
+      return NextResponse.json({ error: "Passwords do not match." }, { status: 400 });
     }
 
     const allowed = await consumeRateLimit(`register:${requestIp(request)}:${email}`, 5, 60);
@@ -29,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = randomUUID();
-    const passwordHash = await bcrypt.hash(body.password, 12);
+    const passwordHash = await bcrypt.hash(password, 12);
     const bootstrapEmail = normalizedEmail(process.env.ADMIN_BOOTSTRAP_EMAIL);
     const role = bootstrapEmail && email === bootstrapEmail ? "admin" : "customer";
     await getPool().query(
@@ -53,4 +58,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "We could not create your account." }, { status: 500 });
   }
 }
-

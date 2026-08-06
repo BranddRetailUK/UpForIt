@@ -98,7 +98,10 @@ async function deliverEmail(job: Job) {
     subject: `${prefix}${subject}`,
     text,
     html,
-    attachments
+    attachments,
+    trackingSettings: job.job_type === "verify_email" || job.job_type === "reset_password"
+      ? { clickTracking: { enable: false, enableText: false } }
+      : undefined
   });
   await getPool().query(
     `UPDATE email_jobs SET status = 'sent', sent_at = now(), locked_at = NULL, last_error = NULL, updated_at = now()
