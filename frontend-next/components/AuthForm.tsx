@@ -123,7 +123,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
       <div className="account-form__links">
         {mode === "login" ? <Link href="/account/forgot-password">Forgot password?</Link> : null}
         {mode !== "login" ? <Link href={nextPath ? `/account/login?next=${encodeURIComponent(nextPath)}` : "/account/login"}>Already have an account?</Link> : null}
-        {mode === "login" ? <Link href={nextPath ? `/account/signup?next=${encodeURIComponent(nextPath)}` : "/account/signup"}>Create an account</Link> : null}
+        {mode === "login" ? <Link className="account-form__create-link" href={nextPath ? `/account/signup?next=${encodeURIComponent(nextPath)}` : "/account/signup"}>Create an account</Link> : null}
       </div>
     </form>
   );

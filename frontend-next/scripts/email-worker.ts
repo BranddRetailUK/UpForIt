@@ -1,5 +1,10 @@
 import sgMail from "@sendgrid/mail";
 import { getPool } from "../lib/db";
+import {
+  resetPasswordEmailHtml,
+  ticketConfirmationEmailHtml,
+  verificationEmailHtml
+} from "../lib/email-templates";
 import { sendMetaConversion } from "../lib/meta-conversion";
 import {
   META_JOB_MAX_ATTEMPTS,
@@ -26,16 +31,6 @@ type MetaJob = {
   attempts: number;
 };
 
-function htmlShell(title: string, body: string) {
-  return `<!doctype html><html><body style="margin:0;background:#fff019;font-family:Arial,sans-serif;color:#111">
-    <div style="max-width:620px;margin:0 auto;padding:32px 20px">
-      <div style="background:#fff;border:4px solid #111;padding:28px;box-shadow:9px 9px 0 #f5277d">
-        <p style="font-size:32px;font-weight:900;margin:0 0 24px">UPFORIT</p>
-        <h1 style="font-size:26px;margin:0 0 18px">${title}</h1>${body}
-      </div>
-    </div></body></html>`;
-}
-
 async function claimEmailJob() {
   const result = await getPool().query<Job>(
     `WITH next_job AS (
@@ -61,9 +56,8 @@ async function deliverEmail(job: Job) {
   const testingRecipient = process.env.EMAIL_FORCE_RECIPIENT?.trim();
   const to = testingRecipient || payload.to;
   const prefix = process.env.EMAIL_SUBJECT_PREFIX?.trim() || "";
-  const originalRecipientNote = testingRecipient
-    ? `<p style="font-size:12px;color:#555">Testing redirect: originally addressed to ${payload.to}</p>`
-    : "";
+  const originalRecipient = testingRecipient ? payload.to : undefined;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.upforitevents.co.uk";
   let subject: string;
   let text: string;
   let html: string;
@@ -71,18 +65,25 @@ async function deliverEmail(job: Job) {
 
   if (job.job_type === "verify_email") {
     subject = "Verify your UPFORIT account";
-    text = `Hi ${payload.displayName}, verify your account: ${payload.url}`;
-    html = htmlShell("Verify your account", `<p>Hi ${payload.displayName},</p><p>Tap the button to verify your email and finish setting up your account.</p><p><a style="display:inline-block;background:#fff019;border:3px solid #111;color:#111;padding:12px 18px;font-weight:bold;text-decoration:none" href="${payload.url}">Verify email</a></p>${originalRecipientNote}`);
+    if (!payload.url) throw new Error("Verification email job is missing url");
+    text = `Hi ${payload.displayName},\n\nVerify your UPFORIT account:\n${payload.url}\n\nThis one-time link expires after 24 hours. If you did not create this account, ignore this email.`;
+    html = verificationEmailHtml({ displayName: payload.displayName, url: payload.url, siteUrl, originalRecipient });
   } else if (job.job_type === "reset_password") {
     subject = "Reset your UPFORIT password";
-    text = `Hi ${payload.displayName}, reset your password: ${payload.url}`;
-    html = htmlShell("Reset your password", `<p>Hi ${payload.displayName},</p><p>This link expires in one hour.</p><p><a style="display:inline-block;background:#fff019;border:3px solid #111;color:#111;padding:12px 18px;font-weight:bold;text-decoration:none" href="${payload.url}">Choose a new password</a></p>${originalRecipientNote}`);
+    if (!payload.url) throw new Error("Password reset email job is missing url");
+    text = `Hi ${payload.displayName},\n\nChoose a new UPFORIT password:\n${payload.url}\n\nThis one-time link expires in one hour. If you did not request it, ignore this email.`;
+    html = resetPasswordEmailHtml({ displayName: payload.displayName, url: payload.url, siteUrl, originalRecipient });
   } else {
     if (!payload.orderId) throw new Error("Ticket confirmation job is missing orderId");
     const pdf = await buildTicketPdf(payload.orderId);
     subject = "Your UPFORIT tickets";
-    text = `Hi ${payload.displayName}, your UPFORIT tickets are attached in one PDF, with one page and one unique QR code per admission ticket.`;
-    html = htmlShell("Your tickets are here!", `<p>Hi ${payload.displayName},</p><p>Your printable tickets are attached in one PDF. It contains one page and one unique QR code per admission ticket.</p><p>Each QR code admits one person and can only be checked in once. You can also find every ticket any time in your UPFORIT account.</p>${originalRecipientNote}`);
+    text = `Hi ${payload.displayName},\n\nYour UPFORIT tickets are attached in one PDF, with one page and one unique QR code per admission ticket. Save the PDF to your phone and show each QR code at entry.\n\nView your account: ${new URL("/account", siteUrl).toString()}`;
+    html = ticketConfirmationEmailHtml({
+      displayName: payload.displayName,
+      accountUrl: new URL("/account", siteUrl).toString(),
+      siteUrl,
+      originalRecipient
+    });
     attachments = [{
       content: Buffer.from(pdf).toString("base64"),
       filename: "UPFORIT-tickets.pdf",
@@ -99,9 +100,7 @@ async function deliverEmail(job: Job) {
     text,
     html,
     attachments,
-    trackingSettings: job.job_type === "verify_email" || job.job_type === "reset_password"
-      ? { clickTracking: { enable: false, enableText: false } }
-      : undefined
+    trackingSettings: { clickTracking: { enable: false, enableText: false } }
   });
   await getPool().query(
     `UPDATE email_jobs SET status = 'sent', sent_at = now(), locked_at = NULL, last_error = NULL, updated_at = now()

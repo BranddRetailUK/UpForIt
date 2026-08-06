@@ -143,6 +143,14 @@ select {
   text-decoration: underline;
 }
 
+.account-form__create-link {
+  margin-left: auto;
+  color: var(--pink);
+  font-weight: 900;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
 .account-actions {
   display: flex;
   flex-wrap: wrap;
