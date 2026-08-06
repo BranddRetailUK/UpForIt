@@ -13,16 +13,26 @@ export default function MerchProductCard({
   priority?: boolean;
 }) {
   const { mainTitle, subtitle } = splitMerchProductTitle(product.title);
+  const secondaryImage = product.images[1];
 
   return (
-    <Link className="merch-card" href={`/merch/${product.slug}`}>
+    <Link className={`merch-card${secondaryImage ? " has-secondary-image" : ""}`} href={`/merch/${product.slug}`}>
       <div className="merch-card__image">
         <MerchImage
           src={product.images[0]?.src || ""}
           alt={product.images[0]?.alt || product.title}
+          className="merch-card__image-primary"
           sizes="(max-width: 900px) 50vw, 360px"
           priority={priority}
         />
+        {secondaryImage ? (
+          <MerchImage
+            src={secondaryImage.src}
+            alt=""
+            className="merch-card__image-secondary"
+            sizes="(max-width: 900px) 50vw, 360px"
+          />
+        ) : null}
         <span>Shop it!</span>
       </div>
       <div className="merch-card__copy">
