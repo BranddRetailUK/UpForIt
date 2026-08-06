@@ -48,6 +48,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <div className="home-section-divider home-section-divider--hero section-wrap" aria-hidden="true" />
+
       <section className="values section-wrap" aria-labelledby="values-title">
         <div className="section-heading">
           <span aria-hidden="true">★</span>

@@ -1514,7 +1514,7 @@ a {
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-bottom: 5px solid var(--ink);
-  background: var(--yellow);
+  background: var(--paper);
 }
 
 .merch-card__image img {
@@ -3336,6 +3336,10 @@ a {
   }
 
   .home-events {
+    padding-bottom: 34px;
+  }
+
+  .home-hero {
     padding-bottom: 34px;
   }
 
