@@ -93,7 +93,7 @@ async function deliverEmail(job: Job) {
 
   await sgMail.send({
     to,
-    from: { email: fromEmail, name: process.env.SENDGRID_FROM_NAME || "UPFORIT Tickets" },
+    from: { email: fromEmail, name: process.env.SENDGRID_FROM_NAME || "UPFORIT Events" },
     replyTo: process.env.SENDGRID_REPLY_TO_EMAIL || fromEmail,
     subject: `${prefix}${subject}`,
     text,

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import AuthForm from "../../../components/AuthForm";
+import { safeNextPath } from "../../../lib/public-url";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ reset?: string; error?: string; next?: string }> }) {
   const query = await searchParams;
-  const nextPath = query.next?.startsWith("/") && !query.next.startsWith("//") ? query.next : undefined;
+  const nextPath = safeNextPath(query.next);
   return (
     <div className="inner-page section-wrap account-page">
       <section className="account-panel">

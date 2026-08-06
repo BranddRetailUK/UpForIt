@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession, SESSION_COOKIE, sessionCookieOptions } from "../../../../lib/auth";
 import { getPool } from "../../../../lib/db";
-import { publicUrl } from "../../../../lib/public-url";
+import { publicUrl, safeNextPath } from "../../../../lib/public-url";
 import { sha256 } from "../../../../lib/security";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
+  const nextPath = safeNextPath(request.nextUrl.searchParams.get("next"));
   const destination = publicUrl("/account/login", request.nextUrl.origin);
+  if (nextPath) destination.searchParams.set("next", nextPath);
   if (!token) {
     destination.searchParams.set("error", "invalid-token");
     return NextResponse.redirect(destination);
@@ -32,8 +34,8 @@ export async function GET(request: NextRequest) {
     await client.query("COMMIT");
 
     const session = await createSession(authToken.user_id);
-    const accountUrl = publicUrl("/account?verified=1", request.nextUrl.origin);
-    const response = NextResponse.redirect(accountUrl);
+    const verifiedDestination = publicUrl(nextPath || "/account?verified=1", request.nextUrl.origin);
+    const response = NextResponse.redirect(verifiedDestination);
     response.cookies.set(SESSION_COOKIE, session.token, sessionCookieOptions(session.expiresAt));
     return response;
   } catch (error) {

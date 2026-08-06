@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { safeNextPath } from "../lib/public-url";
 
 type Mode = "signup" | "login" | "forgot" | "reset";
 
@@ -28,6 +29,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
     const payload: Record<string, string> = {};
     for (const [key, value] of data.entries()) payload[key] = String(value);
     if (token) payload.token = token;
+    if (mode === "signup" && nextPath) payload.next = nextPath;
 
     if (mode === "signup" && payload.password !== payload.confirmPassword) {
       setError("Passwords do not match.");
@@ -45,13 +47,15 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
       if (!response.ok) throw new Error(result.error || "Something went wrong.");
 
       if (mode === "login") {
-        const destination = nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/account";
+        const destination = safeNextPath(nextPath) || "/account";
         router.push(destination);
         router.refresh();
       } else if (mode === "reset") {
         router.push("/account/login?reset=1");
       } else if (mode === "signup") {
-        setMessage("Account created. Check your email to verify it before signing in.");
+        setMessage(nextPath
+          ? "Account created. Check your email to verify it, then you’ll return to the tickets."
+          : "Account created. Check your email to verify it before signing in.");
         form.reset();
       } else {
         setMessage("If that email belongs to an account, a reset link is on its way.");

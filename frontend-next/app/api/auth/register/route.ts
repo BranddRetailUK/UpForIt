@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { consumeRateLimit, createSingleUseToken, normalizedEmail, validPassword } from "../../../../lib/auth";
 import { getPool } from "../../../../lib/db";
 import { enqueueEmail } from "../../../../lib/email-jobs";
+import { verificationUrl } from "../../../../lib/public-url";
 import { assertSameOrigin, requestIp } from "../../../../lib/request";
 
 export async function POST(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     if (!siteUrl) throw new Error("NEXT_PUBLIC_SITE_URL is not set");
     await enqueueEmail(
       "verify_email",
-      { to: email, displayName, url: `${siteUrl}/api/auth/verify?token=${encodeURIComponent(token)}` },
+      { to: email, displayName, url: verificationUrl(siteUrl, token, body.next).toString() },
       { userId }
     );
 
