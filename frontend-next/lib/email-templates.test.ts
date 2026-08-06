@@ -21,7 +21,12 @@ describe("transactional email templates", () => {
     expect(html).toContain("role=\"presentation\"");
     expect(html).toContain("#ffdf00");
     expect(html).toContain("#d90062");
-    expect(html).toContain("#29c6f5");
+    expect(html).toContain("#008ef0");
+    expect(html).toContain("WHITE_LOGO_WEB_filqtw");
+    expect(html).toContain("SUMMER_ROUND_UP_e2jcsl");
+    expect(html).toContain("b_rgb:050505");
+    expect(html).toContain("b_rgb:008ef0");
+    expect(html).toContain("content=\"light only\"");
     expect(html).toContain("token=test-token&amp;next=%2Fevents%23tickets");
     expect(html).not.toContain("<style");
     expect(html).not.toContain("class=");

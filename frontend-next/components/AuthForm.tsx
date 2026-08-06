@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { safeNextPath } from "../lib/public-url";
 
 type Mode = "signup" | "login" | "forgot" | "reset";
@@ -12,6 +12,12 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const successPanelRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (registeredEmail) successPanelRef.current?.focus();
+  }, [registeredEmail]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,9 +59,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
       } else if (mode === "reset") {
         router.push("/account/login?reset=1");
       } else if (mode === "signup") {
-        setMessage(nextPath
-          ? "Account created. Check your email to verify it, then you’ll return to the tickets."
-          : "Account created. Check your email to verify it before signing in.");
+        setRegisteredEmail(payload.email);
         form.reset();
       } else {
         setMessage("If that email belongs to an account, a reset link is on its way.");
@@ -66,6 +70,30 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
     } finally {
       setBusy(false);
     }
+  }
+
+  if (mode === "signup" && registeredEmail) {
+    return (
+      <section
+        className="account-created"
+        ref={successPanelRef}
+        role="status"
+        aria-live="polite"
+        tabIndex={-1}
+      >
+        <span className="account-created__icon" aria-hidden="true">✓</span>
+        <h2>Account created!</h2>
+        <p>
+          We’ve sent a verification link to <strong>{registeredEmail}</strong>.
+        </p>
+        <p>
+          Click the link to activate your account. You’ll be signed in automatically and {nextPath
+            ? "taken back to the tickets."
+            : "taken to your account."}
+        </p>
+        <p className="account-created__hint">Can’t see the email? Check your junk or spam folder.</p>
+      </section>
+    );
   }
 
   return (
