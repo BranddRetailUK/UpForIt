@@ -2,8 +2,8 @@
 format=ai_context_v1
 purpose=canonical repository context for future coding agents; prefer this file over inference; verify source/runtime state before destructive or production actions
 scope=BranddRetailUK/UpForIt repository, its native event-ticketing system, plus its explicit Good Game Apparel merch dependency
-last_source_audit=2026-08-05
-upforit_revision_at_audit=6df223c
+last_source_audit=2026-08-06
+upforit_revision_at_audit=c2602db+ticket-meta-integration
 good_game_revision_at_audit=7a04cb08
 secrets_policy=never write secret values, Stripe keys, database URLs, Railway tokens, or HMAC secrets into source/docs/client bundles/logs
 
@@ -49,9 +49,9 @@ target_port=8080
 railway_service_domain=frontend-production-7f37.up.railway.app
 canonical_custom_domain=www.upforitevents.co.uk
 canonical_origin=https://www.upforitevents.co.uk
-apex_domain=upforitevents.co.uk is GoDaddy-managed permanent 301 forwarding to canonical origin; apex is intentionally not attached to Railway
-apex_dns_rule=do not add CNAME @ in GoDaddy; GoDaddy does not provide apex CNAME flattening; forwarding owns GoDaddy-managed apex A records
-www_dns_rule=retain CNAME www -> Railway-provided target shown by Railway/GoDaddy; do not replace with apex forwarding A records
+apex_domain=upforitevents.co.uk is Cloudflare-proxied and permanently redirects to the canonical www origin
+apex_dns_rule=retain the proxied placeholder A record used by the Cloudflare apex-to-www redirect rule; preserve path and query string
+www_dns_rule=retain the proxied CNAME www -> 91uw3so1.up.railway.app
 deployment_rule=observe terminal Railway deployment SUCCESS before reporting a deploy complete
 
 [environment_contract]
@@ -78,6 +78,9 @@ AUTH_RATE_LIMIT_SECRET=server-only salt for login/signup/reset rate-limit bucket
 EMAIL_JOB_ENCRYPTION_KEY=server-only encryption key for durable email outbox payloads
 ADMIN_BOOTSTRAP_EMAIL=verified account email promoted to admin on initial registration
 SENDGRID_API_KEY=server-only worker credential; local SENDGRID_ACCESS_KEY and legacy misspelling SNEDGRID_ACCESS_KEY are accepted temporarily
+SENDGRID_FROM_EMAIL,SENDGRID_REPLY_TO_EMAIL=private worker sender/reply identity; production uses info@upforitevents.co.uk
+SENDGRID_FROM_NAME=private worker display name; production uses UPFORIT Tickets
+EMAIL_FORCE_RECIPIENT,EMAIL_SUBJECT_PREFIX=Testing-only outbound mail safety; both must be absent in Production
 EMAIL_FORCE_RECIPIENT=Testing safety override; all outbound mail is redirected to this address
 failure_without_GOOD_GAME_API_BASE=catalog/product helpers return empty/null; checkout construction throws and API returns unavailable
 failure_without_secret=signed operations fail; checkout guard returns secure checkout not configured/unavailable
@@ -121,7 +124,7 @@ POST_/api/auth/forgot-password=enumeration-safe one-hour reset email request
 POST_/api/auth/reset-password=single-use password replacement and all-session revocation
 POST_/api/tickets/checkout=authenticated server-priced event-ticket reservation and Stripe-hosted Checkout Session
 POST_/api/stripe/tickets-webhook=raw-body verified, livemode-guarded, idempotent native ticket fulfilment/refund processing
-GET_/api/tickets/orders/:id/pdf=owner/staff printable per-admission QR PDF
+GET_/api/tickets/orders/:id/pdf=owner/staff single printable order PDF with one page and one unique QR per admission ticket
 POST_/api/admin/check-in=staff-only atomic one-use QR/manual ticket check-in
 PATCH_/api/admin/ticket-types/:id=deprecated guard returning 409 because tier activation is automatic
 POST_/api/admin/simulated-purchase=admin-only and APP_ENV=testing-only purchase simulator; uses real order/ticket/PDF/email fulfilment without calling Stripe
@@ -294,11 +297,16 @@ current_scope=collect email only; no ESP/newsletter sync, consent ledger, confir
 
 [meta_ads_measurement]
 consent_cookie=upforit_meta_consent; granted or denied for 180 days; Meta script and server events remain disabled until granted
-browser_events=PageView,merch ViewContent,AddToCart,InitiateCheckout,newsletter Lead,merch Purchase
-server_events=new newsletter Lead and paid merch Purchase; shared event_id deduplicates matching Pixel/CAPI events
+browser_events=PageView,merch and ticket ViewContent,AddToCart,merch and ticket InitiateCheckout,newsletter Lead,merch and paid ticket Purchase
+server_events=new newsletter Lead, paid merch Purchase, and real paid ticket Purchase; shared event_id deduplicates matching Pixel/CAPI events
 user_data=email is normalised and SHA-256 hashed server-side for new Lead; `_fbp`,`_fbc`,IP,user-agent used only after consent
 sensitive_url_rule=never send checkout session query parameters to Meta; confirmation pages scrub the browser URL before tracking
-ads_reporting=server-only last-30-day account Insights helper; protected UI ownership remains outside the production main branch until an authenticated admin surface exists
+ticket_content_ids=ticket tier UUIDs are used consistently for ViewContent, InitiateCheckout and Purchase
+ticket_purchase_rule=queue only after verified Stripe payment and never for admin simulation, failed, expired, cancelled, unpaid, or refunded orders
+ticket_outbox=encrypted `meta_conversion_jobs` payload is inserted in the paid fulfilment transaction; the private worker delivers with stable event_id, bounded exponential retry, delivered/dead terminal states, and unique event-id deduplication
+ticket_delivery_isolation=Meta network/configuration failure never rolls back or delays a paid order, issued tickets, tier progression, or confirmation email; the worker retries independently
+ticket_refund_reporting=refunds void admission tickets and remain visible in Stripe/admin; automatic Meta Purchase reversal is intentionally absent and must be reconciled in Meta/Stripe reporting
+ads_reporting=server-only last-30-day account Insights helper is visible on the authenticated staff/admin surface together with conversion outbox status
 secrets_rule=only NEXT_PUBLIC_META_PIXEL_ID may reach client code; all access tokens and app credentials remain server-only and ignored locally
 
 [database_runtime]
@@ -307,7 +315,7 @@ driver=pg Pool
 pool_lifetime=development cached on globalThis; production creates module/runtime pool without global cache
 production_tls=ssl rejectUnauthorized=false
 schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds prices/capacities and advances rather than regresses the current tier
-tables_owned_here=signups,merch_checkout_requests,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,ticket_audit_log,schema_migrations
+tables_owned_here=signups,merch_checkout_requests,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,meta_conversion_jobs,ticket_audit_log,schema_migrations
 tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilment,email events; all Good Game
 
 [native_ticket_sales]
@@ -319,6 +327,8 @@ customer_flow=/events Buy tickets -> dedicated ticket selector -> required verif
 cart_isolation=native tickets never enter the Good Game merch cart; merch and tickets always use separate checkout sessions
 quantity_ui=active ticket tier starts at quantity 1 and uses accessible left/right stepper buttons; customers may decrease to 0 or increase to the tier availability/per-order limit
 admin_simulation=Testing admin can create one or more paid-equivalent tickets for their own admin account; fulfilment and email are real, Stripe payment is skipped, and the order is visibly marked as a simulation in admin
+multi_ticket_email=one confirmation email is queued per order; it contains one PDF attachment for the complete order, with one full page and one unique QR code per admission ticket
+multi_ticket_account=account order summary shows the ticket count; order detail uses a compact responsive ticket grid with Ticket N of total labels and a single Download all tickets PDF action
 
 [security]
 server_only_modules=lib/merch.ts and lib/merch-checkout-guard.ts import server-only
@@ -339,8 +349,8 @@ product_metadata=dynamic title/description/canonical/OpenGraph primary image fro
 cart_and_confirmation=robots noindex,nofollow
 sitemap=absent
 robots_file=absent
-analytics=absent in tracked source
-cookie_banner=absent
+analytics=consent-gated Meta Pixel plus server-side Meta CAPI and authenticated Ads Insights reporting
+cookie_banner=present; Accept/Decline choice persists for 180 days and Decline/revoke deletes `_fbp` and `_fbc`
 
 [operational_playbook_product]
 create_or_manage=Good Game LIVE admin -> UpForIt Collection
@@ -364,14 +374,15 @@ check_8=verify order in Good Game LIVE admin and verify lifecycle email/stock up
 [operational_playbook_domain]
 canonical=https://www.upforitevents.co.uk
 www=direct Railway custom domain
-apex=GoDaddy 301 forwarding to www; forwarding only/no masking; GoDaddy provides forwarding HTTPS
-do_not=attach apex directly to Railway while GoDaddy DNS remains authoritative; GoDaddy cannot create required flattened apex CNAME
-verify=curl/dig both apex redirect and www 200; allow GoDaddy certificate provisioning time after forwarding edits
+apex=Cloudflare proxied placeholder A record plus 301 redirect rule to www preserving path/query
+do_not=replace the Cloudflare apex redirect placeholder with old hosting A records or expose SendGrid/Microsoft DNS records through the proxy
+verify=curl/dig both apex redirect and www 200; Cloudflare SSL mode Full, Universal SSL active, and Always Use HTTPS enabled
 
 [change_ownership]
 UpForIt_repo=site content, visual design, public routes, cart UX/local persistence, signed proxy endpoints, signup table/API, local checkout throttling, canonical/cache presentation
 Good_Game_repo=product creator/admin collection, product/variant DB, mapping/publication, catalog API, canonical validation, shipping, Stripe, settlement, order number/admin, stock, fulfilment/refunds, transactional email
-GoDaddy=apex forwarding/DNS only
+Cloudflare=authoritative DNS, apex-to-www redirect, proxy and edge TLS; SendGrid/Microsoft mail records remain DNS-only
+GoDaddy=domain registration and Microsoft 365 mailbox reseller only
 Railway=service deployment, environment variables, Postgres connection, www custom domain
 
 [known_current_content_and_maintenance]

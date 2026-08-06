@@ -83,6 +83,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           </div>
         </dl>
         <TicketSelector
+          eventId={event.id}
+          eventTitle={event.title}
           signedIn={Boolean(user)}
           tiers={tierResult.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);

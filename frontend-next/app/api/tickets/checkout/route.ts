@@ -2,7 +2,10 @@ import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserForSessionToken, SESSION_COOKIE } from "../../../../lib/auth";
 import { getPool } from "../../../../lib/db";
+import { insertMetaConversionJob } from "../../../../lib/meta-jobs";
+import { getMetaRequestContext, metaEventId, metaSiteUrl } from "../../../../lib/meta";
 import { assertSameOrigin } from "../../../../lib/request";
+import { encryptJson } from "../../../../lib/security";
 import { assertTicketingEnabled, getStripe } from "../../../../lib/stripe";
 import { lockTicketTiersForCheckout, type TicketCheckoutTier } from "../../../../lib/ticket-tiers";
 
@@ -17,7 +20,8 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Sign in to buy tickets." }, { status: 401 });
     if (!user.emailVerified) return NextResponse.json({ error: "Verify your email before buying tickets." }, { status: 403 });
 
-    const body = (await request.json()) as { items?: CheckoutItem[]; idempotencyKey?: string };
+    const body = (await request.json()) as { items?: CheckoutItem[]; idempotencyKey?: string; meta?: unknown };
+    const metaContext = getMetaRequestContext(request, body.meta);
     const idempotencyKey = typeof body.idempotencyKey === "string" ? body.idempotencyKey.trim() : "";
     const items = Array.isArray(body.items)
       ? body.items.filter((item) => typeof item.ticketTypeId === "string" && Number.isInteger(item.quantity) && item.quantity > 0)
@@ -45,6 +49,7 @@ export async function POST(request: NextRequest) {
     let checkoutRows: TicketCheckoutTier[] = [];
     let totalMinor = 0;
     let orderNumber = "";
+    let purchaseEventId = "";
     try {
       await client.query("BEGIN");
       const locked = await lockTicketTiersForCheckout(client, normalizedItems);
@@ -55,6 +60,7 @@ export async function POST(request: NextRequest) {
       );
 
       orderId = randomUUID();
+      purchaseEventId = metaEventId("ticket_purchase", orderId);
       const numberResult = await client.query<{ value: string }>(
         "SELECT 'UFI-' || lpad(nextval('ticket_order_number_seq')::text, 6, '0') AS value"
       );
@@ -62,9 +68,30 @@ export async function POST(request: NextRequest) {
       await client.query(
         `INSERT INTO ticket_orders (
            id, order_number, user_id, event_id, status, currency, subtotal_minor, total_minor,
-           idempotency_key, request_hash, reserved_until
-         ) VALUES ($1, $2, $3, $4, 'pending', 'gbp', $5, $5, $6, $7, now() + interval '30 minutes')`,
-        [orderId, orderNumber, user.id, checkoutRows[0].event_id, totalMinor, idempotencyKey, requestHash]
+           idempotency_key, request_hash, reserved_until, meta_consent_granted,
+           meta_checkout_event_id, meta_purchase_event_id, meta_context_encrypted
+         ) VALUES (
+           $1, $2, $3, $4, 'pending', 'gbp', $5, $5, $6, $7, now() + interval '30 minutes',
+           $8, $9, $10, $11
+         )`,
+        [
+          orderId,
+          orderNumber,
+          user.id,
+          checkoutRows[0].event_id,
+          totalMinor,
+          idempotencyKey,
+          requestHash,
+          metaContext.consent,
+          metaContext.consent ? metaContext.eventId ?? null : null,
+          metaContext.consent ? purchaseEventId : null,
+          metaContext.consent ? encryptJson({
+            fbp: metaContext.fbp,
+            fbc: metaContext.fbc,
+            clientIp: metaContext.clientIp,
+            clientUserAgent: metaContext.clientUserAgent
+          }) : null
+        ]
       );
       for (let index = 0; index < normalizedItems.length; index += 1) {
         const item = normalizedItems[index];
@@ -112,6 +139,38 @@ export async function POST(request: NextRequest) {
       "UPDATE ticket_orders SET stripe_checkout_session_id = $2, stripe_checkout_url = $3, updated_at = now() WHERE id = $1",
       [orderId, session.id, session.url]
     );
+    if (metaContext.consent && metaContext.eventId) {
+      try {
+        await insertMetaConversionJob(
+          getPool(),
+          {
+            eventName: "InitiateCheckout",
+            eventId: metaContext.eventId,
+            eventSourceUrl: metaSiteUrl(`/events/${checkoutRows[0].event_slug}`),
+            valueMinor: totalMinor,
+            currency: checkoutRows[0].currency,
+            contentName: checkoutRows[0].event_title,
+            contentCategory: "event tickets",
+            contents: normalizedItems.map((item, index) => ({
+              id: checkoutRows[index].id,
+              quantity: item.quantity,
+              itemPriceMinor: checkoutRows[index].price_minor
+            })),
+            userData: {
+              email: user.email,
+              externalId: user.id,
+              fbp: metaContext.fbp,
+              fbc: metaContext.fbc,
+              clientIp: metaContext.clientIp,
+              clientUserAgent: metaContext.clientUserAgent
+            }
+          },
+          { orderId }
+        );
+      } catch (metaError) {
+        console.error("Meta checkout job could not be queued", metaError instanceof Error ? metaError.name : "UnknownError");
+      }
+    }
     return NextResponse.json({ url: session.url });
   } catch (error) {
     if (orderId) {

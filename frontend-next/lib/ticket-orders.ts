@@ -2,7 +2,20 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { advanceTicketTierProgression } from "./ticket-tiers";
 
-export type FulfilledOrder = { orderId: string; userId: string; email: string; displayName: string };
+export type FulfilledOrder = {
+  orderId: string;
+  userId: string;
+  email: string;
+  displayName: string;
+  totalMinor: number;
+  currency: string;
+  eventTitle: string;
+  eventSlug: string;
+  metaConsentGranted: boolean;
+  metaPurchaseEventId: string | null;
+  metaContextEncrypted: string | null;
+  contents: Array<{ id: string; quantity: number; itemPriceMinor: number }>;
+};
 
 export async function fulfilPaidOrder(
   client: PoolClient,
@@ -16,9 +29,20 @@ export async function fulfilPaidOrder(
     status: string;
     email: string;
     display_name: string;
+    total_minor: number;
+    currency: string;
+    event_title: string;
+    event_slug: string;
+    meta_consent_granted: boolean;
+    meta_purchase_event_id: string | null;
+    meta_context_encrypted: string | null;
   }>(
-    `SELECT o.id, o.user_id, o.status, u.email, u.display_name
-       FROM ticket_orders o JOIN users u ON u.id = o.user_id
+    `SELECT o.id, o.user_id, o.status, o.total_minor, o.currency,
+            o.meta_consent_granted, o.meta_purchase_event_id, o.meta_context_encrypted,
+            u.email, u.display_name, e.title AS event_title, e.slug AS event_slug
+       FROM ticket_orders o
+       JOIN users u ON u.id = o.user_id
+       JOIN events e ON e.id = o.event_id
       WHERE o.id = $1 FOR UPDATE OF o`,
     [orderId]
   );
@@ -39,9 +63,11 @@ export async function fulfilPaidOrder(
     id: string;
     quantity: number;
     ticket_type_name: string;
+    ticket_type_id: string;
+    unit_price_minor: number;
     event_id: string;
   }>(
-    `SELECT i.id, i.quantity, i.ticket_type_name, o.event_id
+    `SELECT i.id, i.quantity, i.ticket_type_name, i.ticket_type_id, i.unit_price_minor, o.event_id
        FROM ticket_order_items i JOIN ticket_orders o ON o.id = i.order_id
       WHERE i.order_id = $1`,
     [orderId]
@@ -69,5 +95,22 @@ export async function fulfilPaidOrder(
      VALUES ($1, $2, 'order_paid', $3::jsonb)`,
     [randomUUID(), orderId, JSON.stringify({ paymentIntentId: paymentIntentId ?? null, source })]
   );
-  return { orderId, userId: order.user_id, email: order.email, displayName: order.display_name } satisfies FulfilledOrder;
+  return {
+    orderId,
+    userId: order.user_id,
+    email: order.email,
+    displayName: order.display_name,
+    totalMinor: order.total_minor,
+    currency: order.currency,
+    eventTitle: order.event_title,
+    eventSlug: order.event_slug,
+    metaConsentGranted: order.meta_consent_granted,
+    metaPurchaseEventId: order.meta_purchase_event_id,
+    metaContextEncrypted: order.meta_context_encrypted,
+    contents: items.rows.map((item) => ({
+      id: item.ticket_type_id,
+      quantity: item.quantity,
+      itemPriceMinor: item.unit_price_minor
+    }))
+  } satisfies FulfilledOrder;
 }

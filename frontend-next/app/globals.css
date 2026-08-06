@@ -203,6 +203,17 @@ select {
   gap: 24px;
 }
 
+.ticket-selector__support {
+  margin: 20px 0 0;
+  text-align: center;
+  font-weight: 700;
+}
+
+.ticket-selector__support a {
+  font-weight: 900;
+  text-decoration: underline;
+}
+
 .order-list,
 .ticket-wallet,
 .ticket-tier-list {
@@ -224,10 +235,31 @@ select {
 
 .order-list__item:hover { background: var(--yellow); }
 
-.ticket-wallet { margin-top: 28px; }
-.ticket-wallet__ticket { align-items: flex-start; background: var(--yellow); }
+.ticket-wallet {
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  align-items: start;
+  margin-top: 28px;
+}
+.ticket-wallet__ticket {
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  gap: 14px;
+  background: var(--yellow);
+  text-align: center;
+}
+.ticket-wallet__copy { width: 100%; }
+.ticket-wallet__position {
+  display: block;
+  margin-bottom: 6px;
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.ticket-wallet__void { padding: 45px 12px; color: var(--pink); text-transform: uppercase; }
 .ticket-wallet__ticket img {
-  width: min(220px, 45vw);
+  width: min(260px, 100%);
   height: auto;
   aspect-ratio: 1 / 1;
   border: 2px solid var(--ink);
@@ -487,6 +519,15 @@ select {
 .admin-metrics strong { font-family: var(--font-heavy), sans-serif; font-size: clamp(1.5rem, 3vw, 2.7rem); }
 .admin-panel { margin-bottom: 28px; padding: clamp(18px, 3vw, 30px); overflow: hidden; }
 .admin-panel h2 { margin-top: 0; }
+.meta-ads-panel__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.meta-ads-panel__header a { font-weight: 800; text-decoration: underline; }
+.meta-ads-panel__period { margin: -8px 0 18px; color: #4c4c4c; font-weight: 700; }
+.meta-ads-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.meta-ads-metrics article { display: grid; gap: 4px; padding: 15px; border: 3px solid var(--ink); background: var(--muted); }
+.meta-ads-metrics article:nth-child(3n + 1) { background: var(--yellow); }
+.meta-ads-metrics article:nth-child(3n + 2) { background: #ffd5e7; }
+.meta-ads-metrics strong { font-family: var(--font-heavy), sans-serif; font-size: clamp(1.25rem, 2.3vw, 2rem); }
+.meta-ads-metrics span { font-size: .8rem; font-weight: 800; text-transform: uppercase; }
 .admin-table-wrap { width: 100%; margin-top: 18px; overflow-x: auto; }
 .admin-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: .88rem; }
 .admin-table th, .admin-table td { padding: 11px 10px; border: 1px solid #aaa; text-align: left; vertical-align: top; }
@@ -543,10 +584,12 @@ select {
 
 @media (max-width: 900px) {
   .admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta-ads-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 620px) {
-  .account-heading, .admin-header, .ticket-wallet__ticket { flex-direction: column; }
+  .account-heading, .admin-header { flex-direction: column; }
+  .meta-ads-panel__header { flex-direction: column; }
   .ticket-wallet__ticket img { width: 100%; }
   .ticket-confirmation__action { width: 100%; }
   .account-logout { justify-content: stretch; }

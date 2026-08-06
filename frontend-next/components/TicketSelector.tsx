@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useMetaTracking } from "./MetaTrackingProvider";
 
 type Tier = {
   id: string;
@@ -13,7 +14,19 @@ type Tier = {
   status: "on_sale" | "sold_out" | "reserved" | "upcoming";
 };
 
-export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; signedIn: boolean }) {
+export default function TicketSelector({
+  eventId,
+  eventTitle,
+  tiers,
+  signedIn
+}: {
+  eventId: string;
+  eventTitle: string;
+  tiers: Tier[];
+  signedIn: boolean;
+}) {
+  const { consent, createEventId, getBrowserContext, track } = useMetaTracking();
+  const viewContentTracked = useRef("");
   const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries(
     tiers.filter((tier) => tier.active).map((tier) => [tier.id, 1])
   ));
@@ -22,22 +35,50 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
   const activeTiers = tiers.filter((tier) => tier.active);
   const total = tiers.reduce((sum, tier) => sum + (quantities[tier.id] ?? 0) * tier.priceMinor, 0);
 
+  useEffect(() => {
+    if (consent !== "granted" || viewContentTracked.current === eventId) return;
+    track("ViewContent", {
+      content_ids: tiers.map((tier) => tier.id),
+      content_name: eventTitle,
+      content_category: "event tickets",
+      content_type: "product"
+    });
+    viewContentTracked.current = eventId;
+  }, [consent, eventId, eventTitle, tiers, track]);
+
   async function checkout() {
     setBusy(true);
     setError("");
     try {
+      const eventID = createEventId("ticket_checkout");
+      const selected = activeTiers
+        .map((tier) => ({ tier, quantity: quantities[tier.id] ?? 0 }))
+        .filter(({ quantity }) => quantity > 0);
       const response = await fetch("/api/tickets/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: crypto.randomUUID(),
-          items: activeTiers
-            .map((tier) => ({ ticketTypeId: tier.id, quantity: quantities[tier.id] ?? 0 }))
-            .filter((item) => item.quantity > 0)
+          items: selected.map(({ tier, quantity }) => ({ ticketTypeId: tier.id, quantity })),
+          meta: getBrowserContext(eventID)
         })
       });
       const result = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error || "Checkout could not be started.");
+      track("InitiateCheckout", {
+        content_ids: selected.map(({ tier }) => tier.id),
+        content_name: eventTitle,
+        content_category: "event tickets",
+        content_type: "product",
+        contents: selected.map(({ tier, quantity }) => ({
+          id: tier.id,
+          quantity,
+          item_price: tier.priceMinor / 100
+        })),
+        num_items: selected.reduce((sum, item) => sum + item.quantity, 0),
+        value: total / 100,
+        currency: "GBP"
+      }, eventID);
       window.location.assign(result.url);
     } catch (checkoutError) {
       setError(checkoutError instanceof Error ? checkoutError.message : "Checkout could not be started.");
@@ -109,6 +150,9 @@ export default function TicketSelector({ tiers, signedIn }: { tiers: Tier[]; sig
           <Link className="pop-button pop-button--yellow" href="/account/login?next=%2Fevents%2Fsummer-roundup-2026%23tickets">Sign in to buy tickets</Link>
         )}
       </div>
+      <p className="ticket-selector__support">
+        Having trouble? Contact <a href="mailto:info@upforitevents.co.uk">info@upforitevents.co.uk</a> for help.
+      </p>
     </section>
   );
 }

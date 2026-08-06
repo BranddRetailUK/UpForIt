@@ -76,7 +76,7 @@ function installPixel(pixelId: string) {
 
 function containsSensitiveQuery(pathname: string) {
   if (typeof window === "undefined" || !window.location.search) return false;
-  return pathname === "/cart/confirmation";
+  return ["/cart/confirmation", "/tickets/confirmation", "/account/reset-password"].includes(pathname);
 }
 
 export function MetaTrackingProvider({

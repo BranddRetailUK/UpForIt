@@ -5,6 +5,7 @@ import AdminResendButton from "../../components/AdminResendButton";
 import AdminSimulatedPurchase from "../../components/AdminSimulatedPurchase";
 import { getCurrentUser } from "../../lib/auth";
 import { getPool } from "../../lib/db";
+import { getMetaAdsSummary } from "../../lib/meta";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ticket admin", robots: { index: false, follow: false } };
@@ -14,13 +15,14 @@ type Tier = { id: string; name: string; price_minor: number; capacity: number | 
 type Order = { id: string; order_number: string; status: string; total_minor: number; created_at: Date; paid_at: Date | null; confirmation_email_sent_at: Date | null; email: string; display_name: string; event_title: string; ticket_count: string; simulated: boolean };
 type EmailJob = { id: string; job_type: string; status: string; attempts: number; last_error: string | null; created_at: Date; sent_at: Date | null };
 type Webhook = { stripe_event_id: string; event_type: string; processed_at: Date | null; error_message: string | null; created_at: Date };
+type MetaJob = { id: string; event_name: string; event_id: string; status: string; attempts: number; response_status: number | null; last_error: string | null; created_at: Date; delivered_at: Date | null };
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/account/login");
   if (user.role === "customer") redirect("/account");
 
-  const [metricResult, tiers, orders, emailJobs, webhooks] = await Promise.all([
+  const [metricResult, tiers, orders, emailJobs, webhooks, metaJobs, metaAds] = await Promise.all([
     getPool().query<Metrics>(
       `SELECT
         (SELECT count(*) FROM ticket_orders WHERE status = 'paid')::text AS paid_orders,
@@ -58,7 +60,12 @@ export default async function AdminPage() {
     getPool().query<Webhook>(
       `SELECT stripe_event_id, event_type, processed_at, error_message, created_at
        FROM stripe_event_receipts ORDER BY created_at DESC LIMIT 40`
-    )
+    ),
+    getPool().query<MetaJob>(
+      `SELECT id, event_name, event_id, status, attempts, response_status, last_error, created_at, delivered_at
+       FROM meta_conversion_jobs ORDER BY created_at DESC LIMIT 40`
+    ),
+    getMetaAdsSummary()
   ]);
   const metrics = metricResult.rows[0];
   const activeSortOrder = tiers.rows.find((tier) => tier.is_active)?.sort_order;
@@ -66,7 +73,7 @@ export default async function AdminPage() {
   return (
     <div className="admin-shell section-wrap">
       <header className="admin-header">
-        <div><p className="comic-kicker comic-kicker--yellow">Testing control centre</p><h1>Ticket admin</h1><p>Signed in as {user.email}</p></div>
+        <div><p className="comic-kicker comic-kicker--yellow">{process.env.APP_ENV === "testing" ? "Testing control centre" : "Operations control centre"}</p><h1>Ticket admin</h1><p>Signed in as {user.email}</p></div>
         <nav><Link href="/admin/check-in">Open check-in</Link><Link href="/account">My account</Link></nav>
       </header>
 
@@ -78,7 +85,42 @@ export default async function AdminPage() {
         <article><strong>{metrics.accounts}</strong><span>Accounts</span></article>
       </section>
 
-      {user.role === "admin" ? (
+      <section className="admin-panel meta-ads-panel">
+        <div className="meta-ads-panel__header">
+          <div>
+            <p className="comic-kicker comic-kicker--pink">Meta Marketing API</p>
+            <h2>Ad performance</h2>
+          </div>
+          <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener noreferrer">Open Ads Manager</a>
+        </div>
+        {metaAds.state === "ready" ? (
+          <>
+            <p className="meta-ads-panel__period">
+              Last 30 days{metaAds.dateStart && metaAds.dateStop ? ` · ${metaAds.dateStart} to ${metaAds.dateStop}` : ""}
+            </p>
+            <div className="meta-ads-metrics" aria-label="Meta advertising metrics">
+              <article><strong>£{metaAds.spend.toFixed(2)}</strong><span>Spend</span></article>
+              <article><strong>{metaAds.reach.toLocaleString("en-GB")}</strong><span>Reach</span></article>
+              <article><strong>{metaAds.impressions.toLocaleString("en-GB")}</strong><span>Impressions</span></article>
+              <article><strong>{metaAds.linkClicks.toLocaleString("en-GB")}</strong><span>Link clicks</span></article>
+              <article><strong>{metaAds.ctr.toFixed(2)}%</strong><span>CTR</span></article>
+              <article><strong>£{metaAds.cpc.toFixed(2)}</strong><span>CPC</span></article>
+              <article><strong>{metaAds.purchases.toLocaleString("en-GB")}</strong><span>Purchases</span></article>
+              <article><strong>£{metaAds.purchaseValue.toFixed(2)}</strong><span>Purchase value</span></article>
+              <article><strong>{metaAds.purchaseRoas.toFixed(2)}×</strong><span>Purchase ROAS</span></article>
+              <article><strong>{metaAds.leads.toLocaleString("en-GB")}</strong><span>Leads</span></article>
+            </div>
+          </>
+        ) : (
+          <p className="form-message form-message--error">
+            {metaAds.state === "not_configured"
+              ? "Meta Ads reporting is not configured in this environment."
+              : `Meta Ads reporting is temporarily unavailable${metaAds.status ? ` (API ${metaAds.status})` : ""}. Check or renew the Marketing API token.`}
+          </p>
+        )}
+      </section>
+
+      {user.role === "admin" && process.env.APP_ENV === "testing" ? (
         <section className="admin-panel">
           <AdminSimulatedPurchase tiers={tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
@@ -129,6 +171,14 @@ export default async function AdminPage() {
         <h2>Email delivery</h2>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Type</th><th>Status</th><th>Attempts</th><th>Created</th><th>Error</th></tr></thead><tbody>
           {emailJobs.rows.map((job) => <tr key={job.id}><td>{job.job_type.replace(/_/g, " ")}</td><td>{job.status}</td><td>{job.attempts}</td><td>{new Date(job.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{job.last_error || "—"}</td></tr>)}
+        </tbody></table></div>
+      </section>
+
+      <section className="admin-panel">
+        <h2>Meta conversion delivery</h2>
+        <p>Ticket checkout and paid Purchase events are delivered asynchronously. A Meta outage cannot hold up tickets or email.</p>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Event</th><th>Status</th><th>Attempts</th><th>API</th><th>Created</th><th>Error</th></tr></thead><tbody>
+          {metaJobs.rows.map((job) => <tr key={job.id}><td>{job.event_name}<small>{job.event_id}</small></td><td>{job.status}</td><td>{job.attempts}</td><td>{job.response_status ?? "—"}</td><td>{new Date(job.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{job.last_error || (job.delivered_at ? "Delivered" : "—")}</td></tr>)}
         </tbody></table></div>
       </section>
 

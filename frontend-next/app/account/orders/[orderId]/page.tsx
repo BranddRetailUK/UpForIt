@@ -39,12 +39,16 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
         <h1>{order.event_title}</h1>
         <p>{new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeStyle: "short", timeZone: order.timezone }).format(new Date(order.starts_at))} · {order.venue_name}</p>
         <p><strong>Status:</strong> {order.status} · <strong>Total:</strong> £{(order.total_minor / 100).toFixed(2)}</p>
-        {order.status === "paid" ? <a className="pop-button pop-button--yellow" href={`/api/tickets/orders/${order.id}/pdf`}>Download printable tickets</a> : null}
+        {order.status === "paid" ? <a className="pop-button pop-button--yellow" href={`/api/tickets/orders/${order.id}/pdf`}>Download all {tickets.rows.length} ticket{tickets.rows.length === 1 ? "" : "s"} (PDF)</a> : null}
         <div className="ticket-wallet">
-          {tickets.rows.map((ticket) => (
-            <article className="ticket-wallet__ticket" key={ticket.id}>
-              <div><strong>{ticket.ticket_type_name}</strong><small>{ticket.ticket_number} · {ticket.status.replace("_", " ")}</small></div>
-              {ticket.status !== "void" ? <img src={`/api/tickets/${ticket.id}/qr`} alt={`QR code for ${ticket.ticket_number}`} width={220} height={220} /> : null}
+          {tickets.rows.map((ticket, index) => (
+            <article className="ticket-wallet__ticket" key={ticket.id} aria-label={`Ticket ${index + 1} of ${tickets.rows.length}`}>
+              <div className="ticket-wallet__copy">
+                <span className="ticket-wallet__position">Ticket {index + 1} of {tickets.rows.length}</span>
+                <strong>{ticket.ticket_type_name}</strong>
+                <small>{ticket.ticket_number} · {ticket.status.replace("_", " ")}</small>
+              </div>
+              {ticket.status !== "void" ? <img src={`/api/tickets/${ticket.id}/qr`} alt={`QR code for ${ticket.ticket_number}`} width={260} height={260} loading={index > 3 ? "lazy" : "eager"} /> : <strong className="ticket-wallet__void">Void</strong>}
             </article>
           ))}
         </div>

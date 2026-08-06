@@ -3,10 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getPool } from "../../../../lib/db";
 import { insertEmailJob } from "../../../../lib/email-jobs";
+import { insertMetaConversionJob, shouldQueueTicketPurchase } from "../../../../lib/meta-jobs";
+import { metaSiteUrl } from "../../../../lib/meta";
+import { decryptJson } from "../../../../lib/security";
 import { getStripe } from "../../../../lib/stripe";
 import { fulfilPaidOrder } from "../../../../lib/ticket-orders";
 
 export const runtime = "nodejs";
+
+type StoredMetaContext = {
+  fbp?: string;
+  fbc?: string;
+  clientIp?: string;
+  clientUserAgent?: string;
+};
 
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
@@ -65,6 +75,42 @@ export async function POST(request: NextRequest) {
             { to: fulfilled.email, displayName: fulfilled.displayName, orderId: fulfilled.orderId },
             { userId: fulfilled.userId, orderId: fulfilled.orderId }
           );
+          if (
+            shouldQueueTicketPurchase("stripe", fulfilled.metaConsentGranted) &&
+            fulfilled.metaPurchaseEventId
+          ) {
+            let context: StoredMetaContext = {};
+            if (fulfilled.metaContextEncrypted) {
+              try {
+                context = decryptJson<StoredMetaContext>(fulfilled.metaContextEncrypted);
+              } catch {
+                console.error("Stored Meta checkout context could not be decrypted", fulfilled.orderId);
+              }
+            }
+            await insertMetaConversionJob(
+              client,
+              {
+                eventName: "Purchase",
+                eventId: fulfilled.metaPurchaseEventId,
+                eventSourceUrl: metaSiteUrl(`/events/${fulfilled.eventSlug}`),
+                eventTime: event.created,
+                valueMinor: fulfilled.totalMinor,
+                currency: fulfilled.currency,
+                contentName: fulfilled.eventTitle,
+                contentCategory: "event tickets",
+                contents: fulfilled.contents,
+                userData: {
+                  email: fulfilled.email,
+                  externalId: fulfilled.userId,
+                  fbp: context.fbp,
+                  fbc: context.fbc,
+                  clientIp: context.clientIp,
+                  clientUserAgent: context.clientUserAgent
+                }
+              },
+              { orderId: fulfilled.orderId }
+            );
+          }
         }
       }
     } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
