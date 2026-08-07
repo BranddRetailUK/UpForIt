@@ -14,7 +14,6 @@ export default function SocialsPage() {
       <header className="page-intro">
         <p className="comic-kicker comic-kicker--yellow">Keep up with us</p>
         <h1>Socials</h1>
-        <p>Event news, sounds, behind-the-scenes energy and every new drop.</p>
       </header>
 
       <section className="social-grid" aria-label="UPFORIT social profiles">
