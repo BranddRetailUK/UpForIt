@@ -55,7 +55,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
 
       if (mode === "login") {
         notifyCartAuthChanged();
-        const destination = safeNextPath(nextPath) || "/account";
+        const destination = safeNextPath(nextPath) || "/";
         router.push(destination);
         router.refresh();
       } else if (mode === "reset") {

@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.upforitevents.co.uk"),
   title: {
     default: "UPFORIT | Events, Music & Good Vibes",
-    template: "%s | UPFORIT"
+    template: "UPFORIT | %s"
   },
   description:
     "Discover upcoming UPFORIT events, event news and future merch.",
