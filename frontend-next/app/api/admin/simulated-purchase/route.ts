@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { getStaffForRequest } from "../../../../lib/admin-auth";
+import { getAdminForRequest } from "../../../../lib/admin-auth";
 import { getPool } from "../../../../lib/db";
 import { insertEmailJob } from "../../../../lib/email-jobs";
 import { assertSameOrigin } from "../../../../lib/request";
@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
     if (process.env.APP_ENV !== "testing") {
       return NextResponse.json({ error: "Simulated purchases are available only in Testing." }, { status: 403 });
     }
-    const admin = await getStaffForRequest(request);
-    if (!admin || admin.role !== "admin") {
+    const admin = await getAdminForRequest(request);
+    if (!admin) {
       return NextResponse.json({ error: "Administrator access required." }, { status: 403 });
     }
 

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     [orderId]
   );
   const order = result.rows[0];
-  if (!order || (order.user_id !== user.id && user.role === "customer")) return new NextResponse("Not found", { status: 404 });
+  if (!order || (order.user_id !== user.id && user.role !== "admin")) return new NextResponse("Not found", { status: 404 });
   if (order.status !== "paid") return new NextResponse("Tickets are not available for this order", { status: 409 });
   const pdf = await buildTicketPdf(orderId);
   return new NextResponse(pdf, {

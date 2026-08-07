@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Ticket check-in", robots: { index: f
 export default async function CheckInPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/account/login");
-  if (user.role === "customer") redirect("/account");
+  if (user.role !== "admin") redirect(user.role === "staff" ? "/scan" : "/account");
   return (
     <div className="admin-shell section-wrap">
       <header className="admin-header"><div><p className="comic-kicker comic-kicker--yellow">Door team</p><h1>Ticket check-in</h1></div><Link href="/admin">Back to admin</Link></header>
@@ -18,4 +18,3 @@ export default async function CheckInPage() {
     </div>
   );
 }
-

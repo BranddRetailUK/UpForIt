@@ -1207,6 +1207,107 @@ select {
   text-decoration: underline;
 }
 
+.admin-scanner-access {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-scanner-access h2,
+.admin-scanner-devices h3 {
+  margin: 0;
+}
+
+.admin-scanner-access__heading,
+.admin-scanner-devices__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-scanner-access__heading p:last-child {
+  max-width: 760px;
+  margin-bottom: 0;
+}
+
+.admin-scanner-access__open,
+.admin-scanner-devices__heading span {
+  font-weight: 900;
+  text-decoration: underline;
+}
+
+.admin-scanner-access__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+}
+
+.admin-scanner-access__controls label {
+  display: grid;
+  flex: 1 1 300px;
+  gap: 7px;
+  font-weight: 800;
+}
+
+.admin-scanner-access__controls select {
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+}
+
+.admin-scanner-access__event-time {
+  margin: -10px 0 0;
+  color: #4c4c4c;
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.admin-scanner-enrolment {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(240px, 1fr);
+  align-items: center;
+  gap: clamp(20px, 4vw, 48px);
+  padding: clamp(16px, 3vw, 28px);
+  border: 4px solid var(--ink);
+  background: var(--yellow);
+}
+
+.admin-scanner-enrolment img {
+  width: 100%;
+  border: 3px solid var(--ink);
+  background: #fff;
+}
+
+.admin-scanner-enrolment strong {
+  font-family: var(--font-heavy), sans-serif;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  text-transform: uppercase;
+}
+
+.admin-scanner-devices {
+  padding-top: 4px;
+}
+
+.admin-scanner-devices__heading {
+  align-items: center;
+}
+
+.admin-scanner-table {
+  min-width: 860px;
+}
+
+.scanner-activation small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.scanner-page .admin-panel {
+  max-width: 900px;
+}
+
 .check-in-tool { display: grid; gap: 22px; }
 .check-in-video { width: min(620px, 100%); aspect-ratio: 1; margin-inline: auto; border: 4px solid var(--ink); background: #111; object-fit: cover; }
 .check-in-manual { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 14px; }
@@ -4223,9 +4324,11 @@ a {
 
   .events-page .coming-soon-strip {
     border-color: var(--ink);
+    background: rgba(5, 5, 5, 0.52);
     color: var(--paper);
     font-family: var(--font-heavy), Impact, sans-serif;
     font-weight: 900;
+    box-shadow: 5px 6px 0 rgba(5, 5, 5, 0.18);
     text-shadow: 2px 2px 0 var(--ink);
   }
 
@@ -4434,10 +4537,11 @@ a {
 
   .admin-dashboard > .admin-header { order: 1; }
   .admin-dashboard > .admin-metrics { order: 2; }
-  .admin-dashboard > .admin-section--orders { order: 3; }
-  .admin-dashboard > .admin-section--tiers { order: 4; }
-  .admin-dashboard > .admin-section--simulation { order: 5; }
-  .admin-dashboard > .admin-section--meta { order: 6; }
+  .admin-dashboard > .admin-section--scanner { order: 3; }
+  .admin-dashboard > .admin-section--orders { order: 4; }
+  .admin-dashboard > .admin-section--tiers { order: 5; }
+  .admin-dashboard > .admin-section--simulation { order: 6; }
+  .admin-dashboard > .admin-section--meta { order: 7; }
   .admin-dashboard > .admin-section--ads { order: 99; }
 
   .admin-header,
@@ -4505,6 +4609,29 @@ a {
   .admin-simulated-purchase__controls select {
     text-align: center;
     text-align-last: center;
+  }
+
+  .admin-scanner-access__heading,
+  .admin-scanner-devices__heading,
+  .admin-scanner-access__controls {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .admin-scanner-access__heading,
+  .admin-scanner-enrolment {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .admin-scanner-access__heading > *,
+  .admin-scanner-access__controls > * {
+    width: 100%;
+  }
+
+  .admin-scanner-enrolment img {
+    width: min(360px, 100%);
+    margin-inline: auto;
   }
 
   .admin-table th,

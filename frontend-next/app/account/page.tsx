@@ -204,12 +204,12 @@ export default async function AccountPage() {
               <div className="account-logout"><LogoutButton /></div>
             </section>
 
-            {user.role !== "customer" ? (
+            {user.role === "admin" ? (
               <section className="account-card account-card--compact">
                 <div className="account-card__heading"><div><p className="comic-kicker comic-kicker--blue">Team access</p><h2>Tools</h2></div></div>
                 <div className="account-actions">
-                  {user.role === "admin" ? <Link className="pop-button pop-button--pink" href="/admin">Ticket admin</Link> : null}
-                  <Link className="pop-button pop-button--yellow" href="/staff/events">Staff tools</Link>
+                  <Link className="pop-button pop-button--pink" href="/admin">Ticket admin</Link>
+                  <Link className="pop-button pop-button--yellow" href="/scan">Ticket scanner</Link>
                 </div>
               </section>
             ) : null}

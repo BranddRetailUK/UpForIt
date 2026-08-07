@@ -21,7 +21,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
             e.title AS event_title, e.venue_name, e.starts_at, e.timezone
        FROM ticket_orders o JOIN events e ON e.id = o.event_id
       WHERE o.id = $1 AND (o.user_id = $2 OR $3 = true)`,
-    [orderId, user.id, user.role !== "customer"]
+    [orderId, user.id, user.role === "admin"]
   );
   const order = orderResult.rows[0];
   if (!order) notFound();

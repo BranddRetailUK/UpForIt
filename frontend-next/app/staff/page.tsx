@@ -1,3 +1,2 @@
 import { redirect } from "next/navigation";
-export default function StaffPage() { redirect("/admin"); }
-
+export default function StaffPage() { redirect("/scan"); }

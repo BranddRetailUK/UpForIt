@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 
 type TicketResult = {
   ticket_number: string; ticket_type_name: string; status: string; checked_in_at: string | null;
-  display_name: string; email: string; event_title: string;
+  display_name: string; event_title: string;
 };
 
 export default function AdminCheckIn() {
@@ -19,12 +19,17 @@ export default function AdminCheckIn() {
     if (busy) return;
     setBusy(true);
     setMessage(null);
-    const response = await fetch("/api/admin/check-in", {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code })
-    });
-    const result = await response.json() as { ok?: boolean; error?: string; ticket?: TicketResult };
-    setMessage({ ok: response.ok, text: response.ok ? "Ticket checked in" : result.error || "Check-in failed", ticket: result.ticket });
-    setBusy(false);
+    try {
+      const response = await fetch("/api/admin/check-in", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code })
+      });
+      const result = await response.json() as { ok?: boolean; error?: string; ticket?: TicketResult };
+      setMessage({ ok: response.ok, text: response.ok ? "Ticket checked in" : result.error || "Check-in failed", ticket: result.ticket });
+    } catch {
+      setMessage({ ok: false, text: "Connection lost. Check the signal and try this ticket again." });
+    } finally {
+      setBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -67,10 +72,9 @@ export default function AdminCheckIn() {
       {message ? (
         <div className={`check-in-result ${message.ok ? "is-success" : "is-error"}`} role="status">
           <strong>{message.text}</strong>
-          {message.ticket ? <p>{message.ticket.display_name} · {message.ticket.ticket_type_name}<br />{message.ticket.ticket_number} · {message.ticket.email}</p> : null}
+          {message.ticket ? <p>{message.ticket.display_name} · {message.ticket.ticket_type_name}<br />{message.ticket.ticket_number} · {message.ticket.event_title}</p> : null}
         </div>
       ) : null}
     </div>
   );
 }
-

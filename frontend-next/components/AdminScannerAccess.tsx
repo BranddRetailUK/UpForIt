@@ -1,0 +1,189 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+type EventOption = {
+  id: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+};
+
+type ScannerDevice = {
+  id: string;
+  event_id: string;
+  event_title: string;
+  device_label: string;
+  user_agent: string | null;
+  expires_at: string;
+  last_seen_at: string;
+  revoked_at: string | null;
+  created_at: string;
+  scan_count: string;
+};
+
+type Enrolment = {
+  eventId: string;
+  eventTitle: string;
+  enrolmentExpiresAt: string;
+  sessionExpiresAt: string;
+  qrDataUrl: string;
+};
+
+function formatDate(value: string, timezone = "Europe/London") {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: timezone
+  }).format(new Date(value));
+}
+
+function deviceDescription(userAgent: string | null) {
+  if (!userAgent) return "Browser details unavailable";
+  if (/iPhone/i.test(userAgent)) return "iPhone";
+  if (/iPad/i.test(userAgent)) return "iPad";
+  if (/Android/i.test(userAgent)) return "Android device";
+  return "Web browser";
+}
+
+export default function AdminScannerAccess({ events }: { events: EventOption[] }) {
+  const [eventId, setEventId] = useState(events[0]?.id || "");
+  const [devices, setDevices] = useState<ScannerDevice[]>([]);
+  const [enrolment, setEnrolment] = useState<Enrolment | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const selectedEvent = useMemo(() => events.find((event) => event.id === eventId), [eventId, events]);
+
+  const loadDevices = useCallback(async () => {
+    const response = await fetch("/api/admin/scanner-access", { cache: "no-store" });
+    if (!response.ok) return;
+    const result = await response.json() as { devices?: ScannerDevice[] };
+    setDevices(result.devices || []);
+  }, []);
+
+  useEffect(() => {
+    void loadDevices();
+    const timer = window.setInterval(() => { void loadDevices(); }, 5000);
+    return () => window.clearInterval(timer);
+  }, [loadDevices]);
+
+  async function createEnrolment() {
+    if (!eventId) return;
+    setBusy(true);
+    setError("");
+    const response = await fetch("/api/admin/scanner-access", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ eventId })
+    });
+    const result = await response.json() as Enrolment & { error?: string };
+    if (response.ok) setEnrolment(result);
+    else setError(result.error || "Scanner QR could not be created.");
+    setBusy(false);
+  }
+
+  async function closeEnrolment() {
+    if (!enrolment) return;
+    setBusy(true);
+    const response = await fetch("/api/admin/scanner-access", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ eventId: enrolment.eventId, action: "close_enrolment" })
+    });
+    if (response.ok) setEnrolment(null);
+    else setError("The enrolment window could not be closed.");
+    setBusy(false);
+  }
+
+  async function revokeDevice(sessionId: string) {
+    const response = await fetch(`/api/admin/scanner-access/${sessionId}`, { method: "DELETE" });
+    if (!response.ok) setError("That scanner device could not be revoked.");
+    await loadDevices();
+  }
+
+  async function revokeAll() {
+    if (!eventId || !window.confirm("Revoke every active scanner device for this event?")) return;
+    setBusy(true);
+    const response = await fetch("/api/admin/scanner-access", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ eventId, action: "revoke_all" })
+    });
+    if (response.ok) setEnrolment(null);
+    else setError("Scanner access could not be revoked.");
+    await loadDevices();
+    setBusy(false);
+  }
+
+  const eventDevices = devices.filter((device) => device.event_id === eventId);
+  const now = Date.now();
+  const activeDevices = eventDevices.filter((device) => !device.revoked_at && new Date(device.expires_at).getTime() > now);
+
+  return (
+    <div className="admin-scanner-access">
+      <div className="admin-scanner-access__heading">
+        <div>
+          <p className="comic-kicker comic-kicker--blue">Door team</p>
+          <h2>Scanner access</h2>
+          <p>Show the QR on your phone. Each device scans once and stays authorised until two hours after the event finishes.</p>
+        </div>
+        <a className="admin-scanner-access__open" href="/scan">Open scanner</a>
+      </div>
+
+      {events.length ? (
+        <div className="admin-scanner-access__controls">
+          <label>
+            Event
+            <select value={eventId} onChange={(event) => { setEventId(event.target.value); setEnrolment(null); }}>
+              {events.map((event) => <option value={event.id} key={event.id}>{event.title}</option>)}
+            </select>
+          </label>
+          <button className="pop-button pop-button--yellow" type="button" disabled={busy} onClick={createEnrolment}>
+            {busy ? "Working…" : "Show enrolment QR"}
+          </button>
+          {activeDevices.length ? <button className="text-button" type="button" disabled={busy} onClick={revokeAll}>Revoke all</button> : null}
+        </div>
+      ) : <p>No current event is available for scanner access.</p>}
+
+      {selectedEvent ? <p className="admin-scanner-access__event-time">
+        Event finishes {formatDate(selectedEvent.endsAt, selectedEvent.timezone)} · scanner sessions expire two hours later
+      </p> : null}
+
+      {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
+
+      {enrolment ? (
+        <div className="admin-scanner-enrolment">
+          <img src={enrolment.qrDataUrl} width={360} height={360} alt={`Scanner enrolment QR for ${enrolment.eventTitle}`} />
+          <div>
+            <strong>Ready to scan</strong>
+            <p>This QR accepts new devices until {formatDate(enrolment.enrolmentExpiresAt)}. Devices already enrolled remain active until {formatDate(enrolment.sessionExpiresAt)}.</p>
+            <p>{activeDevices.length} device{activeDevices.length === 1 ? "" : "s"} currently authorised.</p>
+            <button className="text-button" type="button" disabled={busy} onClick={closeEnrolment}>Stop accepting devices</button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="admin-scanner-devices">
+        <div className="admin-scanner-devices__heading"><h3>Authorised devices</h3><span>{activeDevices.length} active</span></div>
+        {eventDevices.length ? (
+          <div className="admin-table-wrap"><table className="admin-table admin-scanner-table"><thead><tr><th>Device</th><th>Status</th><th>Activated</th><th>Last used</th><th>Scans</th><th /></tr></thead><tbody>
+            {eventDevices.map((device) => {
+              const expired = new Date(device.expires_at).getTime() <= now;
+              const status = device.revoked_at ? "Revoked" : expired ? "Expired" : "Active";
+              return <tr key={device.id}>
+                <td><strong>{device.device_label}</strong><small>{deviceDescription(device.user_agent)}</small></td>
+                <td><span className={`admin-status${status === "Active" ? " admin-status--paid" : " admin-status--expired"}`}>{status}</span></td>
+                <td>{formatDate(device.created_at)}</td>
+                <td>{formatDate(device.last_seen_at)}</td>
+                <td>{device.scan_count}</td>
+                <td>{status === "Active" ? <button className="text-button" type="button" onClick={() => void revokeDevice(device.id)}>Revoke</button> : "—"}</td>
+              </tr>;
+            })}
+          </tbody></table></div>
+        ) : <p>No devices have been enrolled for this event yet.</p>}
+      </div>
+    </div>
+  );
+}

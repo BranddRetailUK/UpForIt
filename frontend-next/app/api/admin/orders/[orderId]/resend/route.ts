@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStaffForRequest } from "../../../../../../lib/admin-auth";
+import { getAdminForRequest } from "../../../../../../lib/admin-auth";
 import { getPool } from "../../../../../../lib/db";
 import { enqueueEmail } from "../../../../../../lib/email-jobs";
 import { assertSameOrigin } from "../../../../../../lib/request";
@@ -8,8 +8,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const { orderId } = await params;
     assertSameOrigin(request);
-    const staff = await getStaffForRequest(request);
-    if (!staff) return NextResponse.json({ error: "Staff access required." }, { status: 403 });
+    const admin = await getAdminForRequest(request);
+    if (!admin) return NextResponse.json({ error: "Administrator access required." }, { status: 403 });
     const result = await getPool().query<{ user_id: string; email: string; display_name: string }>(
       `SELECT o.user_id, u.email, u.display_name
          FROM ticket_orders o JOIN users u ON u.id = o.user_id

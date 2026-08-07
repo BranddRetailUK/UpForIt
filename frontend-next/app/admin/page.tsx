@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AdminResendButton from "../../components/AdminResendButton";
+import AdminScannerAccess from "../../components/AdminScannerAccess";
 import AdminSimulatedPurchase from "../../components/AdminSimulatedPurchase";
 import { getCurrentUser } from "../../lib/auth";
 import { getPool } from "../../lib/db";
@@ -16,13 +17,14 @@ type Order = { id: string; order_number: string; status: string; total_minor: nu
 type EmailJob = { id: string; job_type: string; status: string; attempts: number; last_error: string | null; created_at: Date; sent_at: Date | null };
 type Webhook = { stripe_event_id: string; event_type: string; processed_at: Date | null; error_message: string | null; created_at: Date };
 type MetaJob = { id: string; event_name: string; event_id: string; status: string; attempts: number; response_status: number | null; last_error: string | null; created_at: Date; delivered_at: Date | null };
+type ScannerEvent = { id: string; title: string; starts_at: Date; ends_at: Date; timezone: string };
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/account/login");
-  if (user.role === "customer") redirect("/account");
+  if (user.role !== "admin") redirect(user.role === "staff" ? "/scan" : "/account");
 
-  const [metricResult, tiers, orders, emailJobs, webhooks, metaJobs, metaAds] = await Promise.all([
+  const [metricResult, tiers, orders, emailJobs, webhooks, metaJobs, metaAds, scannerEvents] = await Promise.all([
     getPool().query<Metrics>(
       `SELECT
         (SELECT count(*) FROM ticket_orders WHERE status = 'paid')::text AS paid_orders,
@@ -65,7 +67,13 @@ export default async function AdminPage() {
       `SELECT id, event_name, event_id, status, attempts, response_status, last_error, created_at, delivered_at
        FROM meta_conversion_jobs ORDER BY created_at DESC LIMIT 40`
     ),
-    getMetaAdsSummary()
+    getMetaAdsSummary(),
+    getPool().query<ScannerEvent>(
+      `SELECT id, title, starts_at, ends_at, timezone
+         FROM events
+        WHERE status <> 'cancelled' AND ends_at + interval '2 hours' > now()
+        ORDER BY starts_at`
+    )
   ]);
   const metrics = metricResult.rows[0];
   const activeSortOrder = tiers.rows.find((tier) => tier.is_active)?.sort_order;
@@ -75,7 +83,7 @@ export default async function AdminPage() {
       <header className="admin-header">
         <div><p className="comic-kicker comic-kicker--yellow">{process.env.APP_ENV === "testing" ? "Testing control centre" : "Operations control centre"}</p><h1>Ticket admin</h1><p>Signed in as {user.email}</p></div>
         <nav>
-          <Link className="admin-header__check-in" href="/admin/check-in"><span className="admin-label--desktop">Open check-in</span><span className="admin-label--mobile">Scan QR</span></Link>
+          <Link className="admin-header__check-in" href="/scan"><span className="admin-label--desktop">Open check-in</span><span className="admin-label--mobile">Scan QR</span></Link>
           <Link className="admin-header__account-link" href="/account">My account</Link>
         </nav>
       </header>
@@ -86,6 +94,16 @@ export default async function AdminPage() {
         <article><strong>{metrics.issued_tickets}</strong><span>Issued tickets</span></article>
         <article><strong>{metrics.checked_in}</strong><span>Checked in</span></article>
         <article className="admin-metric--accounts"><strong>{metrics.accounts}</strong><span>Accounts</span></article>
+      </section>
+
+      <section className="admin-panel admin-section--scanner">
+        <AdminScannerAccess events={scannerEvents.rows.map((event) => ({
+          id: event.id,
+          title: event.title,
+          startsAt: new Date(event.starts_at).toISOString(),
+          endsAt: new Date(event.ends_at).toISOString(),
+          timezone: event.timezone
+        }))} />
       </section>
 
       <section className="admin-panel meta-ads-panel admin-section--ads">

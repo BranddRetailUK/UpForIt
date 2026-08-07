@@ -76,12 +76,6 @@ export async function requireUser() {
   return user;
 }
 
-export async function requireStaff() {
-  const user = await requireUser();
-  if (user.role !== "staff" && user.role !== "admin") throw new Error("STAFF_REQUIRED");
-  return user;
-}
-
 export async function createSingleUseToken(
   userId: string,
   purpose: "verify_email" | "reset_password",

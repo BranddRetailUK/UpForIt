@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     [ticketId]
   );
   const ticket = result.rows[0];
-  if (!ticket || (ticket.user_id !== user.id && user.role === "customer")) return new NextResponse("Not found", { status: 404 });
+  if (!ticket || (ticket.user_id !== user.id && user.role !== "admin")) return new NextResponse("Not found", { status: 404 });
   const image = await QRCode.toBuffer(createTicketQrToken(ticket.public_id), { type: "png", width: 600, margin: 2 });
   return new NextResponse(new Uint8Array(image), {
     headers: { "content-type": "image/png", "cache-control": "private, no-store" }
