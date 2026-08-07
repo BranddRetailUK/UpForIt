@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Ticket admin", robots: { index: fals
 
 type Metrics = { paid_orders: string; revenue_minor: string; issued_tickets: string; checked_in: string; accounts: string };
 type Tier = { id: string; name: string; price_minor: number; capacity: number | null; max_per_order: number; sort_order: number; is_active: boolean; paid_quantity: string; pending_quantity: string };
-type Order = { id: string; order_number: string; status: string; total_minor: number; created_at: Date; paid_at: Date | null; confirmation_email_sent_at: Date | null; email: string; display_name: string; event_title: string; ticket_count: string; simulated: boolean };
+type Order = { id: string; order_number: string; status: string; total_minor: number; created_at: Date; paid_at: Date | null; confirmation_email_sent_at: Date | null; email: string; display_name: string; event_title: string; ticket_count: string; checked_in_count: string; simulated: boolean };
 type ScannerEvent = { id: string; title: string; starts_at: Date; ends_at: Date; timezone: string };
 
 export default async function AdminPage() {
@@ -43,6 +43,7 @@ export default async function AdminPage() {
       `SELECT o.id, o.order_number, o.status, o.total_minor, o.created_at, o.paid_at,
               o.confirmation_email_sent_at, u.email, u.display_name, e.title AS event_title,
               count(t.id)::text AS ticket_count,
+              count(t.id) FILTER (WHERE t.status = 'checked_in')::text AS checked_in_count,
               EXISTS (
                 SELECT 1 FROM ticket_audit_log a
                  WHERE a.order_id = o.id AND a.action = 'admin_simulated_purchase'
@@ -113,7 +114,7 @@ export default async function AdminPage() {
         <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
           {orders.rows.map((order) => <tr key={order.id}>
             <td className="admin-orders-col--order"><Link href={`/account/orders/${order.id}`}>{order.order_number}</Link>{order.simulated ? <small>Test simulation</small> : null}</td><td className="admin-orders-col--buyer">{order.display_name}<small>{order.email}</small></td>
-            <td className="admin-orders-col--status"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span></td><td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
+            <td className="admin-orders-col--status"><div className="admin-order-statuses"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span>{Number(order.checked_in_count) > 0 ? <span className="admin-status admin-status--scanned" title={`${order.checked_in_count} of ${order.ticket_count} tickets scanned`}>{Number(order.checked_in_count) === Number(order.ticket_count) ? "Scanned" : `${order.checked_in_count}/${order.ticket_count} scanned`}</span> : null}</div></td><td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
             <td className="admin-orders-col--mobile-hidden">{order.confirmation_email_sent_at ? "Sent" : order.status === "paid" ? "Queued/pending" : "—"}</td><td className="admin-orders-col--mobile-hidden">{new Date(order.created_at).toLocaleString("en-GB")}</td>
             <td className="admin-orders-col--mobile-hidden">{order.status === "paid" ? <AdminResendButton orderId={order.id} /> : null}</td>
           </tr>)}

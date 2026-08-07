@@ -1169,8 +1169,10 @@ select {
 .admin-error { max-width: 280px; overflow-wrap: anywhere; }
 .admin-status, .status-toggle { display: inline-block; padding: 6px 9px; border: 2px solid var(--ink); background: #ddd; font-weight: 800; text-transform: uppercase; font-size: .75rem; }
 .admin-status--paid, .status-toggle.is-active { background: #74ed94; }
+.admin-status--scanned { background: var(--yellow); }
 .admin-status--failed, .admin-status--refund_review { background: #ff92ba; }
 .admin-status--refunded, .admin-status--expired { background: #bbb; }
+.admin-order-statuses { display: flex; flex-wrap: wrap; gap: 6px; }
 .status-toggle { cursor: pointer; }
 
 .admin-simulated-purchase {
@@ -4634,6 +4636,10 @@ a {
   .admin-table th,
   .admin-table td {
     text-align: center;
+  }
+
+  .admin-order-statuses {
+    justify-content: center;
   }
 
   .admin-section--orders .admin-table-wrap {
