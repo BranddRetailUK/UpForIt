@@ -32,6 +32,7 @@ export default async function Home() {
             className="home-hero__logo"
             sizes="(max-width: 720px) 82vw, 580px"
             maxWidth={1202}
+            format="png"
             priority
           />
         </div>

@@ -10,6 +10,7 @@ type CloudinaryImageProps = {
   className?: string;
   sizes: string;
   maxWidth?: number;
+  format?: "auto" | "png" | "jpg";
   priority?: boolean;
   style?: CSSProperties;
 };
@@ -22,6 +23,7 @@ export default function CloudinaryImage({
   className,
   sizes,
   maxWidth = asset.width,
+  format = "auto",
   priority = false,
   style
 }: CloudinaryImageProps) {
@@ -32,11 +34,11 @@ export default function CloudinaryImage({
       cappedWidth
     ])
   );
-  const src = cloudinaryUrl(asset, { width: cappedWidth });
+  const src = cloudinaryUrl(asset, { width: cappedWidth, format });
   const srcSet = widths
     .map(
       (width) =>
-        `${cloudinaryUrl(asset, { width })} ${Math.min(width, asset.width)}w`
+        `${cloudinaryUrl(asset, { width, format })} ${Math.min(width, asset.width)}w`
     )
     .join(", ");
 
