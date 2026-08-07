@@ -2732,7 +2732,7 @@ a {
   padding: clamp(10px, 1.4vw, 14px) clamp(20px, 3vw, 30px) clamp(8px, 1.1vw, 11px);
   border: 4px solid var(--ink);
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--paper);
   font-size: clamp(1rem, 1.8vw, 1.35rem);
   letter-spacing: .055em;
   box-shadow: 7px 7px 0 var(--pink);
