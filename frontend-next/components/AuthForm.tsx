@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { notifyCartAuthChanged } from "../lib/cart-storage";
 import { safeNextPath } from "../lib/public-url";
 
 type Mode = "signup" | "login" | "forgot" | "reset";
@@ -53,6 +54,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
       if (!response.ok) throw new Error(result.error || "Something went wrong.");
 
       if (mode === "login") {
+        notifyCartAuthChanged();
         const destination = safeNextPath(nextPath) || "/account";
         router.push(destination);
         router.refresh();

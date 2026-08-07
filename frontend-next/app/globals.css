@@ -4541,7 +4541,6 @@ a {
   .admin-dashboard > .admin-section--orders { order: 4; }
   .admin-dashboard > .admin-section--tiers { order: 5; }
   .admin-dashboard > .admin-section--simulation { order: 6; }
-  .admin-dashboard > .admin-section--meta { order: 7; }
   .admin-dashboard > .admin-section--ads { order: 99; }
 
   .admin-header,
@@ -4564,8 +4563,6 @@ a {
   .admin-header__account-link,
   .admin-metric--accounts,
   .admin-mobile-hidden,
-  .admin-section--email,
-  .admin-section--webhooks,
   .admin-orders-col--mobile-hidden,
   .admin-tier-col--pending,
   .admin-label--desktop {

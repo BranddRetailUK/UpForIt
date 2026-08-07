@@ -14,9 +14,6 @@ export const metadata: Metadata = { title: "Ticket admin", robots: { index: fals
 type Metrics = { paid_orders: string; revenue_minor: string; issued_tickets: string; checked_in: string; accounts: string };
 type Tier = { id: string; name: string; price_minor: number; capacity: number | null; max_per_order: number; sort_order: number; is_active: boolean; paid_quantity: string; pending_quantity: string };
 type Order = { id: string; order_number: string; status: string; total_minor: number; created_at: Date; paid_at: Date | null; confirmation_email_sent_at: Date | null; email: string; display_name: string; event_title: string; ticket_count: string; simulated: boolean };
-type EmailJob = { id: string; job_type: string; status: string; attempts: number; last_error: string | null; created_at: Date; sent_at: Date | null };
-type Webhook = { stripe_event_id: string; event_type: string; processed_at: Date | null; error_message: string | null; created_at: Date };
-type MetaJob = { id: string; event_name: string; event_id: string; status: string; attempts: number; response_status: number | null; last_error: string | null; created_at: Date; delivered_at: Date | null };
 type ScannerEvent = { id: string; title: string; starts_at: Date; ends_at: Date; timezone: string };
 
 export default async function AdminPage() {
@@ -24,7 +21,7 @@ export default async function AdminPage() {
   if (!user) redirect("/account/login");
   if (user.role !== "admin") redirect(user.role === "staff" ? "/scan" : "/account");
 
-  const [metricResult, tiers, orders, emailJobs, webhooks, metaJobs, metaAds, scannerEvents] = await Promise.all([
+  const [metricResult, tiers, orders, metaAds, scannerEvents] = await Promise.all([
     getPool().query<Metrics>(
       `SELECT
         (SELECT count(*) FROM ticket_orders WHERE status = 'paid')::text AS paid_orders,
@@ -54,18 +51,6 @@ export default async function AdminPage() {
        LEFT JOIN tickets t ON t.order_id = o.id
        GROUP BY o.id, u.email, u.display_name, e.title
        ORDER BY o.created_at DESC LIMIT 100`
-    ),
-    getPool().query<EmailJob>(
-      `SELECT id, job_type, status, attempts, last_error, created_at, sent_at
-       FROM email_jobs ORDER BY created_at DESC LIMIT 40`
-    ),
-    getPool().query<Webhook>(
-      `SELECT stripe_event_id, event_type, processed_at, error_message, created_at
-       FROM stripe_event_receipts ORDER BY created_at DESC LIMIT 40`
-    ),
-    getPool().query<MetaJob>(
-      `SELECT id, event_name, event_id, status, attempts, response_status, last_error, created_at, delivered_at
-       FROM meta_conversion_jobs ORDER BY created_at DESC LIMIT 40`
     ),
     getMetaAdsSummary(),
     getPool().query<ScannerEvent>(
@@ -106,6 +91,52 @@ export default async function AdminPage() {
         }))} />
       </section>
 
+      {user.role === "admin" && process.env.APP_ENV === "testing" ? (
+        <section className="admin-panel admin-section--simulation">
+          <AdminSimulatedPurchase tiers={tiers.rows.map((tier) => {
+            const paid = Number(tier.paid_quantity);
+            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
+            return {
+              id: tier.id,
+              name: tier.name,
+              priceMinor: tier.price_minor,
+              maxPerOrder: tier.max_per_order,
+              remaining,
+              available: tier.is_active && (remaining === null || remaining > 0)
+            };
+          })} />
+        </section>
+      ) : null}
+
+      <section className="admin-panel admin-section--orders">
+        <h2>Latest orders</h2>
+        <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
+          {orders.rows.map((order) => <tr key={order.id}>
+            <td className="admin-orders-col--order"><Link href={`/account/orders/${order.id}`}>{order.order_number}</Link>{order.simulated ? <small>Test simulation</small> : null}</td><td className="admin-orders-col--buyer">{order.display_name}<small>{order.email}</small></td>
+            <td className="admin-orders-col--status"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span></td><td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
+            <td className="admin-orders-col--mobile-hidden">{order.confirmation_email_sent_at ? "Sent" : order.status === "paid" ? "Queued/pending" : "—"}</td><td className="admin-orders-col--mobile-hidden">{new Date(order.created_at).toLocaleString("en-GB")}</td>
+            <td className="admin-orders-col--mobile-hidden">{order.status === "paid" ? <AdminResendButton orderId={order.id} /> : null}</td>
+          </tr>)}
+        </tbody></table></div>
+      </section>
+
+      <section className="admin-panel admin-section--tiers">
+        <h2>Ticket tiers</h2>
+        <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 Tier 1 tickets, then unlimited Tier 2 tickets.</p>
+        <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--pending">Open checkouts</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
+          {tiers.rows.map((tier) => {
+            const paid = Number(tier.paid_quantity);
+            const pending = Number(tier.pending_quantity);
+            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
+            const soldOut = tier.capacity !== null && (
+              paid >= tier.capacity || (activeSortOrder !== undefined && tier.sort_order < activeSortOrder)
+            );
+            const status = soldOut ? "Sold out" : tier.is_active ? "On sale" : "Coming next";
+            return <tr key={tier.id}><td className="admin-tier-col--tier">{tier.name}</td><td className="admin-tier-col--price">£{(tier.price_minor / 100).toFixed(2)}</td><td className="admin-tier-col--capacity">{tier.capacity ?? "Unlimited"}</td><td className="admin-tier-col--paid">{paid}</td><td className="admin-tier-col--pending">{pending}</td><td className="admin-tier-col--remaining">{remaining ?? "Unlimited"}</td><td className="admin-tier-col--status"><span className={`admin-status${tier.is_active ? " admin-status--paid" : ""}`}>{status}</span></td></tr>;
+          })}
+        </tbody></table></div>
+      </section>
+
       <section className="admin-panel meta-ads-panel admin-section--ads">
         <div className="meta-ads-panel__header">
           <div>
@@ -141,73 +172,6 @@ export default async function AdminPage() {
         )}
       </section>
 
-      {user.role === "admin" && process.env.APP_ENV === "testing" ? (
-        <section className="admin-panel admin-section--simulation">
-          <AdminSimulatedPurchase tiers={tiers.rows.map((tier) => {
-            const paid = Number(tier.paid_quantity);
-            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
-            return {
-              id: tier.id,
-              name: tier.name,
-              priceMinor: tier.price_minor,
-              maxPerOrder: tier.max_per_order,
-              remaining,
-              available: tier.is_active && (remaining === null || remaining > 0)
-            };
-          })} />
-        </section>
-      ) : null}
-
-      <section className="admin-panel admin-section--tiers">
-        <h2>Ticket tiers</h2>
-        <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 Tier 1 tickets, then unlimited Tier 2 tickets.</p>
-        <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--pending">Open checkouts</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
-          {tiers.rows.map((tier) => {
-            const paid = Number(tier.paid_quantity);
-            const pending = Number(tier.pending_quantity);
-            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
-            const soldOut = tier.capacity !== null && (
-              paid >= tier.capacity || (activeSortOrder !== undefined && tier.sort_order < activeSortOrder)
-            );
-            const status = soldOut ? "Sold out" : tier.is_active ? "On sale" : "Coming next";
-            return <tr key={tier.id}><td className="admin-tier-col--tier">{tier.name}</td><td className="admin-tier-col--price">£{(tier.price_minor / 100).toFixed(2)}</td><td className="admin-tier-col--capacity">{tier.capacity ?? "Unlimited"}</td><td className="admin-tier-col--paid">{paid}</td><td className="admin-tier-col--pending">{pending}</td><td className="admin-tier-col--remaining">{remaining ?? "Unlimited"}</td><td className="admin-tier-col--status"><span className={`admin-status${tier.is_active ? " admin-status--paid" : ""}`}>{status}</span></td></tr>;
-          })}
-        </tbody></table></div>
-      </section>
-
-      <section className="admin-panel admin-section--orders">
-        <h2>Latest orders</h2>
-        <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
-          {orders.rows.map((order) => <tr key={order.id}>
-            <td className="admin-orders-col--order"><Link href={`/account/orders/${order.id}`}>{order.order_number}</Link>{order.simulated ? <small>Test simulation</small> : null}</td><td className="admin-orders-col--buyer">{order.display_name}<small>{order.email}</small></td>
-            <td className="admin-orders-col--status"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span></td><td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
-            <td className="admin-orders-col--mobile-hidden">{order.confirmation_email_sent_at ? "Sent" : order.status === "paid" ? "Queued/pending" : "—"}</td><td className="admin-orders-col--mobile-hidden">{new Date(order.created_at).toLocaleString("en-GB")}</td>
-            <td className="admin-orders-col--mobile-hidden">{order.status === "paid" ? <AdminResendButton orderId={order.id} /> : null}</td>
-          </tr>)}
-        </tbody></table></div>
-      </section>
-
-      <section className="admin-panel admin-section--email">
-        <h2>Email delivery</h2>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Type</th><th>Status</th><th>Attempts</th><th>Created</th><th>Error</th></tr></thead><tbody>
-          {emailJobs.rows.map((job) => <tr key={job.id}><td>{job.job_type.replace(/_/g, " ")}</td><td>{job.status}</td><td>{job.attempts}</td><td>{new Date(job.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{job.last_error || "—"}</td></tr>)}
-        </tbody></table></div>
-      </section>
-
-      <section className="admin-panel admin-section--meta">
-        <h2>Meta conversion delivery</h2>
-        <p>Ticket checkout and paid Purchase events are delivered asynchronously. A Meta outage cannot hold up tickets or email.</p>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Event</th><th>Status</th><th>Attempts</th><th>API</th><th>Created</th><th>Error</th></tr></thead><tbody>
-          {metaJobs.rows.map((job) => <tr key={job.id}><td>{job.event_name}<small>{job.event_id}</small></td><td>{job.status}</td><td>{job.attempts}</td><td>{job.response_status ?? "—"}</td><td>{new Date(job.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{job.last_error || (job.delivered_at ? "Delivered" : "—")}</td></tr>)}
-        </tbody></table></div>
-      </section>
-
-      <section className="admin-panel admin-section--webhooks">
-        <h2>Stripe webhooks</h2>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Event</th><th>Type</th><th>Received</th><th>Result</th></tr></thead><tbody>
-          {webhooks.rows.map((event) => <tr key={event.stripe_event_id}><td>{event.stripe_event_id}</td><td>{event.event_type}</td><td>{new Date(event.created_at).toLocaleString("en-GB")}</td><td className="admin-error">{event.error_message || (event.processed_at ? "Processed" : "Pending")}</td></tr>)}
-        </tbody></table></div>
-      </section>
     </div>
   );
 }

@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { checkoutIntentStorageKey } from "../lib/cart-storage";
 import { getDisplayedMerchDeliveryMinor } from "../lib/merch-delivery";
 import { CartLines, useCart, type CartLine } from "./CartProvider";
 import { useMetaTracking } from "./MetaTrackingProvider";
-
-const CHECKOUT_INTENT_STORAGE_KEY = "upforit.merch.checkout-intent.v1";
 
 type TicketMerchDiscount = {
   entitlementId: string;
@@ -13,25 +12,25 @@ type TicketMerchDiscount = {
   status: "available" | "reserved";
 };
 
-function getCheckoutIntentKey(lines: CartLine[], discountEntitlementId = "") {
+function getCheckoutIntentKey(lines: CartLine[], storageKey: string, discountEntitlementId = "") {
   const fingerprint = lines
     .map((line) => `${line.variantId}:${line.quantity}`)
     .sort()
     .join("|") + `|discount:${discountEntitlementId}`;
   try {
-    const stored = JSON.parse(window.sessionStorage.getItem(CHECKOUT_INTENT_STORAGE_KEY) || "null");
+    const stored = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
     const fresh = Date.now() - Number(stored?.createdAt || 0) < 25 * 60 * 1000;
     if (fresh && stored?.fingerprint === fingerprint && /^ufi_[0-9a-f-]{36}$/i.test(String(stored?.key || ""))) {
       return String(stored.key);
     }
   } catch {}
   const key = `ufi_${window.crypto.randomUUID()}`;
-  window.sessionStorage.setItem(CHECKOUT_INTENT_STORAGE_KEY, JSON.stringify({ fingerprint, key, createdAt: Date.now() }));
+  window.sessionStorage.setItem(storageKey, JSON.stringify({ fingerprint, key, createdAt: Date.now() }));
   return key;
 }
 
 export default function CartPageClient({ cancelled = false }: { cancelled?: boolean }) {
-  const { lines, replaceLines } = useCart();
+  const { cartOwnerId, lines, ready, replaceLines } = useCart();
   const { createEventId, track } = useMetaTracking();
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -49,11 +48,23 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
   }).format(valueMinor / 100);
 
   useEffect(() => {
-    if (cancelled) window.sessionStorage.removeItem(CHECKOUT_INTENT_STORAGE_KEY);
+    if (!ready) {
+      setChecking(true);
+      setDiscount(null);
+      return;
+    }
+    setChecking(true);
+    setDiscount(null);
+    setError("");
+    setNotice("");
+    if (cancelled) {
+      window.sessionStorage.removeItem(checkoutIntentStorageKey(cartOwnerId));
+    }
     if (!lines.length) {
       setChecking(false);
       return;
     }
+    let active = true;
     const controller = new AbortController();
     void fetch("/api/merch/cart", {
       method: "POST",
@@ -63,16 +74,24 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
     }).then(async (response) => {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Unable to refresh cart");
+      if (!active) return;
       replaceLines(payload.lines as CartLine[]);
       setDiscount(payload.discount as TicketMerchDiscount | null);
       if (Number(payload.removedCount || 0) > 0) {
         setNotice(`${Number(payload.removedCount)} unavailable cart item${Number(payload.removedCount) === 1 ? " was" : "s were"} removed and prices were refreshed.`);
       }
     }).catch((reason) => {
-      if (reason?.name !== "AbortError") setError(reason?.message || "Unable to refresh cart");
-    }).finally(() => setChecking(false));
-    return () => controller.abort();
-  }, []); // The cart is deliberately refreshed once when this checkout page opens.
+      if (active && reason?.name !== "AbortError") {
+        setError(reason?.message || "Unable to refresh cart");
+      }
+    }).finally(() => {
+      if (active) setChecking(false);
+    });
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [ready]); // Refresh after the active account's cart has been restored.
 
   async function checkout() {
     if (!lines.length || submitting) return;
@@ -85,7 +104,11 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           items: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
-          idempotencyKey: getCheckoutIntentKey(lines, discount?.entitlementId),
+          idempotencyKey: getCheckoutIntentKey(
+            lines,
+            checkoutIntentStorageKey(cartOwnerId),
+            discount?.entitlementId
+          ),
           discountEntitlementId: discount?.entitlementId
         })
       });

@@ -9,6 +9,14 @@ import {
   useMemo,
   useState
 } from "react";
+import {
+  CART_AUTH_CHANGED_EVENT,
+  CART_AUTH_SYNC_STORAGE_KEY,
+  LEGACY_CART_STORAGE_KEY,
+  LEGACY_CHECKOUT_INTENT_STORAGE_KEY,
+  checkoutIntentStorageKey,
+  userCartStorageKey
+} from "../lib/cart-storage";
 import { splitMerchProductTitle } from "../lib/product-title";
 import MerchImage from "./MerchImage";
 
@@ -29,6 +37,8 @@ type CartContextValue = {
   lines: CartLine[];
   count: number;
   drawerOpen: boolean;
+  ready: boolean;
+  cartOwnerId: string | null;
   addLine: (line: CartLine) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   removeLine: (variantId: string) => void;
@@ -38,7 +48,6 @@ type CartContextValue = {
   closeDrawer: () => void;
 };
 
-const STORAGE_KEY = "upforit.merch.cart.v1";
 const CartContext = createContext<CartContextValue | null>(null);
 
 function normalizeLines(value: unknown): CartLine[] {
@@ -63,46 +72,136 @@ function normalizeLines(value: unknown): CartLine[] {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [cartOwnerId, setCartOwnerId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const controller = new AbortController();
     let active = true;
-    let restored: CartLine[] = [];
+    let ownerId: string | null | undefined;
+    let requestVersion = 0;
+    let canonicalController: AbortController | null = null;
+
     try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      restored = normalizeLines(stored ? JSON.parse(stored) : []);
-      setLines(restored);
-    } catch {
-      setLines([]);
-    }
-    setHydrated(true);
-    if (restored.length) {
-      void fetch("/api/merch/cart", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          items: restored.map((line) => ({ variantId: line.variantId, quantity: line.quantity }))
-        }),
-        signal: controller.signal
-      }).then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || "Unable to refresh cart");
-        if (active) setLines(normalizeLines(payload.lines));
-      }).catch((error) => {
-        if (error?.name !== "AbortError") console.warn("[merch-cart] canonical refresh failed");
-      });
-    }
+      window.localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
+    } catch {}
+    try {
+      window.sessionStorage.removeItem(LEGACY_CHECKOUT_INTENT_STORAGE_KEY);
+    } catch {}
+
+    const loadCartOwner = async (clearImmediately = false) => {
+      const version = ++requestVersion;
+      if (clearImmediately) {
+        canonicalController?.abort();
+        try {
+          window.sessionStorage.removeItem(checkoutIntentStorageKey(ownerId));
+          window.sessionStorage.removeItem(checkoutIntentStorageKey(null));
+        } catch {}
+        setHydrated(false);
+        setLines([]);
+        setDrawerOpen(false);
+      }
+
+      try {
+        const response = await fetch("/api/auth/session", {
+          cache: "no-store",
+          credentials: "same-origin"
+        });
+        if (!response.ok) throw new Error("Unable to confirm cart owner");
+        const payload = await response.json() as { accountId?: unknown };
+        const nextOwnerId = typeof payload.accountId === "string"
+          ? payload.accountId
+          : null;
+        if (!active || version !== requestVersion) return;
+        if (ownerId === nextOwnerId && !clearImmediately) return;
+
+        ownerId = nextOwnerId;
+        canonicalController?.abort();
+        setHydrated(false);
+        setCartOwnerId(nextOwnerId);
+        setDrawerOpen(false);
+
+        let restored: CartLine[] = [];
+        const storageKey = userCartStorageKey(nextOwnerId);
+        if (storageKey) {
+          try {
+            const stored = window.localStorage.getItem(storageKey);
+            restored = normalizeLines(stored ? JSON.parse(stored) : []);
+          } catch {}
+        }
+        setLines(restored);
+        setHydrated(true);
+
+        if (restored.length) {
+          const controller = new AbortController();
+          canonicalController = controller;
+          void fetch("/api/merch/cart", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              items: restored.map((line) => ({
+                variantId: line.variantId,
+                quantity: line.quantity
+              }))
+            }),
+            signal: controller.signal
+          }).then(async (cartResponse) => {
+            const cartPayload = await cartResponse.json();
+            if (!cartResponse.ok) {
+              throw new Error(cartPayload.error || "Unable to refresh cart");
+            }
+            if (active && version === requestVersion) {
+              setLines(normalizeLines(cartPayload.lines));
+            }
+          }).catch((error) => {
+            if (error?.name !== "AbortError") {
+              console.warn("[merch-cart] canonical refresh failed");
+            }
+          });
+        }
+      } catch {
+        if (!active || version !== requestVersion) return;
+        ownerId = null;
+        canonicalController?.abort();
+        setCartOwnerId(null);
+        setLines([]);
+        setDrawerOpen(false);
+        setHydrated(true);
+      }
+    };
+
+    const onAuthChanged = () => void loadCartOwner(true);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === CART_AUTH_SYNC_STORAGE_KEY) onAuthChanged();
+    };
+    const onFocus = () => void loadCartOwner();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void loadCartOwner();
+    };
+
+    void loadCartOwner();
+    window.addEventListener(CART_AUTH_CHANGED_EVENT, onAuthChanged);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
     return () => {
       active = false;
-      controller.abort();
+      canonicalController?.abort();
+      window.removeEventListener(CART_AUTH_CHANGED_EVENT, onAuthChanged);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
-  }, [hydrated, lines]);
+    const storageKey = userCartStorageKey(cartOwnerId);
+    if (!storageKey) return;
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(lines));
+    } catch {}
+  }, [cartOwnerId, hydrated, lines]);
 
   useEffect(() => {
     document.body.classList.toggle("cart-open", drawerOpen);
@@ -153,6 +252,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     lines,
     count: lines.reduce((sum, line) => sum + line.quantity, 0),
     drawerOpen,
+    ready: hydrated,
+    cartOwnerId,
     addLine,
     updateQuantity,
     removeLine,
@@ -160,7 +261,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     clearCart,
     openDrawer,
     closeDrawer
-  }), [addLine, clearCart, closeDrawer, drawerOpen, lines, openDrawer, removeLine, updateQuantity]);
+  }), [addLine, cartOwnerId, clearCart, closeDrawer, drawerOpen, hydrated, lines, openDrawer, removeLine, updateQuantity]);
 
   return (
     <CartContext.Provider value={value}>
