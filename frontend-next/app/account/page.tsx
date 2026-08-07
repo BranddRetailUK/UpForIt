@@ -108,11 +108,6 @@ export default async function AccountPage() {
             <h1>Hi, {firstName}!</h1>
             <p>Tickets, merch orders and account details—all together.</p>
           </div>
-          <nav className="account-dashboard__nav" aria-label="Account sections">
-            <a href="#tickets">Tickets</a>
-            <a href="#merch-orders">Merch</a>
-            <a href="#profile">Profile</a>
-          </nav>
         </header>
 
         {perkReady ? (
