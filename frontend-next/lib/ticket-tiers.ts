@@ -96,12 +96,14 @@ export async function lockTicketTiersForCheckout(client: PoolClient, selections:
     const selection = selections[index];
     const tier = orderedTiers[index];
     if (tier.capacity === null) continue;
+    // An open Stripe Checkout does not hold inventory. Paid orders alone move
+    // availability and tier progression; already-created sessions keep their price.
     const allocated = await client.query<{ quantity: string }>(
       `SELECT COALESCE(sum(i.quantity), 0)::text AS quantity
          FROM ticket_order_items i
          JOIN ticket_orders o ON o.id = i.order_id
         WHERE i.ticket_type_id = $1
-          AND (o.status = 'paid' OR (o.status = 'pending' AND o.reserved_until > now()))`,
+          AND o.status = 'paid'`,
       [tier.id]
     );
     if (Number(allocated.rows[0].quantity) + selection.quantity > tier.capacity) {
@@ -111,4 +113,3 @@ export async function lockTicketTiersForCheckout(client: PoolClient, selections:
 
   return { eventId, tiers: orderedTiers };
 }
-

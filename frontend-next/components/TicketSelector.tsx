@@ -12,7 +12,7 @@ type Tier = {
   maxPerOrder: number;
   remaining: number | null;
   active: boolean;
-  status: "on_sale" | "sold_out" | "reserved" | "upcoming";
+  status: "on_sale" | "sold_out" | "upcoming";
 };
 
 export default function TicketSelector({
@@ -97,9 +97,7 @@ export default function TicketSelector({
           const quantity = quantities[tier.id] ?? 0;
           const status = tier.status === "sold_out"
             ? "Sold out"
-            : tier.status === "reserved"
-              ? "All remaining tickets are currently held"
-              : null;
+            : null;
           return (
           <div className={`ticket-tier ticket-tier--${tier.status}${tier.active ? "" : " is-inactive"}${tier.status === "sold_out" ? " is-sold-out" : ""}${tier.status === "upcoming" ? " has-coming-soon" : ""}`} key={tier.id}>
             <span className="ticket-tier__copy">

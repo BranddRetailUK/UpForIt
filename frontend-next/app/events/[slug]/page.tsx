@@ -20,7 +20,6 @@ type TierRow = {
   sort_order: number;
   is_active: boolean;
   paid_quantity: string;
-  reserved_quantity: string;
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -41,10 +40,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const [tierResult, user] = await Promise.all([
     getPool().query<TierRow>(
       `SELECT tt.id, tt.name, tt.price_minor, tt.max_per_order, tt.capacity, tt.sort_order, tt.is_active,
-              COALESCE(sum(i.quantity) FILTER (WHERE o.status = 'paid'), 0)::text AS paid_quantity,
-              COALESCE(sum(i.quantity) FILTER (
-                WHERE o.status = 'pending' AND o.reserved_until > now()
-              ), 0)::text AS reserved_quantity
+              COALESCE(sum(i.quantity) FILTER (WHERE o.status = 'paid'), 0)::text AS paid_quantity
          FROM ticket_types tt
          LEFT JOIN ticket_order_items i ON i.ticket_type_id = tt.id
          LEFT JOIN ticket_orders o ON o.id = i.order_id
@@ -88,8 +84,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           signedIn={Boolean(user)}
           tiers={tierResult.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
-            const reserved = Number(tier.reserved_quantity);
-            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid - reserved);
+            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
             const soldOut = tier.capacity !== null && (
               paid >= tier.capacity || (activeSortOrder !== undefined && tier.sort_order < activeSortOrder)
             );
@@ -100,7 +95,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               maxPerOrder: tier.max_per_order,
               remaining,
               active: tier.is_active && (remaining === null || remaining > 0),
-              status: soldOut ? "sold_out" as const : tier.is_active && remaining === 0 ? "reserved" as const : tier.is_active ? "on_sale" as const : "upcoming" as const
+              status: soldOut ? "sold_out" as const : tier.is_active ? "on_sale" as const : "upcoming" as const
             };
           })}
         />

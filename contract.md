@@ -16,7 +16,7 @@ MUST=keep `STANDALONE_STOREFRONT_UPFORIT_SECRET` server-only and identical on Up
 MUST=use Good Game LIVE admin/service for UpForIt work; do not implement/deploy this feature through the separate Good Game Railway Testing admin UI
 MUST=preserve `www.upforitevents.co.uk` as canonical public origin
 MUST_NOT=model UpForIt as a fake creator, create creator commission/rewards, or store UpForIt products in local JSON/DB copies
-MUST_NOT=allocate a Good Game merch UFI order number before successful payment; native ticket reservation references may exist while Stripe Checkout is pending
+MUST_NOT=allocate a Good Game merch UFI order number before successful payment; native ticket pending-checkout references may exist while Stripe Checkout is pending
 MUST_NOT=expose product costs/admin fields/storefront secret/database URL to browser code
 
 [repository]
@@ -122,7 +122,7 @@ POST_/api/auth/logout=revokes current session
 GET_/api/auth/verify=single-use email verification and signed-in redirect
 POST_/api/auth/forgot-password=enumeration-safe one-hour reset email request
 POST_/api/auth/reset-password=single-use password replacement and all-session revocation
-POST_/api/tickets/checkout=authenticated server-priced event-ticket reservation and Stripe-hosted Checkout Session
+POST_/api/tickets/checkout=authenticated server-priced pending ticket order and Stripe-hosted Checkout Session; availability changes only after verified payment
 POST_/api/stripe/tickets-webhook=raw-body verified, livemode-guarded, idempotent native ticket fulfilment/refund processing
 GET_/api/tickets/orders/:id/pdf=owner/staff single printable order PDF with one page and one unique QR per admission ticket
 POST_/api/admin/check-in=staff-only atomic one-use QR/manual ticket check-in
@@ -324,7 +324,9 @@ tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilmen
 [native_ticket_sales]
 prices=Early Bird £5; Tier 1 £7.50; Tier 2 £10; exact displayed total with no booking fee
 progression=Early Bird is capped at 50 paid tickets; Tier 1 then activates for 100 paid tickets; Tier 2 then activates with no capacity limit
-concurrency=checkout and admin simulation lock tier rows and count paid plus unexpired pending reservations before allocating tickets
+concurrency=checkout and admin simulation lock tier rows and count paid tickets only; open or abandoned Stripe Checkout Sessions never reduce availability
+checkout_price_lock=the tier and unit price are snapshotted when the dedicated ticket Stripe Checkout Session is created; that session keeps its original price if the sale advances before payment
+checkout_overrun=simultaneous successful payments may take a capped price tier slightly above its nominal paid-ticket threshold; those payments are honoured and the sale advances monotonically
 monotonicity=once the sale advances to a later tier it does not reopen a cheaper tier after refunds
 customer_flow=/events Buy tickets -> dedicated ticket selector -> required verified account -> native ticket Stripe Checkout -> webhook fulfilment -> email/PDF/QR -> persistent account wallet
 ticket_merch_discount=first real paid ticket order grants one lifetime account entitlement regardless of ticket quantity; later ticket orders never grant another; the entitlement persists until redeemed, is revoked if its source ticket order is fully refunded while unused, excludes delivery, never stacks, and is not reissued after a merch refund; admin simulation does not qualify

@@ -70,4 +70,3 @@ export function verifyTicketQrToken(token: string) {
   }
   return actual.length === expected.length && timingSafeEqual(actual, expected) ? publicId : null;
 }
-

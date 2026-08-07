@@ -3933,7 +3933,7 @@ a {
   .admin-section--email,
   .admin-section--webhooks,
   .admin-orders-col--mobile-hidden,
-  .admin-tier-col--reserved,
+  .admin-tier-col--pending,
   .admin-label--desktop {
     display: none;
   }

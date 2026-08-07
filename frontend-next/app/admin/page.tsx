@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ticket admin", robots: { index: false, follow: false } };
 
 type Metrics = { paid_orders: string; revenue_minor: string; issued_tickets: string; checked_in: string; accounts: string };
-type Tier = { id: string; name: string; price_minor: number; capacity: number | null; max_per_order: number; sort_order: number; is_active: boolean; paid_quantity: string; reserved_quantity: string };
+type Tier = { id: string; name: string; price_minor: number; capacity: number | null; max_per_order: number; sort_order: number; is_active: boolean; paid_quantity: string; pending_quantity: string };
 type Order = { id: string; order_number: string; status: string; total_minor: number; created_at: Date; paid_at: Date | null; confirmation_email_sent_at: Date | null; email: string; display_name: string; event_title: string; ticket_count: string; simulated: boolean };
 type EmailJob = { id: string; job_type: string; status: string; attempts: number; last_error: string | null; created_at: Date; sent_at: Date | null };
 type Webhook = { stripe_event_id: string; event_type: string; processed_at: Date | null; error_message: string | null; created_at: Date };
@@ -34,7 +34,7 @@ export default async function AdminPage() {
     getPool().query<Tier>(
       `SELECT tt.id, tt.name, tt.price_minor, tt.capacity, tt.max_per_order, tt.sort_order, tt.is_active,
         COALESCE(sum(i.quantity) FILTER (WHERE o.status = 'paid'), 0)::text AS paid_quantity,
-        COALESCE(sum(i.quantity) FILTER (WHERE o.status = 'pending' AND o.reserved_until > now()), 0)::text AS reserved_quantity
+        COALESCE(sum(i.quantity) FILTER (WHERE o.status = 'pending' AND o.reserved_until > now()), 0)::text AS pending_quantity
        FROM ticket_types tt
        LEFT JOIN ticket_order_items i ON i.ticket_type_id = tt.id
        LEFT JOIN ticket_orders o ON o.id = i.order_id
@@ -127,8 +127,7 @@ export default async function AdminPage() {
         <section className="admin-panel admin-section--simulation">
           <AdminSimulatedPurchase tiers={tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
-            const reserved = Number(tier.reserved_quantity);
-            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid - reserved);
+            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
             return {
               id: tier.id,
               name: tier.name,
@@ -144,16 +143,16 @@ export default async function AdminPage() {
       <section className="admin-panel admin-section--tiers">
         <h2>Ticket tiers</h2>
         <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 Tier 1 tickets, then unlimited Tier 2 tickets.</p>
-        <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--reserved">Reserved</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
+        <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--pending">Open checkouts</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
           {tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
-            const reserved = Number(tier.reserved_quantity);
-            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid - reserved);
+            const pending = Number(tier.pending_quantity);
+            const remaining = tier.capacity === null ? null : Math.max(0, tier.capacity - paid);
             const soldOut = tier.capacity !== null && (
               paid >= tier.capacity || (activeSortOrder !== undefined && tier.sort_order < activeSortOrder)
             );
-            const status = soldOut ? "Sold out" : tier.is_active ? (remaining === 0 ? "Fully reserved" : "On sale") : "Coming next";
-            return <tr key={tier.id}><td className="admin-tier-col--tier">{tier.name}</td><td className="admin-tier-col--price">£{(tier.price_minor / 100).toFixed(2)}</td><td className="admin-tier-col--capacity">{tier.capacity ?? "Unlimited"}</td><td className="admin-tier-col--paid">{paid}</td><td className="admin-tier-col--reserved">{reserved}</td><td className="admin-tier-col--remaining">{remaining ?? "Unlimited"}</td><td className="admin-tier-col--status"><span className={`admin-status${tier.is_active ? " admin-status--paid" : ""}`}>{status}</span></td></tr>;
+            const status = soldOut ? "Sold out" : tier.is_active ? "On sale" : "Coming next";
+            return <tr key={tier.id}><td className="admin-tier-col--tier">{tier.name}</td><td className="admin-tier-col--price">£{(tier.price_minor / 100).toFixed(2)}</td><td className="admin-tier-col--capacity">{tier.capacity ?? "Unlimited"}</td><td className="admin-tier-col--paid">{paid}</td><td className="admin-tier-col--pending">{pending}</td><td className="admin-tier-col--remaining">{remaining ?? "Unlimited"}</td><td className="admin-tier-col--status"><span className={`admin-status${tier.is_active ? " admin-status--paid" : ""}`}>{status}</span></td></tr>;
           })}
         </tbody></table></div>
       </section>
