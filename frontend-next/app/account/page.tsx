@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AccountProfileForm from "../../components/AccountProfileForm";
+import CloudinaryImage from "../../components/CloudinaryImage";
 import LogoutButton from "../../components/LogoutButton";
 import MerchImage from "../../components/MerchImage";
 import { getCurrentUser } from "../../lib/auth";
+import { CLOUDINARY_ASSETS } from "../../lib/cloudinary";
 import { getPool } from "../../lib/db";
 import { formatMerchMoney, getMerchAccountOrders, type MerchAccountOrder } from "../../lib/merch";
 import { getMerchDiscountEntitlement } from "../../lib/merch-discounts";
@@ -83,18 +85,24 @@ export default async function AccountPage() {
   ]);
 
   const ticketOrders = ordersResult.rows;
-  const ticketCount = ticketOrders.reduce((sum, order) => sum + Number(order.ticket_count || 0), 0);
   const firstName = user.displayName.trim().split(/\s+/)[0] || "there";
-  const initials = user.displayName.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "U";
   const accountCreatedAt = accountResult.rows[0]?.created_at;
   const perkReady = discount?.status === "available" || discount?.status === "reserved";
-  const perkLabel = perkReady ? "Ready" : discount?.status === "redeemed" ? "Used" : "Not yet";
 
   return (
     <div className="inner-page section-wrap account-page account-dashboard-page">
       <section className="account-panel account-panel--wide account-dashboard">
         <header className="account-dashboard__hero">
-          <div className="account-dashboard__avatar" aria-hidden="true">{initials}</div>
+          <div className="account-dashboard__avatar" aria-hidden="true">
+            <CloudinaryImage
+              asset={CLOUDINARY_ASSETS.smiley}
+              alt=""
+              className="account-dashboard__avatar-image"
+              sizes="(max-width: 700px) 68px, 96px"
+              maxWidth={160}
+              priority
+            />
+          </div>
           <div>
             <p className="comic-kicker comic-kicker--yellow">Your UPFORIT profile</p>
             <h1>Hi, {firstName}!</h1>
@@ -106,18 +114,6 @@ export default async function AccountPage() {
             <a href="#profile">Profile</a>
           </nav>
         </header>
-
-        <div className="account-overview" aria-label="Account overview">
-          <article className="account-stat account-stat--yellow">
-            <span>Tickets</span><strong>{ticketCount}</strong><small>Across {ticketOrders.length} order{ticketOrders.length === 1 ? "" : "s"}</small>
-          </article>
-          <article className="account-stat account-stat--pink">
-            <span>Merch orders</span><strong>{merchHistory.available ? merchHistory.orders.length : "—"}</strong><small>{merchHistory.available ? "Fulfilled by Good Game" : "Temporarily unavailable"}</small>
-          </article>
-          <article className="account-stat account-stat--blue">
-            <span>20% merch perk</span><strong>{perkLabel}</strong><small>For eligible ticket holders</small>
-          </article>
-        </div>
 
         {perkReady ? (
           <aside className="account-perk" aria-labelledby="account-perk-title">
