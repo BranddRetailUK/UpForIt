@@ -43,8 +43,10 @@ describe("ticket order fulfilment", () => {
 
     const fulfilled = await fulfilPaidOrder({ query } as never, "order-123", "pi_123");
     const ticketInserts = query.mock.calls.filter(([sql]) => String(sql).includes("INSERT INTO tickets"));
+    const discountInserts = query.mock.calls.filter(([sql]) => String(sql).includes("INSERT INTO merch_discount_entitlements"));
 
     expect(ticketInserts).toHaveLength(3);
+    expect(discountInserts).toHaveLength(1);
     expect(new Set(ticketInserts.map(([, values]) => (values as unknown[])[2])).size).toBe(3);
     expect(fulfilled).toMatchObject({
       orderId: "order-123",

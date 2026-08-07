@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useMetaTracking } from "./MetaTrackingProvider";
+import TicketMerchPromoBanner from "./TicketMerchPromoBanner";
 
 type Tier = {
   id: string;
@@ -89,6 +90,7 @@ export default function TicketSelector({
   return (
     <section className="ticket-selector" id="tickets">
       <h2>Tickets</h2>
+      <TicketMerchPromoBanner compact />
       <div className="ticket-tier-list">
         {tiers.map((tier) => {
           const maximum = Math.min(tier.maxPerOrder, tier.remaining ?? tier.maxPerOrder);

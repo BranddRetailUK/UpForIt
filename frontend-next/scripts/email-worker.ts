@@ -7,6 +7,12 @@ import {
   verificationEmailHtml
 } from "../lib/email-templates";
 import { sendMetaConversion } from "../lib/meta-conversion";
+import { getMerchCheckoutConfirmation, revokeGoodGameMerchDiscount } from "../lib/merch";
+import {
+  MERCH_DISCOUNT_SYNC_MAX_ATTEMPTS,
+  merchDiscountRetryDelayMinutes,
+  reconcileMerchDiscountFromConfirmation
+} from "../lib/merch-discounts";
 import {
   META_JOB_MAX_ATTEMPTS,
   metaDeliveryDecision,
@@ -29,6 +35,14 @@ type Payload = { to: string; displayName: string; url?: string; orderId?: string
 type MetaJob = {
   id: string;
   encrypted_payload: string;
+  attempts: number;
+};
+
+type MerchDiscountSyncJob = {
+  id: string;
+  entitlement_id: string;
+  action: "reconcile" | "revoke";
+  stripe_checkout_session_id: string | null;
   attempts: number;
 };
 
@@ -176,6 +190,70 @@ async function claimMetaJob() {
   return result.rows[0] ?? null;
 }
 
+async function claimMerchDiscountSyncJob() {
+  const result = await getPool().query<MerchDiscountSyncJob>(
+    `WITH next_job AS (
+       SELECT id FROM merch_discount_sync_jobs
+        WHERE status IN ('pending', 'retry') AND available_at <= now() AND attempts < $1
+        ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1
+     )
+     UPDATE merch_discount_sync_jobs j
+        SET status = 'processing', locked_at = now(), attempts = attempts + 1, updated_at = now()
+       FROM next_job WHERE j.id = next_job.id
+     RETURNING j.id, j.entitlement_id, j.action, j.stripe_checkout_session_id, j.attempts`,
+    [MERCH_DISCOUNT_SYNC_MAX_ATTEMPTS]
+  );
+  return result.rows[0] ?? null;
+}
+
+async function deliverMerchDiscountSync(job: MerchDiscountSyncJob) {
+  if (job.action === "revoke") {
+    const { response, payload } = await revokeGoodGameMerchDiscount(job.entitlement_id);
+    if (!response.ok) throw new Error(String(payload.error || "Good Game discount revocation failed"));
+    if (String(payload.status || "") === "redeemed") {
+      await getPool().query(
+        `UPDATE merch_discount_entitlements
+            SET status = 'redeemed', redeemed_at = COALESCE(redeemed_at, now()), updated_at = now()
+          WHERE id = $1`,
+        [job.entitlement_id]
+      );
+    }
+  } else {
+    if (!job.stripe_checkout_session_id) throw new Error("Discount reconciliation is missing checkout session");
+    const { response, payload } = await getMerchCheckoutConfirmation(job.stripe_checkout_session_id);
+    if (!response.ok) throw new Error(String(payload.error || "Good Game discount reconciliation failed"));
+    const status = String(payload.status || "");
+    const terminal = payload.paid === true || ["processed", "expired", "payment_failed", "failed"].includes(status);
+    if (!terminal) throw new Error(`Discount checkout is still ${status || "pending"}`);
+    await reconcileMerchDiscountFromConfirmation({
+      entitlementId: String(payload.discountEntitlementId || job.entitlement_id),
+      checkoutSessionId: job.stripe_checkout_session_id,
+      paid: payload.paid === true,
+      status
+    });
+  }
+  await getPool().query(
+    `UPDATE merch_discount_sync_jobs
+        SET status = 'delivered', delivered_at = now(), locked_at = NULL,
+            last_error = NULL, updated_at = now()
+      WHERE id = $1`,
+    [job.id]
+  );
+}
+
+async function failMerchDiscountSync(job: MerchDiscountSyncJob, error: unknown) {
+  const message = error instanceof Error ? error.message : "Merch discount sync failed";
+  const terminal = job.attempts >= MERCH_DISCOUNT_SYNC_MAX_ATTEMPTS;
+  await getPool().query(
+    `UPDATE merch_discount_sync_jobs
+        SET status = $2, locked_at = NULL, last_error = $3,
+            available_at = now() + ($4 * interval '1 minute'), updated_at = now()
+      WHERE id = $1`,
+    [job.id, terminal ? "dead" : "retry", message.slice(0, 1000), merchDiscountRetryDelayMinutes(job.attempts)]
+  );
+  console.error(`Merch discount sync ${job.id} ${terminal ? "dead" : "retry"}: ${message}`);
+}
+
 async function deliverMeta(job: MetaJob) {
   const payload = decryptJson<MetaJobInput>(job.encrypted_payload);
   const result = await sendMetaConversion(payload);
@@ -227,6 +305,14 @@ async function recoverStaleJobs() {
       WHERE status = 'processing' AND locked_at < now() - interval '15 minutes'`,
     [META_JOB_MAX_ATTEMPTS]
   );
+  await getPool().query(
+    `UPDATE merch_discount_sync_jobs
+        SET status = CASE WHEN attempts >= $1 THEN 'dead' ELSE 'retry' END,
+            locked_at = NULL, available_at = now(),
+            last_error = COALESCE(last_error, 'Worker lock expired'), updated_at = now()
+      WHERE status = 'processing' AND locked_at < now() - interval '15 minutes'`,
+    [MERCH_DISCOUNT_SYNC_MAX_ATTEMPTS]
+  );
 }
 
 async function workOnce() {
@@ -265,6 +351,15 @@ async function workOnce() {
         );
       }
       console.error(`Meta conversion job ${metaJob.id} ${decision.status}: ${message}`);
+    }
+  }
+  const merchDiscountJob = await claimMerchDiscountSyncJob();
+  if (merchDiscountJob) {
+    worked = true;
+    try {
+      await deliverMerchDiscountSync(merchDiscountJob);
+    } catch (error) {
+      await failMerchDiscountSync(merchDiscountJob, error);
     }
   }
   return worked;

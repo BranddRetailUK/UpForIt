@@ -7,19 +7,26 @@ import { useMetaTracking } from "./MetaTrackingProvider";
 
 const CHECKOUT_INTENT_STORAGE_KEY = "upforit.merch.checkout-intent.v1";
 
-function getCheckoutIntentKey(lines: CartLine[]) {
+type TicketMerchDiscount = {
+  entitlementId: string;
+  percentOff: number;
+  status: "available" | "reserved";
+};
+
+function getCheckoutIntentKey(lines: CartLine[], discountEntitlementId = "") {
   const fingerprint = lines
     .map((line) => `${line.variantId}:${line.quantity}`)
     .sort()
-    .join("|");
+    .join("|") + `|discount:${discountEntitlementId}`;
   try {
     const stored = JSON.parse(window.sessionStorage.getItem(CHECKOUT_INTENT_STORAGE_KEY) || "null");
-    if (stored?.fingerprint === fingerprint && /^ufi_[0-9a-f-]{36}$/i.test(String(stored?.key || ""))) {
+    const fresh = Date.now() - Number(stored?.createdAt || 0) < 25 * 60 * 1000;
+    if (fresh && stored?.fingerprint === fingerprint && /^ufi_[0-9a-f-]{36}$/i.test(String(stored?.key || ""))) {
       return String(stored.key);
     }
   } catch {}
   const key = `ufi_${window.crypto.randomUUID()}`;
-  window.sessionStorage.setItem(CHECKOUT_INTENT_STORAGE_KEY, JSON.stringify({ fingerprint, key }));
+  window.sessionStorage.setItem(CHECKOUT_INTENT_STORAGE_KEY, JSON.stringify({ fingerprint, key, createdAt: Date.now() }));
   return key;
 }
 
@@ -30,14 +37,19 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [discount, setDiscount] = useState<TicketMerchDiscount | null>(null);
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.priceMinor * line.quantity, 0), [lines]);
   const deliveryMinor = useMemo(() => getDisplayedMerchDeliveryMinor(lines), [lines]);
+  const discountMinor = discount ? Math.round(total * discount.percentOff / 100) : 0;
+  const discountedSubtotalMinor = Math.max(0, total - discountMinor);
+  const finalTotalMinor = discountedSubtotalMinor + deliveryMinor;
   const formatMoney = (valueMinor: number) => new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "GBP"
   }).format(valueMinor / 100);
 
   useEffect(() => {
+    if (cancelled) window.sessionStorage.removeItem(CHECKOUT_INTENT_STORAGE_KEY);
     if (!lines.length) {
       setChecking(false);
       return;
@@ -52,6 +64,7 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Unable to refresh cart");
       replaceLines(payload.lines as CartLine[]);
+      setDiscount(payload.discount as TicketMerchDiscount | null);
       if (Number(payload.removedCount || 0) > 0) {
         setNotice(`${Number(payload.removedCount)} unavailable cart item${Number(payload.removedCount) === 1 ? " was" : "s were"} removed and prices were refreshed.`);
       }
@@ -72,7 +85,8 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           items: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
-          idempotencyKey: getCheckoutIntentKey(lines)
+          idempotencyKey: getCheckoutIntentKey(lines, discount?.entitlementId),
+          discountEntitlementId: discount?.entitlementId
         })
       });
       const payload = await response.json();
@@ -83,7 +97,7 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
         content_type: "product",
         contents: lines.map((line) => ({ id: line.variantId, quantity: line.quantity, item_price: line.priceMinor / 100 })),
         num_items: lines.reduce((sum, line) => sum + line.quantity, 0),
-        value: (total + deliveryMinor) / 100,
+        value: finalTotalMinor / 100,
         currency: "GBP"
       }, eventId);
       window.location.assign(payload.url);
@@ -104,8 +118,21 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
       {lines.length > 0 && (
         <aside className="cart-summary">
           <p className="comic-kicker">Order recap</p>
+          {discount && (
+            <p className="cart-summary__discount-unlocked" role="status">
+              <strong>Ticket perk unlocked!</strong>
+              Your one-time 20% merch discount is applied.
+            </p>
+          )}
           <div><span>Merch subtotal</span><strong>{formatMoney(total)}</strong></div>
+          {discount && (
+            <div className="cart-summary__discount-row">
+              <span>Ticket-holder discount (20%)</span><strong>−{formatMoney(discountMinor)}</strong>
+            </div>
+          )}
+          {discount && <div><span>Discounted merch</span><strong>{formatMoney(discountedSubtotalMinor)}</strong></div>}
           <div><span>UK delivery</span><strong>{formatMoney(deliveryMinor)}</strong></div>
+          <div className="cart-summary__total"><span>Total</span><strong>{formatMoney(finalTotalMinor)}</strong></div>
           <button className="pop-button pop-button--pink" type="button" disabled={checking || submitting} onClick={checkout}>
             {checking ? "Checking your cart…" : submitting ? "Opening secure checkout…" : "Secure checkout"}
           </button>

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
+import { grantTicketMerchDiscount } from "./merch-discounts";
 import { advanceTicketTierProgression } from "./ticket-tiers";
 
 export type FulfilledOrder = {
@@ -90,6 +91,11 @@ export async function fulfilPaidOrder(
   }
   const eventId = items.rows[0]?.event_id;
   if (eventId) await advanceTicketTierProgression(client, eventId);
+  await grantTicketMerchDiscount(client, {
+    userId: order.user_id,
+    ticketOrderId: orderId,
+    source
+  });
   await client.query(
     `INSERT INTO ticket_audit_log (id, order_id, action, details)
      VALUES ($1, $2, 'order_paid', $3::jsonb)`,

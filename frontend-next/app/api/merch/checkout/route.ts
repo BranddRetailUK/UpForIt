@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { getUserForSessionToken, SESSION_COOKIE } from "../../../../lib/auth";
 import { goodGamePath, goodGameUrl, signMerchRequest } from "../../../../lib/merch";
+import {
+  getUsableMerchDiscount,
+  markMerchDiscountReserved,
+  reconcileMerchDiscountFromConfirmation,
+  TICKET_MERCH_DISCOUNT_CAMPAIGN
+} from "../../../../lib/merch-discounts";
 import {
   MerchCheckoutGuardError,
   buildCheckoutRequestHash,
   getCheckoutRequesterKey,
   reserveCheckoutAttempt
 } from "../../../../lib/merch-checkout-guard";
+import { assertSameOrigin } from "../../../../lib/request";
 
 export const runtime = "nodejs";
 
@@ -21,8 +30,9 @@ function checkoutReturnOrigin() {
   return url.origin;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    assertSameOrigin(request);
     if (process.env.MERCH_CHECKOUT_ENABLED === "false") {
       return NextResponse.json({ error: "Merch checkout is disabled in this environment" }, { status: 503 });
     }
@@ -40,9 +50,15 @@ export async function POST(request: Request) {
     if (!/^ufi_[0-9a-f-]{36}$/i.test(idempotencyKey)) {
       return NextResponse.json({ error: "A valid checkout intent is required" }, { status: 400 });
     }
+    const user = await getUserForSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+    const entitlement = user ? await getUsableMerchDiscount(user.id) : null;
+    const requestedEntitlementId = String(input?.discountEntitlementId || "").trim();
+    if (requestedEntitlementId && requestedEntitlementId !== entitlement?.id) {
+      return NextResponse.json({ error: "This ticket-holder discount is no longer available" }, { status: 409 });
+    }
     await reserveCheckoutAttempt({
       idempotencyKey,
-      requestHash: buildCheckoutRequestHash(items),
+      requestHash: buildCheckoutRequestHash(items, entitlement?.id),
       requesterKey: getCheckoutRequesterKey(request.headers)
     });
     const origin = checkoutReturnOrigin();
@@ -50,7 +66,15 @@ export async function POST(request: Request) {
       items,
       idempotencyKey,
       successUrl: `${origin}/cart/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/cart?checkout=cancelled`
+      cancelUrl: `${origin}/cart?checkout=cancelled`,
+      ...(entitlement && user ? {
+        discountEntitlement: {
+          id: entitlement.id,
+          campaign: TICKET_MERCH_DISCOUNT_CAMPAIGN,
+          accountId: user.id,
+          customerEmail: user.email
+        }
+      } : {})
     });
     const path = goodGamePath("/checkout-session");
     const timestamp = String(Math.floor(Date.now() / 1000));
@@ -65,6 +89,25 @@ export async function POST(request: Request) {
       cache: "no-store"
     });
     const payload = await response.json().catch(() => ({}));
+    if (
+      !response.ok && entitlement?.stripeCheckoutSessionId &&
+      payload.code === "discount_redeemed"
+    ) {
+      await reconcileMerchDiscountFromConfirmation({
+        entitlementId: entitlement.id,
+        checkoutSessionId: entitlement.stripeCheckoutSessionId,
+        paid: true,
+        status: "processed"
+      });
+    }
+    if (response.ok && entitlement && user && typeof payload.checkoutSessionId === "string") {
+      await markMerchDiscountReserved({
+        entitlementId: entitlement.id,
+        userId: user.id,
+        idempotencyKey,
+        checkoutSessionId: payload.checkoutSessionId
+      });
+    }
     return NextResponse.json(payload, { status: response.status });
   } catch (error) {
     if (error instanceof MerchCheckoutGuardError) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SummerRoundupCard from "../../components/SummerRoundupCard";
+import TicketMerchPromoBanner from "../../components/TicketMerchPromoBanner";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function EventsPage() {
   return (
     <div className="inner-page section-wrap events-page">
+      <TicketMerchPromoBanner link />
       <SummerRoundupCard priority />
     </div>
   );

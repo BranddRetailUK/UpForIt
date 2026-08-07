@@ -3,6 +3,7 @@ import CloudinaryImage from "../components/CloudinaryImage";
 import MerchProductCard from "../components/MerchProductCard";
 import SignupForm from "../components/SignupForm";
 import SummerRoundupCard from "../components/SummerRoundupCard";
+import TicketMerchPromoBanner from "../components/TicketMerchPromoBanner";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import { getMerchCatalogue, type MerchProduct } from "../lib/merch";
 
@@ -46,6 +47,10 @@ export default async function Home() {
             Check the merch
           </Link>
         </div>
+      </section>
+
+      <section className="home-ticket-merch-promo section-wrap" aria-label="Ticket-holder merch offer">
+        <TicketMerchPromoBanner link />
       </section>
 
       <div className="home-section-divider home-section-divider--hero section-wrap" aria-hidden="true" />

@@ -11,7 +11,7 @@ secrets_policy=never write secret values, Stripe keys, database URLs, Railway to
 MUST=keep Good Game Apparel as merch commerce source of truth for products, variants, SKU, canonical merch price, weight, availability, stock, shipping, merch Stripe payments, merch orders, fulfilment, refunds, admin operations, and merch transactional email
 MUST=keep UpForIt as presentation/cart-intent/server-proxy layer for merch; no duplicated merch product/order database in this repository
 MUST=perform all merch Stripe operations through Good Game; native event-ticket Stripe Checkout and event-ticket webhooks are the explicit exception owned by UpForIt
-MUST=send only variant IDs, quantities, idempotency key, and registered return URLs into checkout; never trust or forward browser prices
+MUST=send only variant IDs, quantities, idempotency key, registered return URLs, and an optional server-resolved ticket-discount entitlement into checkout; never trust or forward browser prices or browser-authored discount values
 MUST=keep `STANDALONE_STOREFRONT_UPFORIT_SECRET` server-only and identical on UpForIt + Good Game
 MUST=use Good Game LIVE admin/service for UpForIt work; do not implement/deploy this feature through the separate Good Game Railway Testing admin UI
 MUST=preserve `www.upforitevents.co.uk` as canonical public origin
@@ -97,8 +97,8 @@ favicon=frontend-next/app/icon.tsx; edge-rendered 512x512 smiley PNG
 global_cart=CartProvider mounted for every route; drawer and header count available site-wide
 
 [public_routes]
-/=home hero, round logo, event/merch CTAs, three house rules, email signup
-/events=Summer Roundup card; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
+/=home hero, round logo, event/merch CTAs, ticket-holder 20% merch promo, three house rules, email signup
+/events=ticket-holder 20% merch promo plus Summer Roundup card; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
 /events/summer-roundup-2026=database-backed event detail and dedicated native ticket selector; multiple tickets go directly to ticket Stripe Checkout and never enter the merch cart; no booking fee
 /account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email
 /account=authenticated ticket-order wallet with purchase history and links to every issued QR ticket/PDF
@@ -129,8 +129,8 @@ POST_/api/admin/check-in=staff-only atomic one-use QR/manual ticket check-in
 PATCH_/api/admin/ticket-types/:id=deprecated guard returning 409 because tier activation is automatic
 POST_/api/admin/simulated-purchase=admin-only and APP_ENV=testing-only purchase simulator; uses real order/ticket/PDF/email fulfilment without calling Stripe
 POST_/api/admin/orders/:id/resend=staff-only confirmation email requeue
-POST_/api/merch/cart=public dynamic canonical cart refresh; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs
-POST_/api/merch/checkout=node runtime; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; reserve/rate-limit in Postgres; HMAC-sign server request to Good Game; return upstream Stripe Checkout URL/payload
+POST_/api/merch/cart=public dynamic canonical cart refresh with optional account session enrichment; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs and the signed-in account's available/reserved one-time 20% ticket-holder discount summary
+POST_/api/merch/checkout=node runtime; same-origin guard; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; select only the authenticated account's usable entitlement; reserve/rate-limit in Postgres; HMAC-sign server request to Good Game; return upstream Stripe Checkout URL/payload and persist discount-session reconciliation
 GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload; paid consented sessions send deduplicated Meta Purchase CAPI event
 POST_/api/merch/revalidate=node runtime; Good Game callback; read exact raw body; require timestamp within 300 seconds + constant-time HMAC; invalidate merch tag/path
 
@@ -148,6 +148,7 @@ source=frontend-next/app/globals.css + frontend-next/components/PopArtScene.tsx
 tokens=ink #050505; paper #ffffff; blue #008ef0; blue-light #29c6f5; blue-deep #0065d9; yellow #ffdf00; pink #d90062; muted #dfeef8
 style=bold pop-art/comic; thick black borders; offset shadows; halftone/radial blue scene; pink/yellow accents; rotated cards/stickers
 event_ticket_selector=Summer Roundup ticket module uses a cyan radial/halftone field, heavy outlined white/yellow tier panels, global heavy uppercase tier typography, and diagonal pink `Coming soon` ribbons over upcoming tiers
+ticket_merch_promo=home, Events and ticket selector surfaces use one responsive pink/yellow/cyan halftone sticker banner with thick black borders, offset shadows and the exact 20%-off offer; cart recap uses the same visual language for the qualified-account discount state
 event_ticket_summary=event detail uses one outlined date/time/venue banner with distinct yellow/pink/blue rows and global heavy typography
 event_ticket_mobile_order=at 720px and below the ticket selector appears before the date/time/venue summary banner; desktop retains the summary before ticket selection
 event_ticket_frame=ticket detail uses reduced page/card top spacing; mobile card is narrowed within the section wrapper so its yellow/black offset shadow retains a visible right gutter
@@ -235,6 +236,7 @@ remove=quantity below 1 or explicit Remove deletes line
 count=sum quantities
 cart_page_refresh=once on mount; replaces all lines with canonical response; unavailable lines removed with notice; refresh error shown
 display_total=sum canonical/refreshed line priceMinor*quantity; delivery displayed separately
+ticket_discount_display=authenticated usable entitlement shows original merch subtotal, `Ticket-holder discount (20%)`, discounted merch subtotal, unchanged delivery, and final total; amount is rounded in minor units from the canonical subtotal
 shipping_copy=£2.99 for exactly one phone case at quantity one; £3.99 for all other products, quantities, and multi-line orders; UK only; display mirrors Good Game canonical checkout calculation
 
 [checkout_intent_and_rate_limit]
@@ -252,11 +254,11 @@ retention=opportunistically delete rows whose last_attempt_at is older than 7 da
 database_failure=fail closed with 503; never bypass rate/idempotency guard
 
 [checkout_flow]
-1=cart page sends variant IDs + quantities + stable idempotency key to local `/api/merch/checkout`
-2=local API validates shapes, reserves intent, derives current request origin, builds success/cancel URLs
-3=local API signs exact JSON body and calls Good Game
-4=Good Game independently loads canonical DB variants/prices/weights/availability and calculates UK shipping
-5=Good Game creates Stripe Checkout Session; browser redirects to returned Stripe URL
+1=cart page sends variant IDs + quantities + stable idempotency key and its displayed entitlement id to local `/api/merch/checkout`
+2=local API validates shapes and same origin, resolves the authenticated account's entitlement independently, reserves intent, derives current request origin, and builds success/cancel URLs
+3=local API signs exact JSON body with an optional server-owned `ticket-merch-20` entitlement and calls Good Game
+4=Good Game independently loads canonical DB variants/prices/weights/availability, calculates UK shipping and calculates 20% from merch subtotal only
+5=Good Game creates a 30-minute Stripe Checkout Session with a single-use exact amount-off coupon; a newer attempt expires the prior open discounted session; browser redirects to returned Stripe URL
 6=Stripe collects email, phone, GB shipping address, billing address, payment details; UpForIt never receives card data
 7=success returns `/cart/confirmation?session_id={CHECKOUT_SESSION_ID}`; cancel returns `/cart?checkout=cancelled`
 8=confirmation proxy signs lookup; client polls every 1500ms up to 20 attempts; clear cart only when `paid=true`
@@ -315,7 +317,7 @@ driver=pg Pool
 pool_lifetime=development cached on globalThis; production creates module/runtime pool without global cache
 production_tls=ssl rejectUnauthorized=false
 schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds prices/capacities and advances rather than regresses the current tier
-tables_owned_here=signups,merch_checkout_requests,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,meta_conversion_jobs,ticket_audit_log,schema_migrations
+tables_owned_here=signups,merch_checkout_requests,merch_discount_entitlements,merch_discount_sync_jobs,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,meta_conversion_jobs,ticket_audit_log,schema_migrations
 tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilment,email events; all Good Game
 
 [native_ticket_sales]
@@ -324,6 +326,8 @@ progression=Early Bird is capped at 50 paid tickets; Tier 1 then activates for 1
 concurrency=checkout and admin simulation lock tier rows and count paid plus unexpired pending reservations before allocating tickets
 monotonicity=once the sale advances to a later tier it does not reopen a cheaper tier after refunds
 customer_flow=/events Buy tickets -> dedicated ticket selector -> required verified account -> native ticket Stripe Checkout -> webhook fulfilment -> email/PDF/QR -> persistent account wallet
+ticket_merch_discount=first real paid ticket order grants one lifetime account entitlement regardless of ticket quantity; later ticket orders never grant another; the entitlement persists until redeemed, is revoked if its source ticket order is fully refunded while unused, excludes delivery, never stacks, and is not reissued after a merch refund; admin simulation does not qualify
+ticket_merch_discount_backfill=scottcharles.rework@gmail.com receives one available entitlement from the earliest paid ticket order during migration 004
 cart_isolation=native tickets never enter the Good Game merch cart; merch and tickets always use separate checkout sessions
 quantity_ui=active ticket tier starts at quantity 1 and uses accessible left/right stepper buttons; customers may decrease to 0 or increase to the tier availability/per-order limit
 admin_simulation=Testing admin can create one or more paid-equivalent tickets for their own admin account; fulfilment and email are real, Stripe payment is skipped, and the order is visibly marked as a simulation in admin
@@ -333,7 +337,7 @@ multi_ticket_account=account order summary shows the ticket count; order detail 
 [security]
 server_only_modules=lib/merch.ts and lib/merch-checkout-guard.ts import server-only
 hmac=SHA-256; exact timestamp/method/path/body binding; revalidation comparison constant-time; 300-second inbound callback tolerance
-checkout_validation=local shape validation + Good Game canonical validation; browser price ignored
+checkout_validation=local shape/same-origin/account-entitlement validation + Good Game canonical validation and entitlement lock; browser price/percentage/eligibility ignored
 return_urls=derived from request origin and upstream allowlisted against registered UpForIt origin
 session_id_validation=`^cs_[A-Za-z0-9_]+$`
 cart_ids=numeric variant IDs only

@@ -22,11 +22,14 @@ function digest(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
-export function buildCheckoutRequestHash(items: Array<{ variantId: string; quantity: number }>) {
-  return digest(items
+export function buildCheckoutRequestHash(
+  items: Array<{ variantId: string; quantity: number }>,
+  discountEntitlementId = ""
+) {
+  return digest(`${items
     .map((item) => `${String(item.variantId)}:${Math.trunc(Number(item.quantity))}`)
     .sort()
-    .join("|"));
+    .join("|")}|discount:${discountEntitlementId}`);
 }
 
 export function getCheckoutRequesterKey(headers: Headers) {

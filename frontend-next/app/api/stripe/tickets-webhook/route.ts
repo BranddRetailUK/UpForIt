@@ -5,6 +5,7 @@ import { getPool } from "../../../../lib/db";
 import { insertEmailJob } from "../../../../lib/email-jobs";
 import { insertMetaConversionJob, shouldQueueTicketPurchase } from "../../../../lib/meta-jobs";
 import { metaSiteUrl } from "../../../../lib/meta";
+import { revokeUnusedMerchDiscountForTicketOrder } from "../../../../lib/merch-discounts";
 import { decryptJson } from "../../../../lib/security";
 import { getStripe } from "../../../../lib/stripe";
 import { fulfilPaidOrder } from "../../../../lib/ticket-orders";
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
         if (order.rows[0]) {
           if (status === "refunded") {
             await client.query("UPDATE tickets SET status = 'void' WHERE order_id = $1", [order.rows[0].id]);
+            await revokeUnusedMerchDiscountForTicketOrder(client, order.rows[0].id);
           }
           await client.query(
             `INSERT INTO ticket_audit_log (id, order_id, action, details)

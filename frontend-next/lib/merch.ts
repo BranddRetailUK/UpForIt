@@ -85,6 +85,40 @@ export function signMerchRequest({
     .digest("hex");
 }
 
+export async function signedMerchJsonRequest(
+  pathname: string,
+  options: { method?: "GET" | "POST"; body?: Record<string, unknown> } = {}
+) {
+  const method = options.method || "GET";
+  const body = options.body ? JSON.stringify(options.body) : "";
+  const path = goodGamePath(pathname);
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const response = await fetch(goodGameUrl(pathname), {
+    method,
+    headers: {
+      ...(body ? { "content-type": "application/json" } : {}),
+      "x-storefront-timestamp": timestamp,
+      "x-storefront-signature": signMerchRequest({ timestamp, method, path, body })
+    },
+    body: body || undefined,
+    cache: "no-store"
+  });
+  const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return { response, payload };
+}
+
+export function getMerchCheckoutConfirmation(sessionId: string) {
+  const query = `?session_id=${encodeURIComponent(sessionId)}`;
+  return signedMerchJsonRequest(`/checkout-confirmation${query}`);
+}
+
+export function revokeGoodGameMerchDiscount(entitlementId: string) {
+  return signedMerchJsonRequest(`/discount-entitlements/${encodeURIComponent(entitlementId)}/revoke`, {
+    method: "POST",
+    body: {}
+  });
+}
+
 async function readCatalogueResponse(response: Response): Promise<CatalogueResponse> {
   if (!response.ok) throw new Error(`Good Game catalogue returned ${response.status}`);
   return response.json() as Promise<CatalogueResponse>;

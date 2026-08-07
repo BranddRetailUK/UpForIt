@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { goodGamePath, goodGameUrl, signMerchRequest } from "../../../../lib/merch";
+import { getMerchCheckoutConfirmation } from "../../../../lib/merch";
+import { reconcileMerchDiscountFromConfirmation } from "../../../../lib/merch-discounts";
 import { getMetaRequestContext, metaEventId, metaSiteUrl, sendMetaConversion } from "../../../../lib/meta";
 
 export const runtime = "nodejs";
@@ -11,20 +12,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid checkout session" }, { status: 400 });
   }
   try {
-    const query = `?session_id=${encodeURIComponent(sessionId)}`;
-    const path = `${goodGamePath("/checkout-confirmation")}${query}`;
-    const timestamp = String(Math.floor(Date.now() / 1000));
-    const response = await fetch(`${goodGameUrl("/checkout-confirmation")}${query}`, {
-      headers: {
-        "x-storefront-timestamp": timestamp,
-        "x-storefront-signature": signMerchRequest({ timestamp, method: "GET", path })
-      },
-      cache: "no-store"
-    });
-    const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
+    const { response, payload } = await getMerchCheckoutConfirmation(sessionId);
     if (!response.ok || payload.paid !== true) {
+      if (response.ok) {
+        await reconcileMerchDiscountFromConfirmation({
+          entitlementId: typeof payload.discountEntitlementId === "string" ? payload.discountEntitlementId : null,
+          checkoutSessionId: sessionId,
+          paid: false,
+          status: String(payload.status || "")
+        });
+      }
       return NextResponse.json(payload, { status: response.status });
     }
+
+    await reconcileMerchDiscountFromConfirmation({
+      entitlementId: typeof payload.discountEntitlementId === "string" ? payload.discountEntitlementId : null,
+      checkoutSessionId: sessionId,
+      paid: true,
+      status: String(payload.status || "")
+    });
 
     const valueMinor = Math.max(0, Math.trunc(Number(payload.totalMinor || 0)));
     const currency = typeof payload.currency === "string" && /^[a-z]{3}$/i.test(payload.currency)

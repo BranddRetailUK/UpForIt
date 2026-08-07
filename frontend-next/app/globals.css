@@ -1358,6 +1358,100 @@ a {
   background: var(--blue-light);
 }
 
+.ticket-merch-promo {
+  position: relative;
+  isolation: isolate;
+  width: min(900px, 100%);
+  margin-inline: auto;
+  padding: clamp(22px, 4vw, 34px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(18px, 3vw, 32px);
+  overflow: hidden;
+  border: 6px solid var(--ink);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .22) 0 1.6px, transparent 1.9px) 0 0 / 14px 14px,
+    var(--pink);
+  box-shadow: 10px 10px 0 var(--yellow), 16px 16px 0 var(--ink);
+  color: var(--paper);
+  transform: rotate(-.7deg);
+}
+
+.ticket-merch-promo__burst {
+  width: clamp(92px, 13vw, 132px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: clamp(2.7rem, 6vw, 4.7rem);
+  line-height: 1;
+  box-shadow: 6px 6px 0 var(--ink);
+  transform: rotate(-8deg);
+}
+
+.ticket-merch-promo__copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 7px;
+}
+
+.ticket-merch-promo__kicker {
+  width: fit-content;
+  padding: 5px 10px 3px;
+  border: 3px solid var(--ink);
+  background: var(--blue-light);
+  color: var(--ink);
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.ticket-merch-promo__copy strong {
+  max-width: 600px;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: clamp(2rem, 4.5vw, 4rem);
+  font-weight: 400;
+  line-height: .88;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+  -webkit-text-stroke: 1px var(--ink);
+  text-shadow: 4px 4px 0 var(--ink);
+}
+
+.ticket-merch-promo__copy small {
+  font-weight: 800;
+}
+
+.ticket-merch-promo.is-compact {
+  width: 100%;
+  margin: 0 0 28px;
+  padding: 15px 18px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  border-width: 4px;
+  box-shadow: 5px 5px 0 var(--yellow), 9px 9px 0 var(--ink);
+}
+
+.ticket-merch-promo.is-compact .ticket-merch-promo__burst {
+  width: 76px;
+  border-width: 3px;
+  font-size: 2.35rem;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.ticket-merch-promo.is-compact .ticket-merch-promo__copy strong {
+  font-size: clamp(1.55rem, 4vw, 2.25rem);
+  text-shadow: 3px 3px 0 var(--ink);
+}
+
 .page-intro {
   width: min(830px, 100%);
   margin-inline: auto;
@@ -2045,6 +2139,37 @@ a {
   border-bottom: 3px solid var(--ink);
 }
 
+.cart-summary .cart-summary__discount-unlocked {
+  margin-top: 19px;
+  padding: 14px;
+  border: 4px solid var(--ink);
+  background: var(--pink);
+  color: var(--paper);
+  box-shadow: 5px 5px 0 var(--ink);
+  font-weight: 800;
+  line-height: 1.3;
+  transform: rotate(-1deg);
+}
+
+.cart-summary__discount-unlocked strong {
+  display: block;
+  margin-bottom: 3px;
+  font-family: var(--font-heavy), Impact, sans-serif;
+  text-transform: uppercase;
+}
+
+.cart-summary > .cart-summary__discount-row {
+  color: var(--pink);
+  font-weight: 900;
+}
+
+.cart-summary > .cart-summary__total {
+  border-bottom: 0;
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+}
+
 .cart-summary > p:not(.comic-kicker) {
   margin-top: 18px;
   line-height: 1.5;
@@ -2285,6 +2410,10 @@ a {
 
 .home-events {
   padding-bottom: clamp(90px, 11vw, 140px);
+}
+
+.home-ticket-merch-promo {
+  padding-bottom: clamp(72px, 9vw, 110px);
 }
 
 .home-events .event-card {
@@ -2593,6 +2722,10 @@ a {
 
 .events-page .event-card {
   margin-top: 0;
+}
+
+.events-page > .ticket-merch-promo {
+  margin-bottom: clamp(46px, 7vw, 76px);
 }
 
 @media (min-width: 721px) {
@@ -3407,6 +3540,43 @@ a {
   .button-row {
     width: min(420px, 100%);
     flex-direction: column;
+  }
+
+  .ticket-merch-promo {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 25px 18px;
+    text-align: center;
+    box-shadow: 7px 7px 0 var(--yellow), 12px 12px 0 var(--ink);
+  }
+
+  .ticket-merch-promo__copy {
+    justify-items: center;
+  }
+
+  .ticket-merch-promo .pop-button {
+    width: min(330px, 100%);
+  }
+
+  .ticket-merch-promo.is-compact {
+    grid-template-columns: 68px minmax(0, 1fr);
+    justify-items: stretch;
+    padding: 14px 12px;
+    text-align: left;
+  }
+
+  .ticket-merch-promo.is-compact .ticket-merch-promo__burst {
+    width: 62px;
+    font-size: 1.9rem;
+  }
+
+  .ticket-merch-promo.is-compact .ticket-merch-promo__copy {
+    justify-items: start;
+  }
+
+  .ticket-merch-promo.is-compact .ticket-merch-promo__copy strong {
+    font-size: clamp(1.25rem, 6vw, 1.7rem);
+    line-height: .95;
   }
 
   .pop-button {
