@@ -49,10 +49,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="home-ticket-merch-promo section-wrap" aria-label="Ticket-holder merch offer">
-        <TicketMerchPromoBanner link />
-      </section>
-
       <div className="home-section-divider home-section-divider--hero section-wrap" aria-hidden="true" />
 
       <section className="values section-wrap" aria-labelledby="values-title">
@@ -73,6 +69,10 @@ export default async function Home() {
 
       <section className="home-events events-page section-wrap" aria-label="Featured event">
         <SummerRoundupCard />
+      </section>
+
+      <section className="home-ticket-merch-promo section-wrap" aria-label="Ticket-holder merch offer">
+        <TicketMerchPromoBanner link />
       </section>
 
       <section className="home-merch section-wrap" aria-labelledby="home-merch-title">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import MerchProductCard from "../../components/MerchProductCard";
+import TicketMerchPromoBanner from "../../components/TicketMerchPromoBanner";
 import { getMerchCatalogue, type MerchProduct } from "../../lib/merch";
 
 export const metadata: Metadata = {
@@ -48,6 +49,8 @@ export default async function MerchPage() {
           </Link>
         </section>
       )}
+
+      <TicketMerchPromoBanner link />
     </div>
   );
 }

@@ -127,7 +127,8 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
           <div><span>Merch subtotal</span><strong>{formatMoney(total)}</strong></div>
           {discount && (
             <div className="cart-summary__discount-row">
-              <span>Ticket-holder discount (20%)</span><strong>−{formatMoney(discountMinor)}</strong>
+              <span>Ticket-holder discount (20%)</span>
+              <strong className="cart-summary__discount-value">{formatMoney(-discountMinor)}</strong>
             </div>
           )}
           {discount && <div><span>Discounted merch</span><strong>{formatMoney(discountedSubtotalMinor)}</strong></div>}

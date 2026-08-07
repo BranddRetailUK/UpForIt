@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 export default function EventsPage() {
   return (
     <div className="inner-page section-wrap events-page">
-      <TicketMerchPromoBanner link />
       <SummerRoundupCard priority />
+      <TicketMerchPromoBanner link />
     </div>
   );
 }

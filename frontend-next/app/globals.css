@@ -1378,20 +1378,19 @@ a {
   transform: rotate(-.7deg);
 }
 
-.ticket-merch-promo__burst {
+.ticket-merch-promo__smiley {
   width: clamp(92px, 13vw, 132px);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border: 5px solid var(--ink);
-  border-radius: 50%;
-  background: var(--yellow);
-  color: var(--ink);
-  font-family: var(--font-display), Impact, sans-serif;
-  font-size: clamp(2.7rem, 6vw, 4.7rem);
-  line-height: 1;
-  box-shadow: 6px 6px 0 var(--ink);
   transform: rotate(-8deg);
+}
+
+.ticket-merch-promo__smiley-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(5px 7px 0 var(--ink));
 }
 
 .ticket-merch-promo__copy {
@@ -1427,7 +1426,10 @@ a {
 }
 
 .ticket-merch-promo__copy small {
+  display: block;
+  font-size: clamp(.82rem, 1.5vw, 1rem);
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .ticket-merch-promo.is-compact {
@@ -1440,11 +1442,8 @@ a {
   box-shadow: 5px 5px 0 var(--yellow), 9px 9px 0 var(--ink);
 }
 
-.ticket-merch-promo.is-compact .ticket-merch-promo__burst {
+.ticket-merch-promo.is-compact .ticket-merch-promo__smiley {
   width: 76px;
-  border-width: 3px;
-  font-size: 2.35rem;
-  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .ticket-merch-promo.is-compact .ticket-merch-promo__copy strong {
@@ -2163,6 +2162,11 @@ a {
   font-weight: 900;
 }
 
+.cart-summary__discount-value {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 .cart-summary > .cart-summary__total {
   border-bottom: 0;
   font-family: var(--font-heavy), Impact, sans-serif;
@@ -2725,7 +2729,11 @@ a {
 }
 
 .events-page > .ticket-merch-promo {
-  margin-bottom: clamp(46px, 7vw, 76px);
+  margin-top: clamp(52px, 7vw, 82px);
+}
+
+.merch-page > .ticket-merch-promo {
+  margin-top: clamp(58px, 8vw, 96px);
 }
 
 @media (min-width: 721px) {
@@ -3565,9 +3573,8 @@ a {
     text-align: left;
   }
 
-  .ticket-merch-promo.is-compact .ticket-merch-promo__burst {
+  .ticket-merch-promo.is-compact .ticket-merch-promo__smiley {
     width: 62px;
-    font-size: 1.9rem;
   }
 
   .ticket-merch-promo.is-compact .ticket-merch-promo__copy {
