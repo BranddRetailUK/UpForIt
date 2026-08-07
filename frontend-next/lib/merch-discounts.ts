@@ -78,6 +78,18 @@ export async function getUsableMerchDiscount(userId: string, database: Queryable
   return result.rows[0] ? toEntitlement(result.rows[0]) : null;
 }
 
+export async function getMerchDiscountEntitlement(userId: string, database: Queryable = getPool()) {
+  const result = await database.query<EntitlementRow>(
+    `SELECT id, user_id, source_ticket_order_id, status, percent_off,
+            checkout_idempotency_key, stripe_checkout_session_id
+       FROM merch_discount_entitlements
+      WHERE user_id = $1
+      LIMIT 1`,
+    [userId]
+  );
+  return result.rows[0] ? toEntitlement(result.rows[0]) : null;
+}
+
 export async function markMerchDiscountReserved(input: {
   entitlementId: string;
   userId: string;

@@ -24,12 +24,13 @@ function digest(value: string) {
 
 export function buildCheckoutRequestHash(
   items: Array<{ variantId: string; quantity: number }>,
-  discountEntitlementId = ""
+  discountEntitlementId = "",
+  customerAccountId = ""
 ) {
   return digest(`${items
     .map((item) => `${String(item.variantId)}:${Math.trunc(Number(item.quantity))}`)
     .sort()
-    .join("|")}|discount:${discountEntitlementId}`);
+    .join("|")}|discount:${discountEntitlementId}|account:${customerAccountId}`);
 }
 
 export function getCheckoutRequesterKey(headers: Headers) {

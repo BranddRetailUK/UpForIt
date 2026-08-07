@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createHmac } from "node:crypto";
+import { normalizeMerchAccountOrders } from "./merch-account-orders";
+export type { MerchAccountOrder, MerchAccountOrderItem } from "./merch-account-orders";
 
 export type MerchImage = {
   id: string;
@@ -110,6 +112,19 @@ export async function signedMerchJsonRequest(
 export function getMerchCheckoutConfirmation(sessionId: string) {
   const query = `?session_id=${encodeURIComponent(sessionId)}`;
   return signedMerchJsonRequest(`/checkout-confirmation${query}`);
+}
+
+export async function getMerchAccountOrders(input: { accountId: string; email: string }) {
+  if (!apiBase() || !merchSecret()) throw new Error("Merch order history is not configured");
+  const { response, payload } = await signedMerchJsonRequest("/customer-orders", {
+    method: "POST",
+    body: {
+      accountId: input.accountId,
+      customerEmail: input.email.trim().toLowerCase()
+    }
+  });
+  if (!response.ok) throw new Error(`Good Game customer orders returned ${response.status}`);
+  return normalizeMerchAccountOrders(payload);
 }
 
 export function revokeGoodGameMerchDiscount(entitlementId: string) {

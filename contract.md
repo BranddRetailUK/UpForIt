@@ -2,16 +2,16 @@
 format=ai_context_v1
 purpose=canonical repository context for future coding agents; prefer this file over inference; verify source/runtime state before destructive or production actions
 scope=BranddRetailUK/UpForIt repository, its native event-ticketing system, plus its explicit Good Game Apparel merch dependency
-last_source_audit=2026-08-06
-upforit_revision_at_audit=c2602db+ticket-meta-integration
-good_game_revision_at_audit=7a04cb08
+last_source_audit=2026-08-07
+upforit_revision_at_audit=6fc6346+account-profile-dashboard
+good_game_revision_at_audit=f81c98f0+account-order-history
 secrets_policy=never write secret values, Stripe keys, database URLs, Railway tokens, or HMAC secrets into source/docs/client bundles/logs
 
 [priority_invariants]
 MUST=keep Good Game Apparel as merch commerce source of truth for products, variants, SKU, canonical merch price, weight, availability, stock, shipping, merch Stripe payments, merch orders, fulfilment, refunds, admin operations, and merch transactional email
 MUST=keep UpForIt as presentation/cart-intent/server-proxy layer for merch; no duplicated merch product/order database in this repository
 MUST=perform all merch Stripe operations through Good Game; native event-ticket Stripe Checkout and event-ticket webhooks are the explicit exception owned by UpForIt
-MUST=send only variant IDs, quantities, idempotency key, registered return URLs, and an optional server-resolved ticket-discount entitlement into checkout; never trust or forward browser prices or browser-authored discount values
+MUST=send only variant IDs, quantities, idempotency key, registered return URLs, an optional server-resolved authenticated account UUID/verified email, and an optional server-resolved ticket-discount entitlement into checkout; never trust or forward browser prices, browser-authored account identity, or browser-authored discount values
 MUST=keep `STANDALONE_STOREFRONT_UPFORIT_SECRET` server-only and identical on UpForIt + Good Game
 MUST=use Good Game LIVE admin/service for UpForIt work; do not implement/deploy this feature through the separate Good Game Railway Testing admin UI
 MUST=preserve `www.upforitevents.co.uk` as canonical public origin
@@ -58,7 +58,7 @@ deployment_rule=observe terminal Railway deployment SUCCESS before reporting a d
 NEXT_PUBLIC_SITE_URL=public canonical origin; tracked example sets https://www.upforitevents.co.uk; currently documentation/config only and not read by source
 GOOD_GAME_API_BASE=server-only Good Game API origin; production value https://dashboard.ggapparel.co.uk
 STANDALONE_STOREFRONT_KEY=server-only registry key; default/upforit production value `upforit`
-STANDALONE_STOREFRONT_UPFORIT_SECRET=server-only shared HMAC secret; required for checkout, confirmation, cache revalidation, and checkout requester hashing
+STANDALONE_STOREFRONT_UPFORIT_SECRET=server-only shared HMAC secret; required for checkout, confirmation, customer merch-order history, cache revalidation, and checkout requester hashing
 DATABASE_URL=server-only Postgres connection; required for email signup persistence and durable checkout intent/rate limiting
 NEXT_PUBLIC_META_PIXEL_ID=public Meta dataset/pixel identifier; the only Meta value allowed in the browser bundle
 META_CONVERSIONS_API_ACCESS_TOKEN=server-only token for consent-gated Lead and merch Purchase events
@@ -101,7 +101,7 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 /events=Summer Roundup card followed by the ticket-holder 20% merch promo; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
 /events/summer-roundup-2026=database-backed event detail and dedicated native ticket selector; multiple tickets go directly to ticket Stripe Checkout and never enter the merch cart; no booking fee
 /account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email
-/account=authenticated ticket-order wallet with purchase history and links to every issued QR ticket/PDF
+/account=full authenticated customer profile with editable display name, verified-email/security details, account age, ticket wallet/history and QR/PDF links, safe Good Game merch-order history, prominent available/reserved 20% ticket-holder perk, staff/admin shortcuts where authorized, logout, and support links; a Good Game history outage degrades only that section
 /account/orders/:id=owner/staff ticket detail, QR display, printable PDF download
 /tickets/confirmation=Stripe return page polling webhook fulfilment status
 /admin=staff/admin testing control centre for metrics, automatic tier status, orders, emails, Stripe events, ticket resend, and an admin-only Testing purchase simulator
@@ -122,6 +122,7 @@ POST_/api/auth/logout=revokes current session
 GET_/api/auth/verify=single-use email verification and signed-in redirect
 POST_/api/auth/forgot-password=enumeration-safe one-hour reset email request
 POST_/api/auth/reset-password=single-use password replacement and all-session revocation
+PATCH_/api/account/profile=same-origin authenticated display-name update; trims/collapses whitespace, enforces 2-80 characters, and never accepts email/role/security fields from the browser
 POST_/api/tickets/checkout=authenticated server-priced pending ticket order and Stripe-hosted Checkout Session; availability changes only after verified payment
 POST_/api/stripe/tickets-webhook=raw-body verified, livemode-guarded, idempotent native ticket fulfilment/refund processing
 GET_/api/tickets/orders/:id/pdf=owner/staff single printable order PDF with one page and one unique QR per admission ticket
@@ -130,7 +131,7 @@ PATCH_/api/admin/ticket-types/:id=deprecated guard returning 409 because tier ac
 POST_/api/admin/simulated-purchase=admin-only and APP_ENV=testing-only purchase simulator; uses real order/ticket/PDF/email fulfilment without calling Stripe
 POST_/api/admin/orders/:id/resend=staff-only confirmation email requeue
 POST_/api/merch/cart=public dynamic canonical cart refresh with optional account session enrichment; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs and the signed-in account's available/reserved one-time 20% ticket-holder discount summary
-POST_/api/merch/checkout=node runtime; same-origin guard; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; select only the authenticated account's usable entitlement; reserve/rate-limit in Postgres; HMAC-sign server request to Good Game; return upstream Stripe Checkout URL/payload and persist discount-session reconciliation
+POST_/api/merch/checkout=node runtime; same-origin guard; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; resolve optional authenticated account UUID/email and only that account's usable entitlement; bind account/entitlement into the durable request hash; reserve/rate-limit in Postgres; HMAC-sign the server-owned account/checkout request to Good Game; return upstream Stripe Checkout URL/payload and persist discount-session reconciliation
 GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload; paid consented sessions send deduplicated Meta Purchase CAPI event
 POST_/api/merch/revalidate=node runtime; Good Game callback; read exact raw body; require timestamp within 300 seconds + constant-time HMAC; invalidate merch tag/path
 
@@ -191,6 +192,7 @@ GET_/api/standalone-storefronts/upforit/catalog=public; live mappings only; prod
 GET_/api/standalone-storefronts/upforit/products/:slug=public; live mapped product only; 404 if absent/hidden
 POST_/api/standalone-storefronts/upforit/checkout-session=HMAC required; canonical server revalidation of items/SKU/price/weight/availability/quantity; validates registered UpForIt return origin; creates Good Game Stripe Checkout Session
 GET_/api/standalone-storefronts/upforit/checkout-confirmation=HMAC required; safe customer-facing status/order response; may idempotently settle a paid session if webhook is pending
+POST_/api/standalone-storefronts/upforit/customer-orders=HMAC required; accepts only the authenticated UpForIt server's account UUID plus verified normalized email in the signed JSON body so identity never appears in request URLs, matches future account-bound checkouts and legacy same-email orders, and returns only order number/date/status/total plus safe line-item summaries; excludes raw order data, addresses, customer/payment identifiers, costs and admin fields
 
 [good_game_admin_product_workflow]
 admin_target=LIVE Good Game admin UI only; dedicated `UpForIt Collection` navigation under collections permission
@@ -244,7 +246,7 @@ shipping_copy=£2.99 for exactly one phone case at quantity one; £3.99 for all 
 intent_storage_key=upforit.merch.checkout-intent.v1 in sessionStorage
 intent_format=ufi_<crypto.randomUUID()>
 intent_reuse=same sorted variantId:quantity fingerprint reuses key; cart fingerprint change creates new key
-request_hash=SHA-256 of sorted variantId:quantity entries
+request_hash=SHA-256 of sorted variantId:quantity entries plus the server-resolved entitlement id and authenticated account id when present
 requester_hash=SHA-256(secret + resolved forwarded/client IP + first 240 user-agent chars); raw IP not stored
 table=merch_checkout_requests; created on demand
 table_columns=idempotency_key PK,request_hash,requester_hash,attempt_count,created_at,last_attempt_at
@@ -256,8 +258,8 @@ database_failure=fail closed with 503; never bypass rate/idempotency guard
 
 [checkout_flow]
 1=cart page sends variant IDs + quantities + stable idempotency key and its displayed entitlement id to local `/api/merch/checkout`
-2=local API validates shapes and same origin, resolves the authenticated account's entitlement independently, reserves intent, derives current request origin, and builds success/cancel URLs
-3=local API signs exact JSON body with an optional server-owned `ticket-merch-20` entitlement and calls Good Game
+2=local API validates shapes and same origin, resolves authenticated account UUID/verified email and that account's entitlement independently, binds both into the intent hash, reserves intent, derives current request origin, and builds success/cancel URLs
+3=local API signs the exact JSON body with optional server-owned `customerAccount` identity and `ticket-merch-20` entitlement and calls Good Game
 4=Good Game independently loads canonical DB variants/prices/weights/availability, calculates UK shipping and calculates 20% from merch subtotal only
 5=Good Game creates a 30-minute Stripe Checkout Session with a single-use exact amount-off coupon; a newer attempt expires the prior open discounted session; browser redirects to returned Stripe URL
 6=Stripe collects email, phone, GB shipping address, billing address, payment details; UpForIt never receives card data
@@ -336,6 +338,8 @@ quantity_ui=active ticket tier starts at quantity 1 and uses accessible left/rig
 admin_simulation=Testing admin can create one or more paid-equivalent tickets for their own admin account; fulfilment and email are real, Stripe payment is skipped, and the order is visibly marked as a simulation in admin
 multi_ticket_email=one confirmation email is queued per order; it contains one PDF attachment for the complete order, with one full page and one unique QR code per admission ticket
 multi_ticket_account=account order summary shows the ticket count; order detail uses a compact responsive ticket grid with Ticket N of total labels and a single Download all tickets PDF action
+account_merch_history=UpForIt stores no merch orders; the dynamic account page HMAC-requests Good Game using the signed-in account UUID and verified normalized email, strictly normalizes the already-safe response again, and shows the history as read-only customer summaries with Good Game fulfilment attribution
+account_profile_update=display name is the only editable local profile field; email remains read-only because it is the verified sign-in and legacy merch ownership key, while password replacement continues through the enumeration-safe email reset flow
 
 [security]
 server_only_modules=lib/merch.ts and lib/merch-checkout-guard.ts import server-only

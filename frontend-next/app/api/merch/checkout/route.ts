@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
     await reserveCheckoutAttempt({
       idempotencyKey,
-      requestHash: buildCheckoutRequestHash(items, entitlement?.id),
+      requestHash: buildCheckoutRequestHash(items, entitlement?.id, user?.id),
       requesterKey: getCheckoutRequesterKey(request.headers)
     });
     const origin = checkoutReturnOrigin();
@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
       idempotencyKey,
       successUrl: `${origin}/cart/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/cart?checkout=cancelled`,
+      ...(user ? {
+        customerAccount: {
+          accountId: user.id,
+          customerEmail: user.email
+        }
+      } : {}),
       ...(entitlement && user ? {
         discountEntitlement: {
           id: entitlement.id,
