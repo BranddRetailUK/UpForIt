@@ -7,7 +7,7 @@ import {
   verificationEmailHtml
 } from "../lib/email-templates";
 import { sendMetaConversion } from "../lib/meta-conversion";
-import { getMerchCheckoutConfirmation, revokeGoodGameMerchDiscount } from "../lib/merch";
+import { getMerchCheckoutConfirmation, revokeGoodGameMerchDiscount } from "../lib/merch-api";
 import {
   MERCH_DISCOUNT_SYNC_MAX_ATTEMPTS,
   merchDiscountRetryDelayMinutes,
