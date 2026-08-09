@@ -9,6 +9,8 @@ import "./globals.css";
 
 const SOCIAL_SHARE_IMAGE =
   "https://res.cloudinary.com/brandduk/image/upload/v1785833927/UPFORIT_Summer_Round_Up_PP_hjq2nh.png";
+const FAVICON_IMAGE =
+  "https://res.cloudinary.com/brandduk/image/upload/v1786281482/LOGO_FAV_smiley_c4wm5v.png";
 
 const display = Bangers({
   weight: "400",
@@ -39,6 +41,11 @@ export const metadata: Metadata = {
   },
   description:
     "Discover upcoming UPFORIT events, event news and future merch.",
+  icons: {
+    icon: [{ url: FAVICON_IMAGE, type: "image/png" }],
+    shortcut: [{ url: FAVICON_IMAGE, type: "image/png" }],
+    apple: [{ url: FAVICON_IMAGE, type: "image/png" }]
+  },
   alternates: {
     canonical: "/"
   },
