@@ -6,7 +6,7 @@ import { useMetaTracking } from "./MetaTrackingProvider";
 
 type Status = {
   id: string;
-  order_number: string;
+  order_number: string | null;
   status: string;
   meta?: {
     eventId: string;
@@ -68,6 +68,7 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
   if (error) return <p className="form-message form-message--error">{error}</p>;
   if (!order || order.status === "pending") return <p>Payment received. We’re issuing your tickets now…</p>;
   if (order.status !== "paid") return <p>Your order status is {order.status}. Please contact us if this looks wrong.</p>;
+  if (!order.order_number) return <p>Payment received. We’re issuing your order number now…</p>;
   return (
     <div className="ticket-confirmation">
       <p className="form-message form-message--success ticket-confirmation__message">Your tickets are ready. A confirmation email is on its way.</p>

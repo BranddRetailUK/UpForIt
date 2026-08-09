@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const client = await getPool().connect();
     try {
       await client.query("BEGIN");
-      const existing = await client.query<{ id: string; order_number: string; request_hash: string }>(
+      const existing = await client.query<{ id: string; order_number: string | null; request_hash: string }>(
         `SELECT id, order_number, request_hash
            FROM ticket_orders
           WHERE user_id = $1 AND idempotency_key = $2
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       );
       if (existing.rows[0]) {
         if (existing.rows[0].request_hash !== requestHash) throw new Error("This simulated purchase request has already been used.");
+        if (!existing.rows[0].order_number) throw new Error("This simulated purchase is still being completed.");
         await client.query("COMMIT");
         return NextResponse.json({ ok: true, orderId: existing.rows[0].id, orderNumber: existing.rows[0].order_number });
       }
@@ -53,16 +54,12 @@ export async function POST(request: NextRequest) {
       const tier = locked.tiers[0];
       const totalMinor = tier.price_minor * quantity;
       const orderId = randomUUID();
-      const numberResult = await client.query<{ value: string }>(
-        "SELECT 'UFI-' || lpad(nextval('ticket_order_number_seq')::text, 6, '0') AS value"
-      );
-      const orderNumber = numberResult.rows[0].value;
       await client.query(
         `INSERT INTO ticket_orders (
-           id, order_number, user_id, event_id, status, currency, subtotal_minor, total_minor,
+           id, user_id, event_id, status, currency, subtotal_minor, total_minor,
            idempotency_key, request_hash, reserved_until
-         ) VALUES ($1, $2, $3, $4, 'pending', 'gbp', $5, $5, $6, $7, now() + interval '5 minutes')`,
-        [orderId, orderNumber, admin.id, tier.event_id, totalMinor, idempotencyKey, requestHash]
+         ) VALUES ($1, $2, $3, 'pending', 'gbp', $4, $4, $5, $6, now() + interval '5 minutes')`,
+        [orderId, admin.id, tier.event_id, totalMinor, idempotencyKey, requestHash]
       );
       await client.query(
         `INSERT INTO ticket_order_items (
@@ -85,7 +82,7 @@ export async function POST(request: NextRequest) {
         [randomUUID(), admin.id, orderId, JSON.stringify({ ticketTypeId, quantity })]
       );
       await client.query("COMMIT");
-      return NextResponse.json({ ok: true, orderId, orderNumber });
+      return NextResponse.json({ ok: true, orderId, orderNumber: fulfilled.orderNumber });
     } catch (error) {
       await client.query("ROLLBACK").catch(() => undefined);
       throw error;

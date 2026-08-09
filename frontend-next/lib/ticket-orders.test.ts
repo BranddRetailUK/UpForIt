@@ -6,11 +6,13 @@ import { fulfilPaidOrder } from "./ticket-orders";
 
 describe("ticket order fulfilment", () => {
   it("issues one independently numbered ticket for every quantity purchased", async () => {
-    let sequence = 10000;
+    let orderSequence = 1000;
+    let ticketSequence = 10000;
     const query = vi.fn(async (sql: string, _values?: unknown[]) => {
-      if (sql.includes("SELECT o.id, o.user_id")) {
+      if (sql.includes("SELECT o.id, o.order_number, o.user_id")) {
         return { rows: [{
           id: "order-123",
+          order_number: null,
           user_id: "user-123",
           status: "pending",
           total_minor: 1500,
@@ -34,9 +36,13 @@ describe("ticket order fulfilment", () => {
           event_id: "event-123"
         }] };
       }
+      if (sql.includes("ticket_order_number_seq")) {
+        orderSequence += 1;
+        return { rows: [{ value: `UFI-${orderSequence}` }] };
+      }
       if (sql.includes("admission_ticket_number_seq")) {
-        sequence += 1;
-        return { rows: [{ value: `UFI-T-${sequence}` }] };
+        ticketSequence += 1;
+        return { rows: [{ value: `UFI-T-${ticketSequence}` }] };
       }
       return { rows: [], rowCount: 1 };
     });
@@ -47,9 +53,11 @@ describe("ticket order fulfilment", () => {
 
     expect(ticketInserts).toHaveLength(3);
     expect(discountInserts).toHaveLength(1);
+    expect(query.mock.calls.filter(([sql]) => String(sql).includes("ticket_order_number_seq"))).toHaveLength(1);
     expect(new Set(ticketInserts.map(([, values]) => (values as unknown[])[2])).size).toBe(3);
     expect(fulfilled).toMatchObject({
       orderId: "order-123",
+      orderNumber: "UFI-1001",
       totalMinor: 1500,
       contents: [{ id: "tier-123", quantity: 3, itemPriceMinor: 500 }]
     });

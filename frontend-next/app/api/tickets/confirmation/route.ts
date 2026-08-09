@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   if (!sessionId) return NextResponse.json({ error: "Missing session" }, { status: 400 });
   const result = await getPool().query<{
     id: string;
-    order_number: string;
+    order_number: string | null;
     status: string;
     total_minor: number;
     currency: string;

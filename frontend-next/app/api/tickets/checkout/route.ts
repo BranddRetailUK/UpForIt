@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
     const client = await getPool().connect();
     let checkoutRows: TicketCheckoutTier[] = [];
     let totalMinor = 0;
-    let orderNumber = "";
     let purchaseEventId = "";
     try {
       await client.query("BEGIN");
@@ -61,22 +60,17 @@ export async function POST(request: NextRequest) {
 
       orderId = randomUUID();
       purchaseEventId = metaEventId("ticket_purchase", orderId);
-      const numberResult = await client.query<{ value: string }>(
-        "SELECT 'UFI-' || lpad(nextval('ticket_order_number_seq')::text, 6, '0') AS value"
-      );
-      orderNumber = numberResult.rows[0].value;
       await client.query(
         `INSERT INTO ticket_orders (
-           id, order_number, user_id, event_id, status, currency, subtotal_minor, total_minor,
+           id, user_id, event_id, status, currency, subtotal_minor, total_minor,
            idempotency_key, request_hash, reserved_until, meta_consent_granted,
            meta_checkout_event_id, meta_purchase_event_id, meta_context_encrypted
          ) VALUES (
-           $1, $2, $3, $4, 'pending', 'gbp', $5, $5, $6, $7, now() + interval '30 minutes',
-           $8, $9, $10, $11
+           $1, $2, $3, 'pending', 'gbp', $4, $4, $5, $6, now() + interval '30 minutes',
+           $7, $8, $9, $10
          )`,
         [
           orderId,
-          orderNumber,
           user.id,
           checkoutRows[0].event_id,
           totalMinor,
@@ -120,8 +114,8 @@ export async function POST(request: NextRequest) {
         customer_email: user.email,
         client_reference_id: orderId,
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-        metadata: { ticketOrderId: orderId, orderNumber },
-        payment_intent_data: { metadata: { ticketOrderId: orderId, orderNumber } },
+        metadata: { ticketOrderId: orderId },
+        payment_intent_data: { metadata: { ticketOrderId: orderId } },
         line_items: normalizedItems.map((item, index) => ({
           quantity: item.quantity,
           price_data: {

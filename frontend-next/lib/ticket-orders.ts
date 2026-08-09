@@ -5,6 +5,7 @@ import { advanceTicketTierProgression } from "./ticket-tiers";
 
 export type FulfilledOrder = {
   orderId: string;
+  orderNumber: string;
   userId: string;
   email: string;
   displayName: string;
@@ -26,6 +27,7 @@ export async function fulfilPaidOrder(
 ) {
   const result = await client.query<{
     id: string;
+    order_number: string | null;
     user_id: string;
     status: string;
     email: string;
@@ -38,7 +40,7 @@ export async function fulfilPaidOrder(
     meta_purchase_event_id: string | null;
     meta_context_encrypted: string | null;
   }>(
-    `SELECT o.id, o.user_id, o.status, o.total_minor, o.currency,
+    `SELECT o.id, o.order_number, o.user_id, o.status, o.total_minor, o.currency,
             o.meta_consent_granted, o.meta_purchase_event_id, o.meta_context_encrypted,
             u.email, u.display_name, e.title AS event_title, e.slug AS event_slug
        FROM ticket_orders o
@@ -52,12 +54,21 @@ export async function fulfilPaidOrder(
   if (order.status === "paid") return null;
   if (order.status === "refunded") return null;
 
+  let orderNumber = order.order_number;
+  if (!orderNumber) {
+    const number = await client.query<{ value: string }>(
+      "SELECT 'UFI-' || lpad(nextval('ticket_order_number_seq')::text, 6, '0') AS value"
+    );
+    orderNumber = number.rows[0].value;
+  }
+
   await client.query(
     `UPDATE ticket_orders
-        SET status = 'paid', stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id),
+        SET status = 'paid', order_number = COALESCE(order_number, $3),
+            stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id),
             paid_at = COALESCE(paid_at, now()), updated_at = now()
       WHERE id = $1`,
-    [orderId, paymentIntentId ?? null]
+    [orderId, paymentIntentId ?? null, orderNumber]
   );
 
   const items = await client.query<{
@@ -103,6 +114,7 @@ export async function fulfilPaidOrder(
   );
   return {
     orderId,
+    orderNumber,
     userId: order.user_id,
     email: order.email,
     displayName: order.display_name,

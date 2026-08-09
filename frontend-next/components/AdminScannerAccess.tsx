@@ -168,17 +168,17 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
       <div className="admin-scanner-devices">
         <div className="admin-scanner-devices__heading"><h3>Authorised devices</h3><span>{activeDevices.length} active</span></div>
         {eventDevices.length ? (
-          <div className="admin-table-wrap"><table className="admin-table admin-scanner-table"><thead><tr><th>Device</th><th>Status</th><th>Activated</th><th>Last used</th><th>Scans</th><th /></tr></thead><tbody>
+          <div className="admin-table-wrap"><table className="admin-table admin-scanner-table"><thead><tr><th className="admin-scanner-col--device">Device</th><th className="admin-scanner-col--status">Status</th><th className="admin-scanner-col--details">Activated</th><th className="admin-scanner-col--details">Last used</th><th className="admin-scanner-col--details">Scans</th><th className="admin-scanner-col--action"><span className="sr-only">Actions</span></th></tr></thead><tbody>
             {eventDevices.map((device) => {
               const expired = new Date(device.expires_at).getTime() <= now;
               const status = device.revoked_at ? "Revoked" : expired ? "Expired" : "Active";
               return <tr key={device.id}>
-                <td><strong>{device.device_label}</strong><small>{deviceDescription(device.user_agent)}</small></td>
-                <td><span className={`admin-status${status === "Active" ? " admin-status--paid" : " admin-status--expired"}`}>{status}</span></td>
-                <td>{formatDate(device.created_at)}</td>
-                <td>{formatDate(device.last_seen_at)}</td>
-                <td>{device.scan_count}</td>
-                <td>{status === "Active" ? <button className="text-button" type="button" onClick={() => void revokeDevice(device.id)}>Revoke</button> : "—"}</td>
+                <td className="admin-scanner-col--device"><strong>{device.device_label}</strong><small>{deviceDescription(device.user_agent)}</small></td>
+                <td className="admin-scanner-col--status"><span className={`admin-status${status === "Active" ? " admin-status--paid" : " admin-status--expired"}`}>{status}</span></td>
+                <td className="admin-scanner-col--details">{formatDate(device.created_at)}</td>
+                <td className="admin-scanner-col--details">{formatDate(device.last_seen_at)}</td>
+                <td className="admin-scanner-col--details">{device.scan_count}</td>
+                <td className="admin-scanner-col--action">{status === "Active" ? <button className="text-button" type="button" onClick={() => void revokeDevice(device.id)}>Revoke</button> : "—"}</td>
               </tr>;
             })}
           </tbody></table></div>

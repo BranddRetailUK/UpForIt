@@ -1146,7 +1146,7 @@ select {
 .admin-header { margin-bottom: 28px; padding: clamp(20px, 4vw, 38px); border: 4px solid var(--ink); background: var(--paper); box-shadow: var(--shadow); }
 .admin-header nav { display: flex; flex-wrap: wrap; gap: 15px; font-weight: 800; text-decoration: underline; }
 .admin-label--mobile { display: none; }
-.admin-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
+.admin-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
 .admin-metrics article { display: grid; gap: 4px; padding: 20px; border: 3px solid var(--ink); background: var(--yellow); box-shadow: var(--shadow-small); }
 .admin-metrics strong { font-family: var(--font-heavy), sans-serif; font-size: clamp(1.5rem, 3vw, 2.7rem); }
 .admin-panel { margin-bottom: 28px; padding: clamp(18px, 3vw, 30px); overflow: hidden; }
@@ -4563,7 +4563,6 @@ a {
   }
 
   .admin-header__account-link,
-  .admin-metric--accounts,
   .admin-mobile-hidden,
   .admin-orders-col--mobile-hidden,
   .admin-tier-col--pending,
@@ -4631,6 +4630,70 @@ a {
   .admin-scanner-enrolment img {
     width: min(360px, 100%);
     margin-inline: auto;
+  }
+
+  .admin-section--scanner,
+  .admin-scanner-access,
+  .admin-scanner-access__heading > div,
+  .admin-scanner-devices,
+  .admin-scanner-devices .admin-table-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-scanner-access__heading p,
+  .admin-scanner-access__event-time {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-scanner-access__controls select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-scanner-devices .admin-table-wrap {
+    overflow: hidden;
+  }
+
+  .admin-scanner-table {
+    min-width: 0;
+    table-layout: fixed;
+    font-size: .72rem;
+  }
+
+  .admin-scanner-table th,
+  .admin-scanner-table td {
+    padding: 8px 4px;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+  }
+
+  .admin-scanner-col--device { width: 42%; }
+  .admin-scanner-col--status { width: 30%; }
+  .admin-scanner-col--action { width: 28%; }
+
+  .admin-scanner-col--details {
+    display: none;
+  }
+
+  .admin-scanner-col--device small {
+    display: block;
+    margin-top: 3px;
+    font-size: .64rem;
+    line-height: 1.2;
+  }
+
+  .admin-scanner-table .admin-status {
+    max-width: 100%;
+    padding: 5px 4px;
+    font-size: .62rem;
+  }
+
+  .admin-scanner-table .text-button {
+    max-width: 100%;
+    font-size: .68rem;
+    overflow-wrap: anywhere;
   }
 
   .admin-table th,
