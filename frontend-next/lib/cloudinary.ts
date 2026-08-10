@@ -38,6 +38,54 @@ export const CLOUDINARY_ASSETS = {
     format: "png",
     width: 1476,
     height: 812
+  },
+  summerRoundupBackground: {
+    publicId: "UPFORIT/summer-roundup-2026-background",
+    format: "jpg",
+    width: 2480,
+    height: 3508
+  },
+  summerRoundupPresents: {
+    publicId: "UPFORIT/summer-roundup-2026-presents",
+    format: "png",
+    width: 840,
+    height: 164
+  },
+  summerRoundupTitle: {
+    publicId: "UPFORIT/summer-roundup-2026-title",
+    format: "png",
+    width: 1865,
+    height: 1026
+  },
+  summerRoundupLineup: {
+    publicId: "UPFORIT/summer-roundup-2026-lineup",
+    format: "png",
+    width: 2247,
+    height: 1044
+  },
+  summerRoundupMcs: {
+    publicId: "UPFORIT/summer-roundup-2026-mcs",
+    format: "png",
+    width: 2325,
+    height: 336
+  },
+  summerRoundupRevolt: {
+    publicId: "UPFORIT/summer-roundup-2026-revolt",
+    format: "png",
+    width: 987,
+    height: 259
+  },
+  summerRoundupCloud: {
+    publicId: "UPFORIT/summer-roundup-2026-cloud",
+    format: "png",
+    width: 329,
+    height: 236
+  },
+  summerRoundupLightning: {
+    publicId: "UPFORIT/summer-roundup-2026-lightning",
+    format: "png",
+    width: 250,
+    height: 305
   }
 } satisfies Record<string, CloudinaryAsset>;
 
@@ -55,4 +103,3 @@ export function cloudinaryUrl(
 
   return `${CLOUDINARY_BASE_URL}/${transforms}/${asset.publicId}.${asset.format}`;
 }
-

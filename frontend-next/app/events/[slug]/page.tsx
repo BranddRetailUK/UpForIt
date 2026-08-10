@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 import CloudinaryImage from "../../../components/CloudinaryImage";
 import TicketSelector from "../../../components/TicketSelector";
 import { getCurrentUser } from "../../../lib/auth";
-import { CLOUDINARY_ASSETS } from "../../../lib/cloudinary";
+import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../../../lib/cloudinary";
 import { getPool } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
 
 type EventRow = {
-  id: string; title: string; description: string; venue_name: string; starts_at: Date; ends_at: Date; timezone: string;
+  id: string; title: string; venue_name: string; starts_at: Date; ends_at: Date; timezone: string;
 };
 type TierRow = {
   id: string;
@@ -22,6 +22,24 @@ type TierRow = {
   paid_quantity: string;
 };
 
+function formatEventTime(value: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+    timeZone
+  }).formatToParts(new Date(value));
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
+
+  if (hour === 12 && minute === 0) return "Noon";
+  if (hour === 0 && minute === 0) return "Midnight";
+
+  const displayHour = hour % 12 || 12;
+  const displayMinute = minute === 0 ? "" : `:${String(minute).padStart(2, "0")}`;
+  return `${displayHour}${displayMinute}${hour < 12 ? "AM" : "PM"}`;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   if (slug !== "summer-roundup-2026") return { title: "Event" };
@@ -31,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const eventResult = await getPool().query<EventRow>(
-    `SELECT id, title, description, venue_name, starts_at, ends_at, timezone
+    `SELECT id, title, venue_name, starts_at, ends_at, timezone
        FROM events WHERE slug = $1 AND status = 'published'`,
     [slug]
   );
@@ -52,32 +70,108 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
     getCurrentUser()
   ]);
   const eventDate = new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeZone: event.timezone }).format(new Date(event.starts_at));
-  const eventTime = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.starts_at));
-  const endTime = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", timeZone: event.timezone }).format(new Date(event.ends_at));
+  const eventTime = formatEventTime(event.starts_at, event.timezone);
+  const endTime = formatEventTime(event.ends_at, event.timezone);
   const activeSortOrder = tierResult.rows.find((tier) => tier.is_active)?.sort_order;
+  const eventBackground = cloudinaryUrl(CLOUDINARY_ASSETS.summerRoundupBackground, { width: 1800 });
 
   return (
-    <div className="inner-page section-wrap event-detail-page">
-      <article className="event-card event-card--tickets">
-        <p className="event-card__eyebrow">UPFORIT presents</p>
-        <h1 className="event-card__title">
-          <CloudinaryImage asset={CLOUDINARY_ASSETS.summerRoundup} alt={event.title} className="event-card__wordmark" sizes="(max-width: 720px) 86vw, 760px" maxWidth={1476} priority />
-        </h1>
-        <p className="event-description">{event.description}</p>
-        <dl className="event-summary-banner" aria-label="Event details">
-          <div className="event-summary-banner__item event-summary-banner__item--date">
+    <div className="inner-page section-wrap event-detail-page summer-roundup-page">
+      <article
+        className="summer-roundup-event"
+        style={{ backgroundImage: `linear-gradient(rgba(0, 142, 240, .12), rgba(0, 101, 217, .18)), url("${eventBackground}")` }}
+      >
+        <header className="summer-roundup-hero">
+          <p className="summer-roundup-genres" aria-label="Music genres">
+            <span>UKG</span><i aria-hidden="true" />
+            <span>Drum &amp; Bass</span><i aria-hidden="true" />
+            <span>Electro</span><i aria-hidden="true" />
+            <span>Breaks</span><i aria-hidden="true" />
+            <span>Dance</span><i aria-hidden="true" />
+            <span>Hardcore</span>
+          </p>
+
+          <div className="summer-roundup-hero__art">
+            <CloudinaryImage
+              asset={CLOUDINARY_ASSETS.summerRoundupCloud}
+              alt=""
+              className="summer-roundup-sticker summer-roundup-sticker--cloud"
+              sizes="(max-width: 720px) 90px, 150px"
+              maxWidth={329}
+            />
+            <div className="summer-roundup-hero__lockup">
+              <CloudinaryImage
+                asset={CLOUDINARY_ASSETS.summerRoundupPresents}
+                alt="UPFORIT presents"
+                className="summer-roundup-hero__presents"
+                sizes="(max-width: 720px) 60vw, 420px"
+                maxWidth={840}
+                priority
+              />
+              <h1>
+                <CloudinaryImage
+                  asset={CLOUDINARY_ASSETS.summerRoundupTitle}
+                  alt={event.title}
+                  className="summer-roundup-hero__title"
+                  sizes="(max-width: 720px) 92vw, 760px"
+                  maxWidth={1476}
+                  priority
+                />
+              </h1>
+            </div>
+            <CloudinaryImage
+              asset={CLOUDINARY_ASSETS.summerRoundupLightning}
+              alt=""
+              className="summer-roundup-sticker summer-roundup-sticker--lightning"
+              sizes="(max-width: 720px) 66px, 105px"
+              maxWidth={250}
+            />
+          </div>
+        </header>
+
+        <section className="summer-roundup-lineup" aria-labelledby="summer-roundup-lineup-title">
+          <p className="summer-roundup-lineup__label" aria-hidden="true">The full lineup</p>
+          <h2 className="sr-only" id="summer-roundup-lineup-title">The full lineup</h2>
+          <CloudinaryImage
+            asset={CLOUDINARY_ASSETS.summerRoundupLineup}
+            alt="Road 23, Spektral, Scott Charles, Haribo, Ectomorph, Sinik, Tommo, Savage, Slumberjack, Deechase, Bandy and Jack Panic"
+            className="summer-roundup-lineup__artists"
+            sizes="(max-width: 720px) 88vw, 940px"
+            maxWidth={1200}
+          />
+          <CloudinaryImage
+            asset={CLOUDINARY_ASSETS.summerRoundupMcs}
+            alt="MCs on the day: E Dappa, Danzee, Razor and Treble"
+            className="summer-roundup-lineup__mcs"
+            sizes="(max-width: 720px) 88vw, 940px"
+            maxWidth={1200}
+          />
+          <div className="summer-roundup-powered-by">
+            <CloudinaryImage
+              asset={CLOUDINARY_ASSETS.summerRoundupRevolt}
+              alt="Revolt Sound System"
+              className="summer-roundup-powered-by__logo"
+              sizes="(max-width: 720px) 180px, 260px"
+              maxWidth={520}
+            />
+          </div>
+        </section>
+
+        <dl className="summer-roundup-info" aria-label="Event details">
+          <div className="summer-roundup-info__item summer-roundup-info__item--date">
             <dt>Date</dt>
             <dd><time dateTime={new Date(event.starts_at).toISOString()}>{eventDate}</time></dd>
           </div>
-          <div className="event-summary-banner__item event-summary-banner__item--time">
+          <div className="summer-roundup-info__item summer-roundup-info__item--time">
             <dt>Time</dt>
             <dd><time dateTime={new Date(event.starts_at).toISOString()}>{eventTime}–{endTime}</time></dd>
           </div>
-          <div className="event-summary-banner__item event-summary-banner__item--venue">
+          <div className="summer-roundup-info__item summer-roundup-info__item--venue">
             <dt>Venue</dt>
-            <dd>{event.venue_name}</dd>
+            <dd>{event.venue_name}<small>4 Chandos Place, Bletchley, MK2 2SN</small></dd>
           </div>
         </dl>
+
         <TicketSelector
           eventId={event.id}
           eventTitle={event.title}
