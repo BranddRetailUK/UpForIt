@@ -121,7 +121,7 @@ export default async function AdminPage() {
 
       <section className="admin-panel admin-section--tiers">
         <h2>Ticket tiers</h2>
-        <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 Tier 1 tickets, then unlimited Tier 2 tickets.</p>
+        <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 General Release tickets, then unlimited On The Door tickets.</p>
         <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--pending">Open checkouts</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
           {tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);

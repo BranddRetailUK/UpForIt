@@ -4,8 +4,8 @@ import { advanceTicketTierProgression } from "../lib/ticket-tiers";
 const EVENT_ID = "4e37f654-31f8-4c86-a59e-bf4e72c7f0a1";
 const TICKET_TYPES = [
   ["8756ca79-53f1-4dd1-9298-c07e85fd10e1", "Early Bird", 500, 50, true, 10],
-  ["8756ca79-53f1-4dd1-9298-c07e85fd10e2", "Tier 1", 750, 100, false, 20],
-  ["8756ca79-53f1-4dd1-9298-c07e85fd10e3", "Tier 2", 1000, null, false, 30]
+  ["8756ca79-53f1-4dd1-9298-c07e85fd10e2", "General Release", 750, 100, false, 20],
+  ["8756ca79-53f1-4dd1-9298-c07e85fd10e3", "On The Door", 1000, null, false, 30]
 ] as const;
 
 async function main() {

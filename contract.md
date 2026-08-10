@@ -326,8 +326,8 @@ tables_owned_here=signups,merch_checkout_requests,merch_discount_entitlements,me
 tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilment,email events; all Good Game
 
 [native_ticket_sales]
-prices=Early Bird £5; Tier 1 £7.50; Tier 2 £10; exact displayed total with no booking fee
-progression=Early Bird is capped at 50 paid tickets; Tier 1 then activates for 100 paid tickets; Tier 2 then activates with no capacity limit
+prices=Early Bird £5; General Release £7.50; On The Door £10; exact displayed total with no booking fee
+progression=Early Bird is capped at 50 paid tickets; General Release then activates for 100 paid tickets; On The Door then activates with no capacity limit
 concurrency=checkout and admin simulation lock tier rows and count paid tickets only; open or abandoned Stripe Checkout Sessions never reduce availability
 checkout_price_lock=the tier and unit price are snapshotted when the dedicated ticket Stripe Checkout Session is created; that session keeps its original price if the sale advances before payment
 checkout_overrun=simultaneous successful payments may take a capped price tier slightly above its nominal paid-ticket threshold; those payments are honoured and the sale advances monotonically
