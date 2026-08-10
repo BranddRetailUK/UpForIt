@@ -4840,3 +4840,444 @@ a {
 .account-dashboard .account-card--compact .account-actions {
   justify-content: stretch;
 }
+
+/* Summer Roundup 2026 — final flyer direction */
+.event-detail-page.summer-roundup-page {
+  width: min(1240px, calc(100% - 34px));
+  padding-top: clamp(22px, 3vw, 42px);
+}
+
+.summer-roundup-event {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  border: 7px solid var(--ink);
+  background-color: var(--blue-light);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: none;
+}
+
+.summer-roundup-event::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, transparent 0 48%, rgba(0, 101, 217, .35) 78%, rgba(0, 69, 155, .52));
+  pointer-events: none;
+}
+
+.summer-roundup-hero,
+.summer-roundup-lineup,
+.summer-roundup-info,
+.summer-roundup-event > .ticket-selector {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.summer-roundup-hero {
+  order: 1;
+  padding: clamp(22px, 4vw, 48px) clamp(24px, 5vw, 64px) 24px;
+}
+
+.summer-roundup-genres {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto clamp(24px, 4vw, 42px);
+  padding: 11px 18px 9px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  border: 4px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 6px 6px 0 var(--ink);
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: clamp(.75rem, 1.45vw, 1rem);
+  line-height: 1;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+  transform: rotate(-.5deg);
+}
+
+.summer-roundup-genres i {
+  width: 7px;
+  height: 20px;
+  display: block;
+  background: var(--pink);
+  transform: skew(-8deg);
+}
+
+.summer-roundup-genres i:nth-of-type(even) {
+  background: var(--yellow);
+}
+
+.summer-roundup-hero__art {
+  position: relative;
+  min-width: 0;
+  width: min(960px, 100%);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+
+.summer-roundup-hero__lockup {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.summer-roundup-hero__presents {
+  position: relative;
+  z-index: 2;
+  width: min(450px, 62%);
+  height: auto;
+  margin: 0 auto -9%;
+  display: block;
+  filter: drop-shadow(5px 6px 0 rgba(0, 0, 0, .55));
+  transform: rotate(2deg);
+}
+
+.summer-roundup-hero__lockup h1 {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  line-height: 0;
+}
+
+.summer-roundup-hero__title {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(9px 12px 0 rgba(0, 0, 0, .68));
+  transform: rotate(-1.5deg);
+}
+
+.summer-roundup-sticker {
+  position: absolute;
+  z-index: 3;
+  height: auto;
+  pointer-events: none;
+}
+
+.summer-roundup-sticker--cloud {
+  top: -25px;
+  right: 2%;
+  width: clamp(90px, 13vw, 150px);
+  transform: rotate(7deg);
+}
+
+.summer-roundup-sticker--lightning {
+  right: -2%;
+  bottom: 8%;
+  width: clamp(66px, 8vw, 104px);
+  transform: rotate(8deg);
+}
+
+.summer-roundup-lineup {
+  order: 2;
+  margin: clamp(24px, 4vw, 46px) clamp(24px, 5vw, 64px) 0;
+  padding: clamp(30px, 5vw, 56px) clamp(18px, 4vw, 42px) clamp(24px, 4vw, 42px);
+  border: 6px solid var(--paper);
+  outline: 6px solid var(--ink);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .08) 0 1.5px, transparent 1.8px) 0 0 / 15px 15px,
+    rgba(5, 5, 5, .9);
+  box-shadow: 12px 13px 0 var(--pink);
+}
+
+.summer-roundup-lineup__label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  margin: 0;
+  padding: 10px 20px 7px;
+  border: 4px solid var(--ink);
+  background: var(--pink);
+  box-shadow: 5px 5px 0 var(--yellow), 8px 8px 0 var(--ink);
+  color: var(--paper);
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  line-height: 1;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  white-space: nowrap;
+}
+
+.summer-roundup-lineup__artists,
+.summer-roundup-lineup__mcs {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.summer-roundup-lineup__artists {
+  margin-top: 7px;
+}
+
+.summer-roundup-lineup__mcs {
+  margin-top: clamp(16px, 2.5vw, 28px);
+}
+
+.summer-roundup-powered-by {
+  margin-top: clamp(22px, 3vw, 34px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--paper);
+}
+
+.summer-roundup-powered-by__logo {
+  width: min(324px, 52vw);
+  height: auto;
+  filter: drop-shadow(5px 6px 0 rgba(0, 0, 0, .65));
+}
+
+.summer-roundup-info {
+  order: 3;
+  margin: clamp(32px, 5vw, 56px) clamp(24px, 5vw, 64px) 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summer-roundup-info__item {
+  min-width: 0;
+  min-height: 138px;
+  padding: 17px 18px;
+  display: grid;
+  grid-template-rows: 36px minmax(0, 1fr);
+  align-items: center;
+  border: 5px solid var(--ink);
+  background: var(--yellow);
+  box-shadow: 7px 8px 0 var(--ink);
+  text-align: center;
+}
+
+.summer-roundup-info__item--time {
+  background: var(--pink);
+  color: var(--paper);
+  transform: none;
+}
+
+.summer-roundup-info__item--venue {
+  background: var(--paper);
+  transform: none;
+}
+
+.summer-roundup-info dt {
+  width: fit-content;
+  align-self: start;
+  margin: 0 auto;
+  padding: 7px 12px 5px;
+  border: 3px solid var(--ink);
+  background: var(--blue-light);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: .78rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+
+.summer-roundup-info__item--time dt {
+  background: var(--yellow);
+  transform: rotate(2deg);
+}
+
+.summer-roundup-info__item--venue dt {
+  background: var(--pink);
+  color: var(--paper);
+  transform: rotate(-1deg);
+}
+
+.summer-roundup-info dd {
+  align-self: center;
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.summer-roundup-info dd small {
+  margin-top: 7px;
+  display: block;
+  font-family: var(--font-body), Arial, sans-serif;
+  font-size: .72rem;
+  font-weight: 850;
+  line-height: 1.25;
+  letter-spacing: .025em;
+}
+
+.summer-roundup-event > .ticket-selector {
+  order: 4;
+  width: min(900px, calc(100% - 48px));
+  margin: clamp(40px, 6vw, 70px) auto clamp(42px, 6vw, 70px);
+  background:
+    repeating-conic-gradient(from -8deg at 50% 44%, rgba(255, 255, 255, .13) 0 8deg, transparent 8deg 17deg),
+    var(--yellow);
+  box-shadow: 10px 10px 0 var(--pink), 17px 17px 0 var(--ink);
+}
+
+.summer-roundup-event > .ticket-selector::before {
+  opacity: .28;
+}
+
+.summer-roundup-event > .ticket-selector h2 {
+  margin-inline: auto;
+  background: var(--pink);
+  color: var(--paper);
+  box-shadow: 5px 5px 0 var(--yellow), 8px 8px 0 var(--ink);
+  text-align: center;
+}
+
+@media (max-width: 840px) {
+  .summer-roundup-hero__art {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summer-roundup-info {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .summer-roundup-info__item--venue {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .event-detail-page.summer-roundup-page {
+    width: calc(100% - 18px);
+    padding-top: 18px;
+  }
+
+  .summer-roundup-event {
+    overflow: hidden;
+    border-width: 4px;
+    box-shadow: none;
+  }
+
+  .summer-roundup-hero {
+    padding: 19px 10px 20px;
+  }
+
+  .summer-roundup-genres {
+    display: none;
+  }
+
+  .summer-roundup-hero__art {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 8px;
+  }
+
+  .summer-roundup-hero__presents {
+    width: min(72%, 340px);
+    margin-bottom: -8%;
+  }
+
+  .summer-roundup-hero__lockup h1 {
+    padding-top: 20px;
+  }
+
+  .summer-roundup-hero__title {
+    filter: drop-shadow(6px 8px 0 rgba(0, 0, 0, .7));
+  }
+
+  .summer-roundup-sticker--cloud {
+    top: 14px;
+    right: -12px;
+    width: 78px;
+  }
+
+  .summer-roundup-sticker--lightning {
+    right: -3px;
+    bottom: 4%;
+    width: 55px;
+  }
+
+  .summer-roundup-lineup {
+    margin: 28px 12px 0;
+    padding: 28px 8px 20px;
+    border-width: 4px;
+    outline-width: 4px;
+    box-shadow: 7px 8px 0 var(--pink);
+  }
+
+  .summer-roundup-lineup__label {
+    padding: 8px 14px 6px;
+    border-width: 3px;
+    box-shadow: 4px 4px 0 var(--yellow), 6px 6px 0 var(--ink);
+  }
+
+  .summer-roundup-lineup__mcs {
+    margin-top: 13px;
+  }
+
+  .summer-roundup-powered-by {
+    margin-top: 20px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .summer-roundup-powered-by__logo {
+    width: min(220px, 72vw);
+  }
+
+  .summer-roundup-info {
+    order: 4;
+    margin: 34px 12px 4px;
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .summer-roundup-info__item,
+  .summer-roundup-info__item--venue {
+    grid-column: auto;
+    min-height: 100px;
+    padding: 14px;
+    border-width: 4px;
+    box-shadow: 5px 6px 0 var(--ink);
+    transform: none;
+  }
+
+  .summer-roundup-info dd {
+    font-size: clamp(1rem, 5vw, 1.24rem);
+  }
+
+  .summer-roundup-event > .ticket-selector {
+    order: 3;
+    width: calc(100% - 24px);
+    margin: 38px auto 4px;
+    padding-inline: 12px;
+    box-shadow: 6px 6px 0 var(--pink), 10px 10px 0 var(--ink);
+  }
+
+  .summer-roundup-event > .ticket-selector h2 {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .summer-roundup-event .ticket-merch-promo.is-compact {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .summer-roundup-event .ticket-merch-promo.is-compact .ticket-merch-promo__copy {
+    justify-items: center;
+    text-align: center;
+  }
+}
