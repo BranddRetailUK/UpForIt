@@ -42,7 +42,7 @@ export default async function Home() {
         </h1>
         <div className="button-row">
           <Link className="pop-button pop-button--pink" href="/events">
-            See what&apos;s next
+            The Summer Round Up
           </Link>
           <Link className="pop-button pop-button--yellow" href="/merch">
             Check the merch
