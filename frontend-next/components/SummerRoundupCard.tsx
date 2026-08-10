@@ -1,22 +1,79 @@
 import Link from "next/link";
-import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
+import type { CSSProperties } from "react";
+import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../lib/cloudinary";
 import CloudinaryImage from "./CloudinaryImage";
 
-export default function SummerRoundupCard({ priority = false }: { priority?: boolean }) {
+export default function SummerRoundupCard({
+  priority = false,
+  flyerBackground = false
+}: {
+  priority?: boolean;
+  flyerBackground?: boolean;
+}) {
+  const flyerBackgroundStyle = flyerBackground
+    ? {
+        "--event-card-flyer-background": `url("${cloudinaryUrl(CLOUDINARY_ASSETS.summerRoundupBackground, { width: 1400 })}")`
+      } as CSSProperties
+    : undefined;
+
   return (
-    <article className="event-card">
+    <article
+      className={`event-card${flyerBackground ? " event-card--flyer" : ""}`}
+      style={flyerBackgroundStyle}
+    >
       <div className="event-card__burst" aria-hidden="true" />
-      <p className="event-card__eyebrow">UPFORIT presents</p>
-      <h2 className="event-card__title">
-        <CloudinaryImage
-          asset={CLOUDINARY_ASSETS.summerRoundup}
-          alt="The Summer Roundup"
-          className="event-card__wordmark"
-          sizes="(max-width: 720px) 86vw, 760px"
-          maxWidth={1476}
-          priority={priority}
-        />
-      </h2>
+      {flyerBackground ? (
+        <div className="event-card__flyer-hero">
+          <CloudinaryImage
+            asset={CLOUDINARY_ASSETS.summerRoundupCloud}
+            alt=""
+            className="event-card__flyer-sticker event-card__flyer-sticker--cloud"
+            sizes="(max-width: 720px) 78px, 130px"
+            maxWidth={329}
+          />
+          <div className="event-card__flyer-lockup">
+            <CloudinaryImage
+              asset={CLOUDINARY_ASSETS.summerRoundupPresents}
+              alt="UPFORIT presents"
+              className="event-card__flyer-presents"
+              sizes="(max-width: 720px) 70vw, 420px"
+              maxWidth={840}
+              priority={priority}
+            />
+            <h2 className="event-card__flyer-title">
+              <CloudinaryImage
+                asset={CLOUDINARY_ASSETS.summerRoundupTitle}
+                alt="The Summer Roundup"
+                className="event-card__flyer-wordmark"
+                sizes="(max-width: 720px) 92vw, 760px"
+                maxWidth={1476}
+                priority={priority}
+              />
+            </h2>
+          </div>
+          <CloudinaryImage
+            asset={CLOUDINARY_ASSETS.summerRoundupLightning}
+            alt=""
+            className="event-card__flyer-sticker event-card__flyer-sticker--lightning"
+            sizes="(max-width: 720px) 55px, 90px"
+            maxWidth={250}
+          />
+        </div>
+      ) : (
+        <>
+          <p className="event-card__eyebrow">UPFORIT presents</p>
+          <h2 className="event-card__title">
+            <CloudinaryImage
+              asset={CLOUDINARY_ASSETS.summerRoundup}
+              alt="The Summer Roundup"
+              className="event-card__wordmark"
+              sizes="(max-width: 720px) 86vw, 760px"
+              maxWidth={1476}
+              priority={priority}
+            />
+          </h2>
+        </>
+      )}
 
       <div className="event-facts">
         <div className="event-fact event-fact--yellow">
@@ -47,7 +104,7 @@ export default function SummerRoundupCard({ priority = false }: { priority?: boo
         Early bird tickets now available!
         <span aria-hidden="true">★</span>
       </div>
-      <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026#tickets">
+      <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026">
         Buy tickets
       </Link>
     </article>

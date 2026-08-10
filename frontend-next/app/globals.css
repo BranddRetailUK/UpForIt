@@ -3042,6 +3042,7 @@ a {
 }
 
 .values {
+  display: none;
   padding-block: 40px clamp(90px, 11vw, 140px);
 }
 
@@ -5123,6 +5124,160 @@ a {
   letter-spacing: .025em;
 }
 
+/* Keep the Events listing summary visually aligned with the final event page. */
+.events-page .event-card--flyer {
+  background-color: var(--blue-light);
+  background-image:
+    linear-gradient(rgba(0, 142, 240, .12), rgba(0, 101, 217, .18)),
+    var(--event-card-flyer-background);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.events-page .event-card--flyer .event-card__burst {
+  display: none;
+}
+
+.events-page .event-card__flyer-hero {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  width: min(790px, 100%);
+  margin: 0 auto 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+
+.events-page .event-card__flyer-lockup {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.events-page .event-card__flyer-presents {
+  position: relative;
+  z-index: 2;
+  width: min(450px, 62%);
+  height: auto;
+  margin: 0 auto -9%;
+  display: block;
+  filter: drop-shadow(5px 6px 0 rgba(0, 0, 0, .55));
+  transform: rotate(2deg);
+}
+
+.events-page .event-card__flyer-title {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  line-height: 0;
+}
+
+.events-page .event-card__flyer-wordmark {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(9px 12px 0 rgba(0, 0, 0, .68));
+  transform: rotate(-1.5deg);
+}
+
+.events-page .event-card__flyer-sticker {
+  position: absolute;
+  z-index: 3;
+  height: auto;
+  pointer-events: none;
+}
+
+.events-page .event-card__flyer-sticker--cloud {
+  top: -20px;
+  right: 1%;
+  width: clamp(82px, 12vw, 130px);
+  transform: rotate(7deg);
+}
+
+.events-page .event-card__flyer-sticker--lightning {
+  right: -1%;
+  bottom: 8%;
+  width: clamp(58px, 7vw, 90px);
+  transform: rotate(8deg);
+}
+
+.events-page .event-facts {
+  margin-top: 26px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.events-page .event-fact {
+  min-height: 138px;
+  padding: 17px 18px;
+  display: grid;
+  align-items: center;
+  border: 5px solid var(--ink);
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: 7px 8px 0 var(--ink);
+  text-align: center;
+}
+
+.events-page .event-fact--pink {
+  background: var(--pink);
+  color: var(--paper);
+}
+
+.events-page .event-fact--blue {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.events-page .event-fact__icon {
+  display: none;
+}
+
+.events-page .event-fact > div {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  line-height: 1.05;
+}
+
+.events-page .event-fact__label {
+  width: fit-content;
+  align-self: start;
+  justify-self: center;
+  padding: 7px 12px 5px;
+  border: 3px solid var(--ink);
+  background: var(--blue-light);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  font-family: var(--font-heavy), Impact, sans-serif;
+  font-size: .78rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+
+.events-page .event-fact--pink .event-fact__label {
+  background: var(--yellow);
+  transform: rotate(2deg);
+}
+
+.events-page .event-fact--blue .event-fact__label {
+  background: var(--pink);
+  color: var(--paper);
+  transform: rotate(-1deg);
+}
+
 .summer-roundup-event > .ticket-selector {
   order: 4;
   width: min(900px, calc(100% - 48px));
@@ -5155,6 +5310,14 @@ a {
   }
 
   .summer-roundup-info__item--venue {
+    grid-column: 1 / -1;
+  }
+
+  .events-page .event-facts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .events-page .event-fact--blue {
     grid-column: 1 / -1;
   }
 }
@@ -5256,6 +5419,79 @@ a {
 
   .summer-roundup-info dd {
     font-size: clamp(1rem, 5vw, 1.24rem);
+  }
+
+  .events-page .event-facts {
+    margin-top: 22px;
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .events-page .event-card,
+  .events-page .event-card__title,
+  .events-page .event-facts {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .events-page .event-card__title {
+    width: 100%;
+  }
+
+  .events-page .event-card__wordmark {
+    max-width: 100%;
+  }
+
+  .events-page .event-card__flyer-hero,
+  .events-page .event-card__flyer-lockup,
+  .events-page .event-card__flyer-title {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .events-page .event-card__flyer-hero {
+    width: 100%;
+    padding-top: 8px;
+  }
+
+  .events-page .event-card__flyer-presents {
+    width: min(72%, 340px);
+    margin-bottom: -8%;
+  }
+
+  .events-page .event-card__flyer-title {
+    padding-top: 20px;
+  }
+
+  .events-page .event-card__flyer-wordmark {
+    filter: drop-shadow(6px 8px 0 rgba(0, 0, 0, .7));
+  }
+
+  .events-page .event-card__flyer-sticker--cloud {
+    top: 14px;
+    right: -4px;
+    width: 72px;
+  }
+
+  .events-page .event-card__flyer-sticker--lightning {
+    right: -1px;
+    bottom: 4%;
+    width: 50px;
+  }
+
+  .events-page .event-fact,
+  .events-page .event-fact--blue {
+    grid-column: auto;
+    min-height: 100px;
+    padding: 14px;
+    border-width: 4px;
+    box-shadow: 5px 6px 0 var(--ink);
+  }
+
+  .events-page .event-fact > div {
+    grid-template-rows: 32px minmax(0, 1fr);
+    font-size: clamp(1rem, 5vw, 1.24rem);
+    overflow-wrap: break-word;
   }
 
   .summer-roundup-event > .ticket-selector {

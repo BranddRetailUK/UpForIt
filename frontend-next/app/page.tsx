@@ -69,7 +69,7 @@ export default async function Home() {
       </section>
 
       <section className="home-events events-page section-wrap" aria-label="Featured event">
-        <SummerRoundupCard />
+        <SummerRoundupCard flyerBackground />
       </section>
 
       <section className="home-ticket-merch-promo section-wrap" aria-label="Ticket-holder merch offer">

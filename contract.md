@@ -97,7 +97,7 @@ favicon=frontend-next/app/icon.tsx; edge-rendered 512x512 smiley PNG
 global_cart=CartProvider mounted for every route; drawer and header count available site-wide
 
 [public_routes]
-/=home hero, round logo, event/merch CTAs, three house rules, featured event, ticket-holder 20% merch promo immediately above featured merch, email signup
+/=home hero, round logo, event/merch CTAs, featured event, ticket-holder 20% merch promo immediately above featured merch, email signup; legacy House Rules markup is hidden at every breakpoint
 /events=Summer Roundup card followed by the ticket-holder 20% merch promo; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
 /events/summer-roundup-2026=database-backed event detail and dedicated native ticket selector; multiple tickets go directly to ticket Stripe Checkout and never enter the merch cart; no booking fee
 /account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email
@@ -152,9 +152,10 @@ style=bold pop-art/comic; thick black borders; offset shadows; halftone/radial b
 event_ticket_selector=Summer Roundup ticket module uses a cyan radial/halftone field, heavy outlined white/yellow tier panels, global heavy uppercase tier typography, and diagonal pink `Coming soon` ribbons over upcoming tiers
 event_page_eyebrow=the Events landing card uses the enlarged native `UPFORIT presents` sticker with a yellow field, black border, black text and pink offset shadow; the Summer Roundup detail hero uses the extracted final-flyer presents artwork; the Home card retains its separate compact treatment
 ticket_merch_promo=home, Events, merch and ticket selector surfaces use one responsive pink/yellow/cyan halftone sticker banner with the solid parallax-smiley asset on desktop, thick black borders, offset shadows, `20% off all merch!` headline and smaller any-UpForIt-event ticket condition; mobile hides the decorative smiley and compact banners collapse to one text column; cart recap uses the same visual language for the qualified-account discount state
-event_ticket_summary=Summer Roundup detail uses three equal-height, horizontally aligned date/time/venue cards with distinct yellow/pink/white fields, heavy typography and compact comic-banner labels; the venue card also shows the street address
+event_ticket_summary=Summer Roundup detail and Events listing use equal-height, horizontally aligned date/time/venue cards with distinct yellow/pink/white fields, heavy typography and compact comic-banner labels; the detail-page venue card also shows the street address
 event_ticket_mobile_order=at 720px and below the ticket selector appears before the stacked date/time/venue cards; desktop retains the aligned summary cards before ticket selection
 event_ticket_frame=Summer Roundup detail uses the extracted cyan flyer background inside a black outer frame without offset colour strokes; the final-flyer presents/title, lineup, MC, Revolt, cloud and lightning assets are composed as responsive page elements; the genre strip is hidden on mobile, the title lockup is lowered to clear the presents/cloud artwork, and ticket/perk headings are centred
+events_listing_frame=the Home and Events page Summer Roundup cards share the extracted final-flyer cyan background, presents/title lockup, cloud, lightning and comic date/time/venue styling in place of the former dark radial field and legacy combined wordmark; the Buy tickets action opens the event detail at the top without a section hash
 ticket_confirmation_mobile=paid ticket confirmation message and order number are centred with clear vertical spacing before the full-width mobile View tickets action
 ticket_wallet_qr=account wallet QR images preserve a strict 1:1 square aspect ratio at every breakpoint
 responsive_breakpoints=900px,760px,720px,430px
