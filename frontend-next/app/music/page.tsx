@@ -5,12 +5,12 @@ import { MUSIC_CONTENT } from "../../lib/music";
 export const metadata: Metadata = {
   title: "Music & Mixes",
   description:
-    "Listen to UPFORIT artist mixes, watch live sessions and meet the selectors behind the music.",
+    "Listen to UPFORIT artist mixes, watch live sessions and meet the artists behind the music.",
   alternates: { canonical: "/music" },
   openGraph: {
     title: "UPFORIT | Music & Mixes",
     description:
-      "Listen to UPFORIT artist mixes, watch live sessions and meet the selectors behind the music.",
+      "Listen to UPFORIT artist mixes, watch live sessions and meet the artists behind the music.",
     url: "/music"
   }
 };
