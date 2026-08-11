@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type EventOption = {
   id: string;
@@ -48,6 +48,7 @@ function deviceDescription(userAgent: string | null) {
 }
 
 export default function AdminScannerAccess({ events }: { events: EventOption[] }) {
+  const enrolmentRef = useRef<HTMLDivElement>(null);
   const [eventId, setEventId] = useState(events[0]?.id || "");
   const [devices, setDevices] = useState<ScannerDevice[]>([]);
   const [enrolment, setEnrolment] = useState<Enrolment | null>(null);
@@ -67,14 +68,19 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
     return () => window.clearInterval(timer);
   }, [loadDevices]);
 
-  async function createEnrolment() {
-    if (!eventId) return;
+  useEffect(() => {
+    if (!enrolment) return;
+    enrolmentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [enrolment]);
+
+  async function createEnrolment(targetEventId = eventId) {
+    if (!targetEventId) return;
     setBusy(true);
     setError("");
     const response = await fetch("/api/admin/scanner-access", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ eventId })
+      body: JSON.stringify({ eventId: targetEventId })
     });
     const result = await response.json() as Enrolment & { error?: string };
     if (response.ok) setEnrolment(result);
@@ -123,7 +129,7 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
               {events.map((event) => <option value={event.id} key={event.id}>{event.title}</option>)}
             </select>
           </label>
-          <button className="pop-button pop-button--yellow" type="button" disabled={busy} onClick={createEnrolment}>
+          <button className="pop-button pop-button--yellow" type="button" disabled={busy} onClick={() => void createEnrolment()}>
             {busy ? "Working…" : "Show enrolment QR"}
           </button>
         </div>
@@ -132,7 +138,7 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
 
       {enrolment ? (
-        <div className="admin-scanner-enrolment">
+        <div className="admin-scanner-enrolment" ref={enrolmentRef}>
           <img src={enrolment.qrDataUrl} width={360} height={360} alt={`Scanner enrolment QR for ${enrolment.eventTitle}`} />
           <div>
             <strong>Ready to scan</strong>
@@ -156,7 +162,12 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
                 <td className="admin-scanner-col--details">{formatDate(device.created_at)}</td>
                 <td className="admin-scanner-col--details">{formatDate(device.last_seen_at)}</td>
                 <td className="admin-scanner-col--details">{device.scan_count}</td>
-                <td className="admin-scanner-col--action">{status === "Active" ? <button className="text-button" type="button" onClick={() => void revokeDevice(device.id)}>Revoke</button> : "—"}</td>
+                <td className="admin-scanner-col--action">
+                  <div className="admin-scanner-row-actions">
+                    <button className="text-button" type="button" disabled={busy} onClick={() => void createEnrolment(device.event_id)}>Show scanner QR</button>
+                    {status === "Active" ? <button className="text-button" type="button" disabled={busy} onClick={() => void revokeDevice(device.id)}>Revoke</button> : null}
+                  </div>
+                </td>
               </tr>;
             })}
           </tbody></table></div>

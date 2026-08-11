@@ -1357,6 +1357,13 @@ select {
   min-width: 860px;
 }
 
+.admin-scanner-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
 .scanner-activation small {
   display: block;
   margin-top: 2px;
@@ -4759,6 +4766,10 @@ a {
     max-width: 100%;
     font-size: .68rem;
     overflow-wrap: anywhere;
+  }
+
+  .admin-scanner-row-actions {
+    justify-content: center;
   }
 
   .admin-table th,
