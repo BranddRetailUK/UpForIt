@@ -11,8 +11,17 @@ export type CloudinaryUrlOptions = {
   quality?: "auto" | number;
 };
 
+export type CloudinaryAudioFormat = "mp3" | "m4a" | "ogg";
+export type CloudinaryVideoFormat = "mp4" | "webm";
+
+export type CloudinaryArtworkUrlOptions = {
+  width: number;
+  height: number;
+};
+
 const CLOUD_NAME = "brandduk";
 const CLOUDINARY_BASE_URL = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload`;
+const CLOUDINARY_MEDIA_BASE_URL = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload`;
 
 export const CLOUDINARY_ASSETS = {
   navLogo: {
@@ -102,4 +111,89 @@ export function cloudinaryUrl(
   ].join(",");
 
   return `${CLOUDINARY_BASE_URL}/${transforms}/${asset.publicId}.${asset.format}`;
+}
+
+function encodedPublicId(publicId: string) {
+  return publicId
+    .trim()
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
+export function cloudinaryArtworkUrl(
+  publicId: string,
+  { width, height }: CloudinaryArtworkUrlOptions
+) {
+  const safeWidth = Math.max(1, Math.round(width));
+  const safeHeight = Math.max(1, Math.round(height));
+  const transforms = [
+    "f_auto",
+    "q_auto",
+    "c_fill",
+    "g_auto",
+    `w_${safeWidth}`,
+    `h_${safeHeight}`
+  ].join(",");
+
+  return `${CLOUDINARY_BASE_URL}/${transforms}/${encodedPublicId(publicId)}`;
+}
+
+export function cloudinaryAudioUrl(
+  publicId: string,
+  format: CloudinaryAudioFormat = "mp3"
+) {
+  return `${CLOUDINARY_MEDIA_BASE_URL}/f_${format},q_auto/${encodedPublicId(publicId)}.${format}`;
+}
+
+export function cloudinaryVideoUrl(
+  publicId: string,
+  format: CloudinaryVideoFormat = "mp4"
+) {
+  return `${CLOUDINARY_MEDIA_BASE_URL}/${encodedPublicId(publicId)}.${format}`;
+}
+
+export function cloudinaryVideoPosterUrl(
+  publicId: string,
+  { width, height }: CloudinaryArtworkUrlOptions
+) {
+  const safeWidth = Math.max(1, Math.round(width));
+  const safeHeight = Math.max(1, Math.round(height));
+  const transforms = [
+    "f_jpg",
+    "q_auto",
+    "so_0",
+    "c_fill",
+    "g_auto",
+    `w_${safeWidth}`,
+    `h_${safeHeight}`
+  ].join(",");
+
+  return `${CLOUDINARY_MEDIA_BASE_URL}/${transforms}/${encodedPublicId(publicId)}.jpg`;
+}
+
+export function safeCloudinaryDownloadName(filename: string) {
+  const safeName = filename
+    .trim()
+    .replace(/\.[^.]+$/, "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+
+  return safeName || "upforit-mix";
+}
+
+export function cloudinaryAudioDownloadUrl(
+  publicId: string,
+  filename: string,
+  format: CloudinaryAudioFormat = "mp3"
+) {
+  const safeName = safeCloudinaryDownloadName(filename);
+  const transforms = [`fl_attachment:${safeName}`, `f_${format}`, "q_auto"].join(",");
+
+  return `${CLOUDINARY_MEDIA_BASE_URL}/${transforms}/${encodedPublicId(publicId)}.${format}`;
 }
