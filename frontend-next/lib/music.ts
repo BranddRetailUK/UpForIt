@@ -67,7 +67,7 @@ export const MUSIC_CONTENT: readonly MusicContentBlock[] = [
     title: "UPFORIT MiniMix 2026",
     artist: "Scott Charles",
     description:
-      "Scott Charles takes us back to our last UPFORIT event with a full MiniMix packed with large ammounts of multi genre energy",
+      "Scott Charles takes us back to our last UPFORIT event with a full MiniMix packed with large amounts of multi genre energy!",
     date: "2026",
     genre: "MiniMix",
     mediaPublicId: "UpForIt_MiniMix_rhs1ez",
