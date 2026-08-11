@@ -17,7 +17,12 @@ import {
   persistMetaConsent,
   readMetaConsent
 } from "../lib/meta-client";
-import type { MetaBrowserContext, MetaConsent, MetaEventParameters } from "../lib/meta-shared";
+import {
+  isMetaConsentLandingPath,
+  type MetaBrowserContext,
+  type MetaConsent,
+  type MetaEventParameters
+} from "../lib/meta-shared";
 
 type Fbq = ((...args: unknown[]) => void) & {
   callMethod?: (...args: unknown[]) => void;
@@ -132,7 +137,9 @@ export function MetaTrackingProvider({
     track
   }), [consent, track]);
 
-  const showBanner = ready && (settingsOpen || (pathname === "/" && consent === "unknown"));
+  const showBanner = ready && (
+    settingsOpen || (consent === "unknown" && isMetaConsentLandingPath(pathname))
+  );
 
   return (
     <MetaTrackingContext.Provider value={value}>

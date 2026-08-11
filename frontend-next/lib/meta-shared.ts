@@ -2,6 +2,19 @@ export const META_CONSENT_COOKIE = "upforit_meta_consent";
 export const META_CONSENT_GRANTED = "granted";
 export const META_CONSENT_DENIED = "denied";
 
+const META_CONSENT_INTERNAL_ROUTE_PREFIXES = ["/admin", "/account", "/scan", "/staff"];
+const META_CONSENT_SENSITIVE_ROUTES = new Set(["/cart/confirmation", "/tickets/confirmation"]);
+
+function matchesRoutePrefix(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+export function isMetaConsentLandingPath(pathname: string) {
+  if (!pathname.startsWith("/")) return false;
+  if (META_CONSENT_SENSITIVE_ROUTES.has(pathname)) return false;
+  return !META_CONSENT_INTERNAL_ROUTE_PREFIXES.some((prefix) => matchesRoutePrefix(pathname, prefix));
+}
+
 export type MetaConsent = "unknown" | typeof META_CONSENT_GRANTED | typeof META_CONSENT_DENIED;
 
 export type MetaBrowserContext = {
