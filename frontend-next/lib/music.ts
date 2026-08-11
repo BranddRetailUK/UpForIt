@@ -67,7 +67,7 @@ export const MUSIC_CONTENT: readonly MusicContentBlock[] = [
     title: "UPFORIT MiniMix 2026",
     artist: "Scott Charles",
     description:
-      "Scott Charles takes us back to our last UPFORIT event with a full MiniMix packed with proper party energy.",
+      "Scott Charles takes us back to our last UPFORIT event with a full MiniMix packed with large ammounts of multi genre energy",
     date: "2026",
     genre: "MiniMix",
     mediaPublicId: "UpForIt_MiniMix_rhs1ez",
@@ -119,24 +119,12 @@ export const MUSIC_CONTENT: readonly MusicContentBlock[] = [
     title: "Behind the Booth",
     artist: "Artist spotlight coming soon",
     description:
-      "Meet the selectors shaping the sound of UPFORIT and find out what keeps them reaching for the next tune.",
+      "Meet the artists shaping the sound of UPFORIT",
     body: [
       "We are getting the first artist story ready now. This space will hold interviews, influences and the stories behind each mix.",
       "Check back for the full feature as soon as the final words and portraits land."
     ],
     pullQuote: "Good vibes start with the people behind the music.",
-    placeholder: true
-  },
-  {
-    id: "crowd-control-video",
-    kind: "video",
-    title: "Crowd Control",
-    artist: "Guest artist TBA",
-    description:
-      "A second video session is being lined up, bringing a different sound and another side of the party.",
-    date: "Coming soon",
-    genre: "Guest session",
-    presentation: "wide",
     placeholder: true
   }
 ];
