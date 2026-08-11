@@ -101,20 +101,6 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
     await loadDevices();
   }
 
-  async function revokeAll() {
-    if (!eventId || !window.confirm("Revoke every active scanner device for this event?")) return;
-    setBusy(true);
-    const response = await fetch("/api/admin/scanner-access", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ eventId, action: "revoke_all" })
-    });
-    if (response.ok) setEnrolment(null);
-    else setError("Scanner access could not be revoked.");
-    await loadDevices();
-    setBusy(false);
-  }
-
   const eventDevices = devices.filter((device) => device.event_id === eventId);
   const now = Date.now();
   const activeDevices = eventDevices.filter((device) => !device.revoked_at && new Date(device.expires_at).getTime() > now);
@@ -140,7 +126,6 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
           <button className="pop-button pop-button--yellow" type="button" disabled={busy} onClick={createEnrolment}>
             {busy ? "Working…" : "Show enrolment QR"}
           </button>
-          {activeDevices.length ? <button className="text-button" type="button" disabled={busy} onClick={revokeAll}>Revoke all</button> : null}
         </div>
       ) : <p>No current event is available for scanner access.</p>}
 

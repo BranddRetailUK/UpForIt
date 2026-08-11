@@ -1242,7 +1242,6 @@ select {
   line-height: 1;
   box-shadow: 3px 3px 0 var(--ink);
 }
-.admin-scanned-empty { color: #666; font-weight: 800; }
 .status-toggle { cursor: pointer; }
 
 .admin-simulated-purchase {
