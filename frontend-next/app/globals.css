@@ -586,6 +586,25 @@ select {
   text-transform: uppercase;
 }
 
+.account-panel--centered-heading > .comic-kicker {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.account-panel--centered-heading > h1 {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.account-panel--ticket-confirmation > h1 {
+  font-size: clamp(2rem, 5vw, 3.6rem);
+}
+
 .account-panel h2,
 .admin-panel h2,
 .ticket-selector h2 {

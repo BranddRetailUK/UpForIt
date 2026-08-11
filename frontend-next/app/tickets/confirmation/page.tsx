@@ -7,7 +7,7 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
   const { session_id: sessionId } = await searchParams;
   return (
     <div className="inner-page section-wrap account-page">
-      <section className="account-panel">
+      <section className="account-panel account-panel--centered-heading account-panel--ticket-confirmation">
         <p className="comic-kicker comic-kicker--yellow">Nice one!</p>
         <h1>Ticket confirmation</h1>
         {sessionId ? <TicketConfirmation sessionId={sessionId} /> : <p>That confirmation link is incomplete.</p>}

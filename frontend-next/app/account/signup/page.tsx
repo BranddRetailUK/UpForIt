@@ -9,7 +9,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const nextPath = safeNextPath(query.next);
   return (
     <div className="inner-page section-wrap account-page">
-      <section className="account-panel">
+      <section className="account-panel account-panel--centered-heading">
         <p className="comic-kicker comic-kicker--yellow">Join the party</p>
         <h1>Create account</h1>
         <p>Set up your account before buying tickets.</p>
