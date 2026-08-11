@@ -132,7 +132,7 @@ export function MetaTrackingProvider({
     track
   }), [consent, track]);
 
-  const showBanner = ready && (consent === "unknown" || settingsOpen);
+  const showBanner = ready && (settingsOpen || (pathname === "/" && consent === "unknown"));
 
   return (
     <MetaTrackingContext.Provider value={value}>
