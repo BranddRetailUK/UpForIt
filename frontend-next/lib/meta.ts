@@ -48,6 +48,26 @@ function graphVersion() {
   return /^v\d+\.\d+$/.test(configured) ? configured : DEFAULT_GRAPH_VERSION;
 }
 
+export function metaAdsTimeRange(now = new Date()) {
+  const dateParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(now);
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(dateParts.find((entry) => entry.type === type)?.value);
+  const year = part("year");
+  const month = part("month");
+  const day = part("day");
+  const since = new Date(Date.UTC(year, month - 1, day));
+  since.setUTCDate(since.getUTCDate() - 29);
+
+  return {
+    since: since.toISOString().slice(0, 10),
+    until: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+  };
+}
+
 function cookieValue(cookieHeader: string | null, name: string) {
   if (!cookieHeader) return "";
   const prefix = `${encodeURIComponent(name)}=`;
@@ -137,7 +157,7 @@ export async function getMetaAdsSummary(): Promise<MetaAdsSummaryResult> {
   if (!/^act_\d+$/.test(accountId) || !accessToken) return { state: "not_configured" };
 
   const url = new URL(`https://graph.facebook.com/${graphVersion()}/${accountId}/insights`);
-  url.searchParams.set("date_preset", "last_30d");
+  url.searchParams.set("time_range", JSON.stringify(metaAdsTimeRange()));
   url.searchParams.set("level", "account");
   url.searchParams.set("fields", "spend,impressions,reach,clicks,inline_link_clicks,ctr,cpc,actions,action_values,purchase_roas,date_start,date_stop");
   if (appSecret) url.searchParams.set("appsecret_proof", createHmac("sha256", appSecret).update(accessToken).digest("hex"));

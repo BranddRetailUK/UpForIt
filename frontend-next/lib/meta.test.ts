@@ -6,6 +6,7 @@ import {
   buildMetaEvent,
   getMetaRequestContext,
   hashMetaValue,
+  metaAdsTimeRange,
   metaEventId,
   parseMetaAdsSummary
 } from "./meta";
@@ -99,6 +100,17 @@ describe("Meta measurement helpers", () => {
       purchaseValue: 240,
       purchaseRoas: 2.388,
       leads: 11
+    });
+  });
+
+  it("includes today in the rolling 30-day Meta reporting range", () => {
+    expect(metaAdsTimeRange(new Date("2026-08-10T14:00:00Z"))).toEqual({
+      since: "2026-07-12",
+      until: "2026-08-10"
+    });
+    expect(metaAdsTimeRange(new Date("2026-08-10T23:30:00Z"))).toEqual({
+      since: "2026-07-13",
+      until: "2026-08-11"
     });
   });
 

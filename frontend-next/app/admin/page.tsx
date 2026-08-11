@@ -49,6 +49,7 @@ export default async function AdminPage() {
               ) AS simulated
        FROM ticket_orders o JOIN users u ON u.id = o.user_id JOIN events e ON e.id = o.event_id
        LEFT JOIN tickets t ON t.order_id = o.id
+       WHERE o.status <> 'expired'
        GROUP BY o.id, u.email, u.display_name, e.title
        ORDER BY o.created_at DESC LIMIT 100`
     ),
@@ -108,7 +109,7 @@ export default async function AdminPage() {
       ) : null}
 
       <section className="admin-panel admin-section--orders">
-        <h2>Latest orders</h2>
+        <h2>Ticket Purchases</h2>
         <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
           {orders.rows.map((order) => <tr key={order.id}>
             <td className="admin-orders-col--order">{order.order_number ? <Link href={`/account/orders/${order.id}`}>{order.order_number}</Link> : <span>Pending checkout</span>}{order.simulated ? <small>Test simulation</small> : null}</td><td className="admin-orders-col--buyer">{order.display_name}<small>{order.email}</small></td>
