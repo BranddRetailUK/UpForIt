@@ -30,7 +30,7 @@ CREATE INDEX IF NOT EXISTS user_sessions_expiry_idx ON user_sessions (expires_at
 CREATE TABLE IF NOT EXISTS auth_tokens (
   id uuid PRIMARY KEY,
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  purpose text NOT NULL CHECK (purpose IN ('verify_email', 'reset_password')),
+  purpose text NOT NULL CHECK (purpose IN ('verify_email', 'reset_password', 'signup_session')),
   token_hash text NOT NULL UNIQUE,
   expires_at timestamptz NOT NULL,
   used_at timestamptz,
@@ -176,4 +176,3 @@ CREATE TABLE IF NOT EXISTS ticket_audit_log (
   details jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-

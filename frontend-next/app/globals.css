@@ -725,6 +725,38 @@ select {
   overflow-wrap: anywhere;
 }
 
+.account-created__polling {
+  width: 100%;
+  padding: 10px 12px;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+  font-weight: 900;
+}
+
+.account-created__polling--waiting::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--pink);
+  animation: account-verification-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.account-created__polling--verified { background: #bdffcb; }
+.account-created__polling--expired { background: #ffd5e7; }
+
+@keyframes account-verification-pulse {
+  from { opacity: .35; transform: scale(.75); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-created__polling--waiting::before { animation: none; }
+}
+
 .account-created__hint {
   width: 100%;
   padding-top: 12px;

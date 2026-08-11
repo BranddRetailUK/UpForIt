@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
+import type { PoolClient } from "pg";
 import { getPool } from "./db";
 import { randomToken, sha256 } from "./security";
 
@@ -13,6 +14,8 @@ export type AuthUser = {
   role: "customer" | "staff" | "admin";
   emailVerified: boolean;
 };
+
+type Queryable = Pick<PoolClient, "query">;
 
 type UserRow = {
   id: string;
@@ -32,15 +35,19 @@ function toAuthUser(row: UserRow): AuthUser {
   };
 }
 
-export async function createSession(userId: string) {
+export async function createSessionForUser(database: Queryable, userId: string) {
   const token = randomToken();
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  await getPool().query(
+  await database.query(
     `INSERT INTO user_sessions (id, user_id, token_hash, expires_at)
      VALUES ($1, $2, $3, $4)`,
     [randomUUID(), userId, sha256(token), expiresAt]
   );
   return { token, expiresAt };
+}
+
+export async function createSession(userId: string) {
+  return createSessionForUser(getPool(), userId);
 }
 
 export function sessionCookieOptions(expires: Date) {
@@ -78,7 +85,7 @@ export async function requireUser() {
 
 export async function createSingleUseToken(
   userId: string,
-  purpose: "verify_email" | "reset_password",
+  purpose: "verify_email" | "reset_password" | "signup_session",
   lifetimeMinutes: number
 ) {
   const token = randomToken();

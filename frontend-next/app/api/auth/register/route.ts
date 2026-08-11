@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     );
 
     const token = await createSingleUseToken(userId, "verify_email", 24 * 60);
+    const signupSessionToken = await createSingleUseToken(userId, "signup_session", 24 * 60);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (!siteUrl) throw new Error("NEXT_PUBLIC_SITE_URL is not set");
     await enqueueEmail(
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
       { userId }
     );
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, signupSessionToken });
   } catch (error) {
     console.error("Registration failed", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "We could not create your account." }, { status: 500 });

@@ -23,11 +23,14 @@ describe("transactional email templates", () => {
     expect(html).toContain("#d90062");
     expect(html).toContain("#008ef0");
     expect(html).toContain("NEW_ROUND_LOGO_amtvr0");
-    expect(html).toContain("SUMMER_ROUND_UP_e2jcsl");
+    expect(html).not.toContain("SUMMER_ROUND_UP_e2jcsl");
     expect(html).not.toContain("WHITE_LOGO_WEB_filqtw");
     expect(html).not.toContain("b_rgb:");
-    expect(html).toContain("content=\"light dark\"");
+    expect(html).toContain("content=\"light only\"");
+    expect(html).toContain("content=\"light\"");
     expect(html).toContain("prefers-color-scheme:dark");
+    expect(html).toContain("-webkit-text-fill-color:#050505!important");
+    expect(html).toContain("class=\"ufi-force-light\"");
     expect(html).toContain("class=\"ufi-email-gutter\"");
     expect(html).toContain("token=test-token&amp;next=%2Fevents%23tickets");
     expect(html).toContain("@media only screen and (max-width:600px)");

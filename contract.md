@@ -100,7 +100,7 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 /=home hero, round logo, event/merch CTAs, featured event, ticket-holder 20% merch promo immediately above featured merch, email signup; legacy House Rules markup is hidden at every breakpoint
 /events=Summer Roundup card followed by the ticket-holder 20% merch promo; 26 September 2026; noon-11PM; McCarthys Sports Bar; links to native ticket sales
 /events/summer-roundup-2026=database-backed event detail and dedicated native ticket selector; multiple tickets go directly to ticket Stripe Checkout and never enter the merch cart; no booking fee
-/account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email
+/account/signup,/account/login,/account/forgot-password,/account/reset-password=customer account lifecycle with required verified email; the post-signup page holds a one-time hashed handoff token, polls while open, and signs the original browser in after verification on the same or another device
 /account=full authenticated customer profile with editable display name, verified-email/security details, account age, ticket wallet/history and QR/PDF links, safe Good Game merch-order history, prominent available/reserved 20% ticket-holder perk, staff/admin shortcuts where authorized, logout, and support links; a Good Game history outage degrades only that section
 /account/orders/:id=owner/staff ticket detail, QR display, printable PDF download
 /tickets/confirmation=Stripe return page polling webhook fulfilment status
@@ -116,10 +116,11 @@ global_cart=CartProvider mounted for every route; drawer and header count availa
 
 [api_routes]
 POST_/api/signup=accept JSON or form email; trim/lowercase; regex validate; create `signups` table on demand; unique insert with ON CONFLICT DO NOTHING; consent-gated new signups send deduplicated Meta Lead CAPI event
-POST_/api/auth/register=validated account creation; bcrypt cost 12; queues one-day verification link
+POST_/api/auth/register=validated account creation; bcrypt cost 12; queues one-day verification link and returns a separate one-day signup-session handoff token
 POST_/api/auth/login=verified-account login; opaque 30-day HttpOnly Secure SameSite=Lax database session
 POST_/api/auth/logout=revokes current session
 GET_/api/auth/verify=single-use email verification and signed-in redirect
+POST_/api/auth/verification-session=same-origin one-time signup handoff; returns pending until the linked email is verified, then atomically consumes the hashed token and creates a 30-day HttpOnly session for the original browser
 POST_/api/auth/forgot-password=enumeration-safe one-hour reset email request
 POST_/api/auth/reset-password=single-use password replacement and all-session revocation
 PATCH_/api/account/profile=same-origin authenticated display-name update; trims/collapses whitespace, enforces 2-80 characters, and never accepts email/role/security fields from the browser

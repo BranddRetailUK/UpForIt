@@ -7,6 +7,7 @@ import { notifyCartAuthChanged } from "../lib/cart-storage";
 import { safeNextPath } from "../lib/public-url";
 
 type Mode = "signup" | "login" | "forgot" | "reset";
+type VerificationState = "waiting" | "verified" | "expired";
 
 export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?: string; nextPath?: string }) {
   const router = useRouter();
@@ -14,11 +15,51 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [signupSessionToken, setSignupSessionToken] = useState("");
+  const [verificationState, setVerificationState] = useState<VerificationState>("waiting");
   const successPanelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (registeredEmail) successPanelRef.current?.focus();
   }, [registeredEmail]);
+
+  useEffect(() => {
+    if (mode !== "signup" || !signupSessionToken) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function pollVerification() {
+      try {
+        const response = await fetch("/api/auth/verification-session", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token: signupSessionToken })
+        });
+        const result = (await response.json()) as { verified?: boolean };
+        if (cancelled) return;
+        if (response.status === 410) {
+          setVerificationState("expired");
+          return;
+        }
+        if (response.ok && result.verified) {
+          setVerificationState("verified");
+          notifyCartAuthChanged();
+          router.replace(safeNextPath(nextPath) || "/account");
+          router.refresh();
+          return;
+        }
+      } catch {
+        // A transient network failure should not interrupt the verification flow.
+      }
+      if (!cancelled) timer = setTimeout(pollVerification, 3000);
+    }
+
+    timer = setTimeout(pollVerification, 1000);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [mode, nextPath, router, signupSessionToken]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,7 +91,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as { error?: string; signupSessionToken?: string };
       if (!response.ok) throw new Error(result.error || "Something went wrong.");
 
       if (mode === "login") {
@@ -61,7 +102,10 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
       } else if (mode === "reset") {
         router.push("/account/login?reset=1");
       } else if (mode === "signup") {
+        if (!result.signupSessionToken) throw new Error("Automatic verification sign-in could not be started.");
         setRegisteredEmail(payload.email);
+        setSignupSessionToken(result.signupSessionToken);
+        setVerificationState("waiting");
         form.reset();
       } else {
         setMessage("If that email belongs to an account, a reset link is on its way.");
@@ -89,9 +133,16 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
           We’ve sent a verification link to <strong>{registeredEmail}</strong>.
         </p>
         <p>
-          Click the link to activate your account. You’ll be signed in automatically and {nextPath
+          Click the link to activate your account. Keep this page open and you’ll be signed in automatically and {nextPath
             ? "taken back to the tickets."
             : "taken to your account."}
+        </p>
+        <p className={`account-created__polling account-created__polling--${verificationState}`}>
+          {verificationState === "verified"
+            ? "Email verified — taking you to your account…"
+            : verificationState === "expired"
+              ? "Automatic sign-in has expired. Verify your email, then sign in normally."
+              : "Waiting for email verification…"}
         </p>
         <p className="account-created__hint">Can’t see the email? Check your junk or spam folder.</p>
       </section>
