@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  scannerActivationUrl,
   scannerDeviceLabel,
   scannerSessionExpiry,
   SCANNER_EVENT_GRACE_HOURS
@@ -16,5 +17,14 @@ describe("scanner access policy", () => {
     expect(scannerDeviceLabel("  Front   door iPhone  ", 2)).toBe("Front door iPhone");
     expect(scannerDeviceLabel("", 3)).toBe("Door device 3");
     expect(scannerDeviceLabel(null, 4)).toBe("Door device 4");
+  });
+
+  it("keeps enrolment secrets in the fragment and marks relink URLs", () => {
+    expect(scannerActivationUrl("https://www.upforitevents.co.uk", "secret value").toString()).toBe(
+      "https://www.upforitevents.co.uk/scan/activate#token=secret+value"
+    );
+    expect(scannerActivationUrl("https://www.upforitevents.co.uk", "secret value", true).toString()).toBe(
+      "https://www.upforitevents.co.uk/scan/activate?mode=relink#token=secret+value"
+    );
   });
 });

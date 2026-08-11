@@ -1364,6 +1364,28 @@ select {
   gap: 8px 12px;
 }
 
+.admin-scanner-row-button {
+  padding: 8px 10px 6px;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-heavy), sans-serif;
+  font-size: .72rem;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--ink);
+  cursor: pointer;
+}
+
+.admin-scanner-row-button--danger {
+  background: #ff4d4d;
+}
+
+.admin-scanner-row-button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
 .scanner-activation small {
   display: block;
   margin-top: 2px;
@@ -4770,6 +4792,14 @@ a {
 
   .admin-scanner-row-actions {
     justify-content: center;
+  }
+
+  .admin-scanner-row-button {
+    max-width: 100%;
+    padding: 6px 5px 5px;
+    font-size: .58rem;
+    overflow-wrap: anywhere;
+    box-shadow: 2px 2px 0 var(--ink);
   }
 
   .admin-table th,

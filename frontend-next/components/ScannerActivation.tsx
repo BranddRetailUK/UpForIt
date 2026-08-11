@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ScannerActivation() {
+export default function ScannerActivation({ mode = "enrol" }: { mode?: "enrol" | "relink" }) {
   const router = useRouter();
   const initialized = useRef(false);
   const [token, setToken] = useState("");
@@ -18,19 +18,18 @@ export default function ScannerActivation() {
     setToken(value);
     window.history.replaceState(null, "", "/scan/activate");
     if (!value) setError("This scanner QR is missing its access key. Ask Scott to show a new QR.");
-  }, []);
+    else if (mode === "relink") void activateToken(value, "");
+  }, [mode]);
 
-  async function activate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!token) return;
+  async function activateToken(tokenValue: string, label: string) {
+    if (!tokenValue) return;
     setBusy(true);
     setError("");
-    const data = new FormData(event.currentTarget);
     try {
       const response = await fetch("/api/scanner/activate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token, label: String(data.get("label") || "") })
+        body: JSON.stringify({ token: tokenValue, label, mode })
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) {
@@ -45,6 +44,23 @@ export default function ScannerActivation() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function activate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    await activateToken(token, String(data.get("label") || ""));
+  }
+
+  if (mode === "relink") {
+    return (
+      <div className="account-form scanner-activation">
+        <button className="pop-button pop-button--yellow" type="button" disabled={!token || busy} onClick={() => void activateToken(token, "")}>
+          {busy ? "Relinking…" : "Relink scanner"}
+        </button>
+        {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
+      </div>
+    );
   }
 
   return (

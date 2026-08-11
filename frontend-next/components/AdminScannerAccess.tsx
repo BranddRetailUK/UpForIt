@@ -28,6 +28,7 @@ type Enrolment = {
   eventTitle: string;
   enrolmentExpiresAt: string;
   sessionExpiresAt: string;
+  relinkDeviceLabel: string | null;
   qrDataUrl: string;
 };
 
@@ -73,14 +74,14 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
     enrolmentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [enrolment]);
 
-  async function createEnrolment(targetEventId = eventId) {
+  async function createEnrolment(targetEventId = eventId, relinkSessionId?: string) {
     if (!targetEventId) return;
     setBusy(true);
     setError("");
     const response = await fetch("/api/admin/scanner-access", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ eventId: targetEventId })
+      body: JSON.stringify({ eventId: targetEventId, sessionId: relinkSessionId })
     });
     const result = await response.json() as Enrolment & { error?: string };
     if (response.ok) setEnrolment(result);
@@ -139,12 +140,14 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
 
       {enrolment ? (
         <div className="admin-scanner-enrolment" ref={enrolmentRef}>
-          <img src={enrolment.qrDataUrl} width={360} height={360} alt={`Scanner enrolment QR for ${enrolment.eventTitle}`} />
+          <img src={enrolment.qrDataUrl} width={360} height={360} alt={enrolment.relinkDeviceLabel ? `Scanner relink QR for ${enrolment.relinkDeviceLabel}` : `Scanner enrolment QR for ${enrolment.eventTitle}`} />
           <div>
-            <strong>Ready to scan</strong>
-            <p>This QR accepts new devices until {formatDate(enrolment.enrolmentExpiresAt)}. Devices already enrolled remain active until {formatDate(enrolment.sessionExpiresAt)}.</p>
+            <strong>{enrolment.relinkDeviceLabel ? `Relink ${enrolment.relinkDeviceLabel}` : "Ready to scan"}</strong>
+            <p>{enrolment.relinkDeviceLabel
+              ? `Scan this one-time QR on that device by ${formatDate(enrolment.enrolmentExpiresAt)}. Its existing name and scan history will be preserved.`
+              : `This QR accepts new devices until ${formatDate(enrolment.enrolmentExpiresAt)}. Devices already enrolled remain active until ${formatDate(enrolment.sessionExpiresAt)}.`}</p>
             <p>{activeDevices.length} device{activeDevices.length === 1 ? "" : "s"} currently authorised.</p>
-            <button className="text-button" type="button" disabled={busy} onClick={closeEnrolment}>Stop accepting devices</button>
+            <button className="text-button" type="button" disabled={busy} onClick={closeEnrolment}>{enrolment.relinkDeviceLabel ? "Close relink QR" : "Stop accepting devices"}</button>
           </div>
         </div>
       ) : null}
@@ -164,8 +167,8 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
                 <td className="admin-scanner-col--details">{device.scan_count}</td>
                 <td className="admin-scanner-col--action">
                   <div className="admin-scanner-row-actions">
-                    <button className="text-button" type="button" disabled={busy} onClick={() => void createEnrolment(device.event_id)}>Show scanner QR</button>
-                    {status === "Active" ? <button className="text-button" type="button" disabled={busy} onClick={() => void revokeDevice(device.id)}>Revoke</button> : null}
+                    <button className="admin-scanner-row-button" type="button" disabled={busy} onClick={() => void createEnrolment(device.event_id, device.id)}>Show scanner QR</button>
+                    {status === "Active" ? <button className="admin-scanner-row-button admin-scanner-row-button--danger" type="button" disabled={busy} onClick={() => void revokeDevice(device.id)}>Revoke</button> : null}
                   </div>
                 </td>
               </tr>;

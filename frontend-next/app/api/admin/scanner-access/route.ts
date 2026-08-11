@@ -7,6 +7,7 @@ import { assertSameOrigin } from "../../../../lib/request";
 import {
   SCANNER_ENROLMENT_MINUTES,
   SCANNER_MAX_DEVICES,
+  scannerActivationUrl,
   scannerSessionExpiry
 } from "../../../../lib/scanner-access";
 import { randomToken, sha256 } from "../../../../lib/security";
@@ -24,6 +25,11 @@ type DeviceRow = {
   revoked_at: Date | null;
   created_at: Date;
   scan_count: string;
+};
+
+type RelinkDeviceRow = {
+  id: string;
+  device_label: string;
 };
 
 export async function GET(request: NextRequest) {
@@ -51,10 +57,14 @@ export async function POST(request: NextRequest) {
     const admin = await getAdminForRequest(request);
     if (!admin) return NextResponse.json({ error: "Administrator access required." }, { status: 403 });
 
-    const body = await request.json() as { eventId?: unknown };
+    const body = await request.json() as { eventId?: unknown; sessionId?: unknown };
     const eventId = typeof body.eventId === "string" ? body.eventId : "";
+    const relinkSessionId = typeof body.sessionId === "string" ? body.sessionId : "";
     if (!UUID_PATTERN.test(eventId)) {
       return NextResponse.json({ error: "Choose a valid event." }, { status: 400 });
+    }
+    if (relinkSessionId && !UUID_PATTERN.test(relinkSessionId)) {
+      return NextResponse.json({ error: "Choose a valid scanner device." }, { status: 400 });
     }
 
     const eventResult = await getPool().query<{ title: string; ends_at: Date }>(
@@ -63,6 +73,16 @@ export async function POST(request: NextRequest) {
     );
     const selectedEvent = eventResult.rows[0];
     if (!selectedEvent) return NextResponse.json({ error: "Event not found." }, { status: 404 });
+
+    const relinkDevice = relinkSessionId
+      ? (await getPool().query<RelinkDeviceRow>(
+          "SELECT id, device_label FROM scanner_sessions WHERE id = $1 AND event_id = $2",
+          [relinkSessionId, eventId]
+        )).rows[0]
+      : null;
+    if (relinkSessionId && !relinkDevice) {
+      return NextResponse.json({ error: "Scanner device not found for this event." }, { status: 404 });
+    }
 
     const sessionExpiresAt = scannerSessionExpiry(new Date(selectedEvent.ends_at));
     if (sessionExpiresAt.getTime() <= Date.now()) {
@@ -83,9 +103,17 @@ export async function POST(request: NextRequest) {
       );
       await client.query(
         `INSERT INTO scanner_enrolments (
-           id, event_id, created_by, token_hash, expires_at, max_devices
-         ) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [enrolmentId, eventId, admin.id, sha256(enrolmentToken), enrolmentExpiresAt, SCANNER_MAX_DEVICES]
+           id, event_id, created_by, token_hash, expires_at, max_devices, relink_session_id
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          enrolmentId,
+          eventId,
+          admin.id,
+          sha256(enrolmentToken),
+          enrolmentExpiresAt,
+          relinkDevice ? 1 : SCANNER_MAX_DEVICES,
+          relinkDevice?.id ?? null
+        ]
       );
       await client.query("COMMIT");
     } catch (error) {
@@ -97,8 +125,7 @@ export async function POST(request: NextRequest) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (!siteUrl) throw new Error("NEXT_PUBLIC_SITE_URL is not set");
-    const activationUrl = new URL("/scan/activate", siteUrl);
-    activationUrl.hash = `token=${encodeURIComponent(enrolmentToken)}`;
+    const activationUrl = scannerActivationUrl(siteUrl, enrolmentToken, Boolean(relinkDevice));
     const qrDataUrl = await QRCode.toDataURL(activationUrl.toString(), {
       width: 720,
       margin: 2,
@@ -112,6 +139,7 @@ export async function POST(request: NextRequest) {
       enrolmentId,
       enrolmentExpiresAt: enrolmentExpiresAt.toISOString(),
       sessionExpiresAt: sessionExpiresAt.toISOString(),
+      relinkDeviceLabel: relinkDevice?.device_label ?? null,
       qrDataUrl
     });
   } catch (error) {
