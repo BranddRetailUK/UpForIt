@@ -6,6 +6,12 @@ import {
   ticketConfirmationEmailHtml,
   verificationEmailHtml
 } from "../lib/email-templates";
+import {
+  buildTicketEmailAttachments,
+  describeEmailDeliveryError,
+  EMAIL_JOB_MAX_ATTEMPTS,
+  type SendGridAttachment
+} from "../lib/email-delivery";
 import { sendMetaConversion } from "../lib/meta-conversion";
 import { getMerchCheckoutConfirmation, revokeGoodGameMerchDiscount } from "../lib/merch-api";
 import {
@@ -50,12 +56,13 @@ async function claimEmailJob() {
   const result = await getPool().query<Job>(
     `WITH next_job AS (
        SELECT id FROM email_jobs
-        WHERE status IN ('pending', 'failed') AND available_at <= now() AND attempts < 5
+        WHERE status IN ('pending', 'failed') AND available_at <= now() AND attempts < $1
         ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1
      )
      UPDATE email_jobs j SET status = 'processing', locked_at = now(), attempts = attempts + 1, updated_at = now()
        FROM next_job WHERE j.id = next_job.id
-     RETURNING j.id, j.job_type, j.order_id, j.encrypted_payload, j.attempts`
+     RETURNING j.id, j.job_type, j.order_id, j.encrypted_payload, j.attempts`,
+    [EMAIL_JOB_MAX_ATTEMPTS]
   );
   return result.rows[0] ?? null;
 }
@@ -76,13 +83,7 @@ async function deliverEmail(job: Job) {
   let subject: string;
   let text: string;
   let html: string;
-  let attachments: Array<{
-    content: string;
-    filename: string;
-    type: string;
-    disposition: string;
-    contentId?: string;
-  }> | undefined;
+  let attachments: SendGridAttachment[] | undefined;
 
   if (job.job_type === "verify_email") {
     subject = "Verify your UPFORIT account";
@@ -120,23 +121,12 @@ async function deliverEmail(job: Job) {
       singleTicketQrCid: qrContentId,
       singleTicketNumber: singleTicket?.ticket_number
     });
-    attachments = [
-      {
-        content: Buffer.from(pdf).toString("base64"),
-        filename: singleTicket ? "UPFORIT-ticket.pdf" : "UPFORIT-tickets.pdf",
-        type: "application/pdf",
-        disposition: "attachment"
-      },
-      ...(qrImage && qrContentId
-        ? [{
-            content: qrImage.toString("base64"),
-            filename: "UPFORIT-ticket-QR.png",
-            type: "image/png",
-            disposition: "inline",
-            contentId: qrContentId
-          }]
-        : [])
-    ];
+    attachments = buildTicketEmailAttachments({
+      pdf,
+      singleTicket: Boolean(singleTicket),
+      qrImage,
+      qrContentId
+    });
   }
 
   await sgMail.send({
@@ -163,7 +153,7 @@ async function deliverEmail(job: Job) {
 }
 
 async function failEmail(job: Job, error: unknown) {
-  const message = error instanceof Error ? error.message : "Email delivery failed";
+  const message = describeEmailDeliveryError(error);
   const delayMinutes = Math.min(60, 2 ** job.attempts);
   await getPool().query(
     `UPDATE email_jobs SET status = 'failed', locked_at = NULL, last_error = $2,

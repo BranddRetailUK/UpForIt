@@ -1176,6 +1176,10 @@ select {
 .admin-status--scanned { background: var(--yellow); }
 .admin-status--failed, .admin-status--refund_review { background: #ff92ba; }
 .admin-status--refunded, .admin-status--expired { background: #bbb; }
+.admin-status--email-sent { background: #74ed94; }
+.admin-status--email-failed { background: #ff92ba; }
+.admin-status--email-retrying { background: var(--yellow); }
+.admin-email-status--mobile { display: none; }
 .admin-order-statuses { display: flex; flex-wrap: wrap; gap: 6px; }
 .status-toggle { cursor: pointer; }
 
@@ -4577,6 +4581,10 @@ a {
 
   .admin-label--mobile {
     display: inline;
+  }
+
+  .admin-email-status--mobile {
+    display: inline-block;
   }
 
   .admin-header__check-in {
