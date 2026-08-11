@@ -34,14 +34,19 @@ export type MetaAdsSummary = {
   cpc: number;
   purchases: number;
   purchaseValue: number;
-  purchaseRoas: number;
-  leads: number;
 };
 
-export type MetaAdsSummaryResult =
-  | MetaAdsSummary
+export type MetaAdsCampaignSummary = MetaAdsSummary & {
+  campaignId: string;
+  campaignName: string;
+};
+
+export type MetaAdsAnalyticsResult =
+  | { state: "ready"; all: MetaAdsSummary; campaigns: MetaAdsCampaignSummary[] }
   | { state: "not_configured" }
   | { state: "error"; status?: number };
+
+type MetaCampaign = { id: string; name: string };
 
 function graphVersion() {
   const configured = String(process.env.META_GRAPH_API_VERSION || DEFAULT_GRAPH_VERSION).trim();
@@ -125,13 +130,25 @@ function actionValue(actions: unknown, priorities: string[]) {
   return 0;
 }
 
-export function parseMetaAdsSummary(payload: unknown): MetaAdsSummary | null {
-  const data = payload && typeof payload === "object" && Array.isArray((payload as { data?: unknown[] }).data)
-    ? (payload as { data: Array<Record<string, unknown>> }).data[0]
-    : undefined;
-  if (!data) return null;
+function emptyMetaAdsSummary(dateStart = "", dateStop = ""): MetaAdsSummary {
+  return {
+    state: "ready",
+    dateStart,
+    dateStop,
+    spend: 0,
+    impressions: 0,
+    reach: 0,
+    clicks: 0,
+    linkClicks: 0,
+    ctr: 0,
+    cpc: 0,
+    purchases: 0,
+    purchaseValue: 0
+  };
+}
+
+function parseMetaAdsRow(data: Record<string, unknown>): MetaAdsSummary {
   const purchaseTypes = ["offsite_conversion.fb_pixel_purchase", "omni_purchase", "purchase"];
-  const leadTypes = ["offsite_conversion.fb_pixel_lead", "lead", "onsite_conversion.lead_grouped"];
   return {
     state: "ready",
     dateStart: String(data.date_start || ""),
@@ -144,49 +161,122 @@ export function parseMetaAdsSummary(payload: unknown): MetaAdsSummary | null {
     ctr: numeric(data.ctr),
     cpc: numeric(data.cpc),
     purchases: actionValue(data.actions, purchaseTypes),
-    purchaseValue: actionValue(data.action_values, purchaseTypes),
-    purchaseRoas: actionValue(data.purchase_roas, purchaseTypes),
-    leads: actionValue(data.actions, leadTypes)
+    purchaseValue: actionValue(data.action_values, purchaseTypes)
   };
 }
 
-export async function getMetaAdsSummary(): Promise<MetaAdsSummaryResult> {
+function payloadRows(payload: unknown) {
+  return payload && typeof payload === "object" && Array.isArray((payload as { data?: unknown[] }).data)
+    ? (payload as { data: Array<Record<string, unknown>> }).data
+    : [];
+}
+
+export function parseMetaAdsSummary(payload: unknown): MetaAdsSummary | null {
+  const data = payloadRows(payload)[0];
+  return data ? parseMetaAdsRow(data) : null;
+}
+
+export function parseMetaCampaignAdsSummaries(
+  payload: unknown,
+  campaigns: MetaCampaign[],
+  fallbackRange: { since: string; until: string }
+) {
+  const rowsByCampaignId = new Map(
+    payloadRows(payload).map((row) => [String(row.campaign_id || ""), row])
+  );
+  return campaigns.map((campaign): MetaAdsCampaignSummary => {
+    const row = rowsByCampaignId.get(campaign.id);
+    return {
+      ...(row ? parseMetaAdsRow(row) : emptyMetaAdsSummary(fallbackRange.since, fallbackRange.until)),
+      campaignId: campaign.id,
+      campaignName: campaign.name
+    };
+  });
+}
+
+function metaUrl(path: string, parameters: Record<string, string>, accessToken: string, appSecret: string) {
+  const url = new URL(`https://graph.facebook.com/${graphVersion()}/${path}`);
+  for (const [name, value] of Object.entries(parameters)) url.searchParams.set(name, value);
+  if (appSecret) {
+    url.searchParams.set("appsecret_proof", createHmac("sha256", appSecret).update(accessToken).digest("hex"));
+  }
+  return url;
+}
+
+async function fetchMeta(url: URL, accessToken: string) {
+  return fetch(url, {
+    headers: { authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(META_REQUEST_TIMEOUT_MS)
+  });
+}
+
+export async function getMetaAdsAnalytics(): Promise<MetaAdsAnalyticsResult> {
   const accountId = String(process.env.META_AD_ACCOUNT_ID || "").trim();
   const accessToken = String(process.env.META_MARKETING_API_ACCESS_TOKEN || "").trim();
   const appSecret = String(process.env.META_APP_SECRET || "").trim();
   if (!/^act_\d+$/.test(accountId) || !accessToken) return { state: "not_configured" };
 
-  const url = new URL(`https://graph.facebook.com/${graphVersion()}/${accountId}/insights`);
-  url.searchParams.set("time_range", JSON.stringify(metaAdsTimeRange()));
-  url.searchParams.set("level", "account");
-  url.searchParams.set("fields", "spend,impressions,reach,clicks,inline_link_clicks,ctr,cpc,actions,action_values,purchase_roas,date_start,date_stop");
-  if (appSecret) url.searchParams.set("appsecret_proof", createHmac("sha256", appSecret).update(accessToken).digest("hex"));
+  const timeRange = metaAdsTimeRange();
+  const metricFields = "spend,impressions,reach,clicks,inline_link_clicks,ctr,cpc,actions,action_values,date_start,date_stop";
+  const activeCampaignsUrl = metaUrl(`${accountId}/campaigns`, {
+    fields: "id,name,effective_status",
+    filtering: JSON.stringify([{ field: "effective_status", operator: "IN", value: ["ACTIVE"] }]),
+    limit: "100"
+  }, accessToken, appSecret);
 
   try {
-    const response = await fetch(url, {
-      headers: { authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(META_REQUEST_TIMEOUT_MS)
-    });
-    if (!response.ok) {
-      console.error(`[meta-insights] request failed with status ${response.status}`);
-      return { state: "error", status: response.status };
+    const campaignResponse = await fetchMeta(activeCampaignsUrl, accessToken);
+    if (!campaignResponse.ok) {
+      console.error(`[meta-campaigns] request failed with status ${campaignResponse.status}`);
+      return { state: "error", status: campaignResponse.status };
     }
-    return parseMetaAdsSummary(await response.json()) || {
+    const campaigns = payloadRows(await campaignResponse.json())
+      .map((campaign) => ({ id: String(campaign.id || ""), name: String(campaign.name || "Unnamed campaign") }))
+      .filter((campaign) => campaign.id);
+    if (!campaigns.length) {
+      return {
+        state: "ready",
+        all: emptyMetaAdsSummary(timeRange.since, timeRange.until),
+        campaigns: []
+      };
+    }
+
+    const activeCampaignFilter = JSON.stringify([{
+      field: "campaign.id",
+      operator: "IN",
+      value: campaigns.map((campaign) => campaign.id)
+    }]);
+    const accountInsightsUrl = metaUrl(`${accountId}/insights`, {
+      time_range: JSON.stringify(timeRange),
+      level: "account",
+      filtering: activeCampaignFilter,
+      fields: metricFields
+    }, accessToken, appSecret);
+    const campaignInsightsUrl = metaUrl(`${accountId}/insights`, {
+      time_range: JSON.stringify(timeRange),
+      level: "campaign",
+      filtering: activeCampaignFilter,
+      fields: `campaign_id,campaign_name,${metricFields}`,
+      limit: "100"
+    }, accessToken, appSecret);
+    const [accountResponse, campaignInsightsResponse] = await Promise.all([
+      fetchMeta(accountInsightsUrl, accessToken),
+      fetchMeta(campaignInsightsUrl, accessToken)
+    ]);
+    if (!accountResponse.ok || !campaignInsightsResponse.ok) {
+      const status = !accountResponse.ok ? accountResponse.status : campaignInsightsResponse.status;
+      console.error(`[meta-insights] request failed with status ${status}`);
+      return { state: "error", status };
+    }
+    const [accountPayload, campaignPayload] = await Promise.all([
+      accountResponse.json(),
+      campaignInsightsResponse.json()
+    ]);
+    return {
       state: "ready",
-      dateStart: "",
-      dateStop: "",
-      spend: 0,
-      impressions: 0,
-      reach: 0,
-      clicks: 0,
-      linkClicks: 0,
-      ctr: 0,
-      cpc: 0,
-      purchases: 0,
-      purchaseValue: 0,
-      purchaseRoas: 0,
-      leads: 0
+      all: parseMetaAdsSummary(accountPayload) || emptyMetaAdsSummary(timeRange.since, timeRange.until),
+      campaigns: parseMetaCampaignAdsSummaries(campaignPayload, campaigns, timeRange)
     };
   } catch (error) {
     console.error("[meta-insights] request failed", error instanceof Error ? error.name : "UnknownError");

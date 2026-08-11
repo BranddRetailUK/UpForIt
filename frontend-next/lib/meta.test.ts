@@ -8,7 +8,8 @@ import {
   hashMetaValue,
   metaAdsTimeRange,
   metaEventId,
-  parseMetaAdsSummary
+  parseMetaAdsSummary,
+  parseMetaCampaignAdsSummaries
 } from "./meta";
 
 describe("Meta measurement helpers", () => {
@@ -87,19 +88,15 @@ describe("Meta measurement helpers", () => {
         cpc: "0.402",
         actions: [
           { action_type: "offsite_conversion.fb_pixel_purchase", value: "4" },
-          { action_type: "purchase", value: "9" },
-          { action_type: "lead", value: "11" }
+          { action_type: "purchase", value: "9" }
         ],
-        action_values: [{ action_type: "offsite_conversion.fb_pixel_purchase", value: "240" }],
-        purchase_roas: [{ action_type: "offsite_conversion.fb_pixel_purchase", value: "2.388" }]
+        action_values: [{ action_type: "offsite_conversion.fb_pixel_purchase", value: "240" }]
       }]
     })).toMatchObject({
       state: "ready",
       spend: 100.5,
       purchases: 4,
-      purchaseValue: 240,
-      purchaseRoas: 2.388,
-      leads: 11
+      purchaseValue: 240
     });
   });
 
@@ -112,6 +109,38 @@ describe("Meta measurement helpers", () => {
       since: "2026-07-13",
       until: "2026-08-11"
     });
+  });
+
+  it("builds a summary for every active campaign, including campaigns without delivery", () => {
+    expect(parseMetaCampaignAdsSummaries({
+      data: [{
+        campaign_id: "campaign-1",
+        date_start: "2026-07-13",
+        date_stop: "2026-08-11",
+        spend: "12.50",
+        impressions: "950",
+        inline_link_clicks: "14"
+      }]
+    }, [
+      { id: "campaign-1", name: "Ticket purchases" },
+      { id: "campaign-2", name: "Post engagement" }
+    ], { since: "2026-07-13", until: "2026-08-11" })).toEqual([
+      expect.objectContaining({
+        campaignId: "campaign-1",
+        campaignName: "Ticket purchases",
+        spend: 12.5,
+        impressions: 950,
+        linkClicks: 14
+      }),
+      expect.objectContaining({
+        campaignId: "campaign-2",
+        campaignName: "Post engagement",
+        dateStart: "2026-07-13",
+        dateStop: "2026-08-11",
+        spend: 0,
+        impressions: 0
+      })
+    ]);
   });
 
   it("creates stable, Meta-safe server event IDs", () => {

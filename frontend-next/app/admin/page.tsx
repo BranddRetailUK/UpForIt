@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AdminMetaAdsAnalytics from "../../components/AdminMetaAdsAnalytics";
 import AdminResendButton from "../../components/AdminResendButton";
 import AdminScannerAccess from "../../components/AdminScannerAccess";
 import AdminSimulatedPurchase from "../../components/AdminSimulatedPurchase";
 import { getCurrentUser } from "../../lib/auth";
 import { getPool } from "../../lib/db";
-import { getMetaAdsSummary } from "../../lib/meta";
+import { getMetaAdsAnalytics } from "../../lib/meta";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ticket admin", robots: { index: false, follow: false } };
@@ -53,7 +54,7 @@ export default async function AdminPage() {
        GROUP BY o.id, u.email, u.display_name, e.title
        ORDER BY o.created_at DESC LIMIT 100`
     ),
-    getMetaAdsSummary(),
+    getMetaAdsAnalytics(),
     getPool().query<ScannerEvent>(
       `SELECT id, title, starts_at, ends_at, timezone
          FROM events
@@ -79,16 +80,6 @@ export default async function AdminPage() {
         <article><strong>£{(Number(metrics.revenue_minor) / 100).toFixed(2)}</strong><span>Revenue</span></article>
         <article><strong>{metrics.issued_tickets}</strong><span>Issued tickets</span></article>
         <article><strong>{metrics.checked_in}</strong><span>Checked in</span></article>
-      </section>
-
-      <section className="admin-panel admin-section--scanner">
-        <AdminScannerAccess events={scannerEvents.rows.map((event) => ({
-          id: event.id,
-          title: event.title,
-          startsAt: new Date(event.starts_at).toISOString(),
-          endsAt: new Date(event.ends_at).toISOString(),
-          timezone: event.timezone
-        }))} />
       </section>
 
       {user.role === "admin" && process.env.APP_ENV === "testing" ? (
@@ -139,30 +130,11 @@ export default async function AdminPage() {
 
       <section className="admin-panel meta-ads-panel admin-section--ads">
         <div className="meta-ads-panel__header">
-          <div>
-            <p className="comic-kicker comic-kicker--pink">Meta Marketing API</p>
-            <h2>Ad performance</h2>
-          </div>
+          <h2>Ad performance</h2>
           <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener noreferrer">Open Ads Manager</a>
         </div>
         {metaAds.state === "ready" ? (
-          <>
-            <p className="meta-ads-panel__period">
-              Last 30 days{metaAds.dateStart && metaAds.dateStop ? ` · ${metaAds.dateStart} to ${metaAds.dateStop}` : ""}
-            </p>
-            <div className="meta-ads-metrics" aria-label="Meta advertising metrics">
-              <article><strong>£{metaAds.spend.toFixed(2)}</strong><span>Spend</span></article>
-              <article><strong>{metaAds.reach.toLocaleString("en-GB")}</strong><span>Reach</span></article>
-              <article><strong>{metaAds.impressions.toLocaleString("en-GB")}</strong><span>Impressions</span></article>
-              <article><strong>{metaAds.linkClicks.toLocaleString("en-GB")}</strong><span>Link clicks</span></article>
-              <article><strong>{metaAds.ctr.toFixed(2)}%</strong><span>CTR</span></article>
-              <article><strong>£{metaAds.cpc.toFixed(2)}</strong><span>CPC</span></article>
-              <article><strong>{metaAds.purchases.toLocaleString("en-GB")}</strong><span>Purchases</span></article>
-              <article><strong>£{metaAds.purchaseValue.toFixed(2)}</strong><span>Purchase value</span></article>
-              <article><strong>{metaAds.purchaseRoas.toFixed(2)}×</strong><span>Purchase ROAS</span></article>
-              <article><strong>{metaAds.leads.toLocaleString("en-GB")}</strong><span>Leads</span></article>
-            </div>
-          </>
+          <AdminMetaAdsAnalytics all={metaAds.all} campaigns={metaAds.campaigns} />
         ) : (
           <p className="form-message form-message--error">
             {metaAds.state === "not_configured"
@@ -170,6 +142,16 @@ export default async function AdminPage() {
               : `Meta Ads reporting is temporarily unavailable${metaAds.status ? ` (API ${metaAds.status})` : ""}. Check or renew the Marketing API token.`}
           </p>
         )}
+      </section>
+
+      <section className="admin-panel admin-section--scanner">
+        <AdminScannerAccess events={scannerEvents.rows.map((event) => ({
+          id: event.id,
+          title: event.title,
+          startsAt: new Date(event.starts_at).toISOString(),
+          endsAt: new Date(event.ends_at).toISOString(),
+          timezone: event.timezone
+        }))} />
       </section>
 
     </div>
