@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type EventOption = {
   id: string;
@@ -53,8 +53,6 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
   const [enrolment, setEnrolment] = useState<Enrolment | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-
-  const selectedEvent = useMemo(() => events.find((event) => event.id === eventId), [eventId, events]);
 
   const loadDevices = useCallback(async () => {
     const response = await fetch("/api/admin/scanner-access", { cache: "no-store" });
@@ -127,7 +125,6 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
         <div>
           <p className="comic-kicker comic-kicker--blue">Door team</p>
           <h2>Scanner access</h2>
-          <p>Show the QR on your phone. Each device scans once and stays authorised until two hours after the event finishes.</p>
         </div>
         <a className="admin-scanner-access__open" href="/scan">Open scanner</a>
       </div>
@@ -146,10 +143,6 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
           {activeDevices.length ? <button className="text-button" type="button" disabled={busy} onClick={revokeAll}>Revoke all</button> : null}
         </div>
       ) : <p>No current event is available for scanner access.</p>}
-
-      {selectedEvent ? <p className="admin-scanner-access__event-time">
-        Event finishes {formatDate(selectedEvent.endsAt, selectedEvent.timezone)} · scanner sessions expire two hours later
-      </p> : null}
 
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
 

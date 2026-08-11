@@ -18,6 +18,15 @@ type Tier = { id: string; name: string; price_minor: number; capacity: number | 
 type Order = { id: string; order_number: string | null; status: string; total_minor: number; created_at: Date; paid_at: Date | null; confirmation_email_sent_at: Date | null; confirmation_email_status: string | null; confirmation_email_attempts: number | null; confirmation_email_error: string | null; email: string; display_name: string; event_title: string; ticket_count: string; checked_in_count: string; simulated: boolean };
 type ScannerEvent = { id: string; title: string; starts_at: Date; ends_at: Date; timezone: string };
 
+const adminDateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/London"
+});
+
 export default async function AdminPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/account/login");
@@ -114,7 +123,7 @@ export default async function AdminPage() {
 
       <section className="admin-panel admin-section--orders">
         <h2>Ticket Purchases</h2>
-        <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
+        <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><thead><tr><th className="admin-orders-col--order">Order</th><th className="admin-orders-col--buyer">Buyer</th><th className="admin-orders-col--status">Status</th><th className="admin-orders-col--scanned">Scanned</th><th className="admin-orders-col--mobile-hidden">Tickets</th><th className="admin-orders-col--mobile-hidden">Total</th><th className="admin-orders-col--mobile-hidden">Email</th><th className="admin-orders-col--mobile-hidden">Created</th><th className="admin-orders-col--mobile-hidden" /></tr></thead><tbody>
           {orders.rows.map((order) => {
             const emailStatus = getTicketEmailStatus({
               orderStatus: order.status,
@@ -125,10 +134,15 @@ export default async function AdminPage() {
             const emailStatusTitle = emailStatus.label === "Failed" && order.confirmation_email_error
               ? order.confirmation_email_error
               : undefined;
+            const checkedInCount = Number(order.checked_in_count);
+            const ticketCount = Number(order.ticket_count);
+            const scannedTitle = `${checkedInCount} of ${ticketCount} tickets scanned`;
             return <tr key={order.id}>
               <td className="admin-orders-col--order">{order.order_number ? <Link href={`/account/orders/${order.id}`}>{order.order_number}</Link> : <span>Pending checkout</span>}{order.simulated ? <small>Test simulation</small> : null}</td><td className="admin-orders-col--buyer">{order.display_name}<small>{order.email}</small></td>
-              <td className="admin-orders-col--status"><div className="admin-order-statuses"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span>{Number(order.checked_in_count) > 0 ? <span className="admin-status admin-status--scanned" title={`${order.checked_in_count} of ${order.ticket_count} tickets scanned`}>{Number(order.checked_in_count) === Number(order.ticket_count) ? "Scanned" : `${order.checked_in_count}/${order.ticket_count} scanned`}</span> : null}<span className={`admin-status admin-email-status--mobile admin-status--email-${emailStatus.tone}`} title={emailStatusTitle}>Email: {emailStatus.label}</span></div></td><td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
-              <td className="admin-orders-col--mobile-hidden"><span className={`admin-status admin-status--email-${emailStatus.tone}`} title={emailStatusTitle}>{emailStatus.label}</span></td><td className="admin-orders-col--mobile-hidden">{new Date(order.created_at).toLocaleString("en-GB")}</td>
+              <td className="admin-orders-col--status"><div className="admin-order-statuses"><span className={`admin-status admin-status--${order.status}`}>{order.status}</span><span className={`admin-status admin-email-status--mobile admin-status--email-${emailStatus.tone}`} title={emailStatusTitle}>Email: {emailStatus.label}</span></div></td>
+              <td className="admin-orders-col--scanned">{checkedInCount > 0 ? <span className="admin-scanned-check" title={scannedTitle} aria-label={scannedTitle}>✓</span> : <span className="admin-scanned-empty" aria-label="No tickets scanned">—</span>}</td>
+              <td className="admin-orders-col--mobile-hidden">{order.ticket_count}</td><td className="admin-orders-col--mobile-hidden">£{(order.total_minor / 100).toFixed(2)}</td>
+              <td className="admin-orders-col--mobile-hidden"><span className={`admin-status admin-status--email-${emailStatus.tone}`} title={emailStatusTitle}>{emailStatus.label}</span></td><td className="admin-orders-col--mobile-hidden">{adminDateTimeFormatter.format(new Date(order.created_at))}</td>
               <td className="admin-orders-col--mobile-hidden">{order.status === "paid" ? <AdminResendButton orderId={order.id} /> : null}</td>
             </tr>;
           })}
@@ -137,7 +151,6 @@ export default async function AdminPage() {
 
       <section className="admin-panel admin-section--tiers">
         <h2>Ticket tiers</h2>
-        <p className="admin-mobile-hidden">Sales advance automatically: 50 Early Bird tickets, then 100 General Release tickets, then unlimited On The Door tickets.</p>
         <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--pending">Open checkouts</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
           {tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);

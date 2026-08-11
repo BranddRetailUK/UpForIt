@@ -1208,7 +1208,6 @@ select {
 .meta-ads-tab { flex: 0 0 auto; max-width: min(420px, 75vw); padding: 11px 16px 9px; overflow: hidden; border: 3px solid var(--ink); background: var(--paper); color: var(--ink); font-family: var(--font-heavy), sans-serif; font-size: .88rem; line-height: 1.1; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
 .meta-ads-tab:hover, .meta-ads-tab:focus-visible { background: #ffd5e7; }
 .meta-ads-tab.is-active { background: var(--yellow); box-shadow: 4px 4px 0 var(--ink); }
-.meta-ads-panel__period { margin: 0 0 18px; color: #4c4c4c; font-weight: 700; }
 .meta-ads-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .meta-ads-metrics article { display: grid; gap: 4px; padding: 15px; border: 3px solid var(--ink); background: var(--muted); }
 .meta-ads-metrics article:nth-child(3n + 1) { background: var(--yellow); }
@@ -1224,7 +1223,6 @@ select {
 .admin-error { max-width: 280px; overflow-wrap: anywhere; }
 .admin-status, .status-toggle { display: inline-block; padding: 6px 9px; border: 2px solid var(--ink); background: #ddd; font-weight: 800; text-transform: uppercase; font-size: .75rem; }
 .admin-status--paid, .status-toggle.is-active { background: #74ed94; }
-.admin-status--scanned { background: var(--yellow); }
 .admin-status--failed, .admin-status--refund_review { background: #ff92ba; }
 .admin-status--refunded, .admin-status--expired { background: #bbb; }
 .admin-status--email-sent { background: #74ed94; }
@@ -1232,6 +1230,19 @@ select {
 .admin-status--email-retrying { background: var(--yellow); }
 .admin-email-status--mobile { display: none; }
 .admin-order-statuses { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-scanned-check {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 2px solid var(--ink);
+  background: #74ed94;
+  font-family: var(--font-heavy), sans-serif;
+  font-size: 1.15rem;
+  line-height: 1;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.admin-scanned-empty { color: #666; font-weight: 800; }
 .status-toggle { cursor: pointer; }
 
 .admin-simulated-purchase {
@@ -1286,11 +1297,6 @@ select {
   gap: 20px;
 }
 
-.admin-scanner-access__heading p:last-child {
-  max-width: 760px;
-  margin-bottom: 0;
-}
-
 .admin-scanner-access__open,
 .admin-scanner-devices__heading span {
   font-weight: 900;
@@ -1316,13 +1322,6 @@ select {
   padding: 10px 12px;
   border: 3px solid var(--ink);
   background: var(--paper);
-}
-
-.admin-scanner-access__event-time {
-  margin: -10px 0 0;
-  color: #4c4c4c;
-  font-size: .9rem;
-  font-weight: 700;
 }
 
 .admin-scanner-enrolment {
@@ -4709,8 +4708,7 @@ a {
     min-width: 0;
   }
 
-  .admin-scanner-access__heading p,
-  .admin-scanner-access__event-time {
+  .admin-scanner-access__heading p {
     overflow-wrap: anywhere;
   }
 
@@ -4790,9 +4788,17 @@ a {
     vertical-align: middle;
   }
 
-  .admin-orders-col--order { width: 30%; }
-  .admin-orders-col--buyer { width: 43%; }
-  .admin-orders-col--status { width: 27%; }
+  .admin-orders-col--order { width: 25%; }
+  .admin-orders-col--buyer { width: 34%; }
+  .admin-orders-col--status { width: 25%; }
+  .admin-orders-col--scanned { width: 16%; }
+
+  .admin-scanned-check {
+    width: 26px;
+    height: 26px;
+    font-size: 1rem;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
 
   .admin-orders-table small {
     font-size: .64rem;

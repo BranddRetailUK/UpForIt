@@ -70,9 +70,6 @@ export default function AdminMetaAdsAnalytics({ all, campaigns }: Props) {
         role="tabpanel"
         aria-labelledby={`meta-ads-tab-${tabs[selectedIndex].key}`}
       >
-        <p className="meta-ads-panel__period">
-          Last 30 days{selected.dateStart && selected.dateStop ? ` · ${selected.dateStart} to ${selected.dateStop}` : ""}
-        </p>
         <div className="meta-ads-metrics" aria-label={`${tabs[selectedIndex].label} advertising metrics`}>
           <article><strong>£{selected.spend.toFixed(2)}</strong><span>Spend</span></article>
           <article><strong>{selected.reach.toLocaleString("en-GB")}</strong><span>Reach</span></article>
