@@ -466,9 +466,8 @@ function ReleaseShareLink({ block }: { block: ReleaseShowcaseBlock }) {
 
     event.preventDefault();
     const url = event.currentTarget.href;
-    const shareText = `Check out ${block.title}\n\n${url}`;
+    const shareText = `Check out ${block.title}\n${url}`;
     const shareData = {
-      title: `${block.title} — ${block.artist}`,
       text: shareText
     };
 
@@ -493,7 +492,7 @@ function ReleaseShareLink({ block }: { block: ReleaseShowcaseBlock }) {
   return (
     <a
       className="music-release-showcase__share"
-      href={`/music#${block.id}`}
+      href={`/music?release=${encodeURIComponent(block.id)}#${block.id}`}
       onClick={shareRelease}
     >
       <ShareIcon />
@@ -536,7 +535,6 @@ function ReleaseShowcase({
               rel="noopener noreferrer"
             >
               View release on Bandcamp
-              <span aria-hidden="true">↗</span>
             </a>
             <ReleaseShareLink block={block} />
           </div>

@@ -6627,12 +6627,6 @@ a {
   white-space: nowrap;
 }
 
-.music-release-showcase__link span {
-  color: var(--yellow);
-  font-size: 1.2rem;
-  line-height: .8;
-}
-
 .music-release-showcase__share {
   background: var(--yellow);
   color: var(--ink);
