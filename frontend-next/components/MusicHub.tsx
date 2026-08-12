@@ -566,7 +566,8 @@ function ReleaseShowcase({
 export default function MusicHub({ blocks }: MusicHubProps) {
   const [filter, setFilter] = useState<MusicFilter>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const visibleBlocks = filterMusicContent(blocks, filter);
+  const publishedBlocks = blocks.filter((block) => !block.placeholder);
+  const visibleBlocks = filterMusicContent(publishedBlocks, filter);
 
   const selectFilter = (nextFilter: MusicFilter) => {
     if (nextFilter === filter) return;
@@ -600,7 +601,7 @@ export default function MusicHub({ blocks }: MusicHubProps) {
       </p>
 
       <div className="music-feed">
-        {blocks.map((block) => {
+        {publishedBlocks.map((block) => {
           const visible = musicBlockMatchesFilter(block, filter);
           if (block.kind === "audio") {
             return (
