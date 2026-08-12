@@ -11,6 +11,9 @@ const SMILEYS = [
   { className: "parallax-smiley--four", depth: 1.45, maxWidth: 220 }
 ];
 
+const BURST_POINTS =
+  "50,0 61,32 84,8 72,38 100,35 74,53 96,70 67,66 73,100 53,72 35,98 37,68 4,81 30,57 0,45 34,43 15,15 43,34";
+
 export default function PopArtScene() {
   const sceneRef = useRef<HTMLDivElement>(null);
 
@@ -87,8 +90,12 @@ export default function PopArtScene() {
       <div className="pop-art-backdrop" />
       <div className="scene-cloud scene-cloud--one" />
       <div className="scene-cloud scene-cloud--two" />
-      <div className="scene-burst scene-burst--one" />
-      <div className="scene-burst scene-burst--two" />
+      <svg className="scene-burst scene-burst--one" viewBox="-5 -5 110 110">
+        <polygon points={BURST_POINTS} />
+      </svg>
+      <svg className="scene-burst scene-burst--two" viewBox="-5 -5 110 110">
+        <polygon points={BURST_POINTS} />
+      </svg>
       <div className="scene-star scene-star--one" />
       <div className="scene-star scene-star--two" />
       <svg className="scene-bolt scene-bolt--one" viewBox="0 0 70 120">

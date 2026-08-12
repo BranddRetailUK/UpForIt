@@ -1675,12 +1675,15 @@ a {
 .scene-burst {
   position: absolute;
   z-index: 1;
+  display: block;
   width: 120px;
   aspect-ratio: 1;
-  background: var(--pink);
-  border: 7px solid var(--ink);
-  clip-path: polygon(50% 0, 61% 32%, 84% 8%, 72% 38%, 100% 35%, 74% 53%, 96% 70%, 67% 66%, 73% 100%, 53% 72%, 35% 98%, 37% 68%, 4% 81%, 30% 57%, 0 45%, 34% 43%, 15% 15%, 43% 34%);
-  filter: drop-shadow(5px 6px 0 rgba(0, 0, 0, 0.52));
+  overflow: visible;
+  fill: var(--pink);
+  stroke: var(--ink);
+  stroke-width: 7;
+  stroke-linejoin: round;
+  filter: drop-shadow(5px 6px 0 rgba(0, 0, 0, 0.44));
 }
 
 .scene-burst--one {
@@ -1693,7 +1696,7 @@ a {
   bottom: 15%;
   left: 3%;
   width: 84px;
-  background: var(--yellow);
+  fill: var(--yellow);
   transform: rotate(-12deg);
 }
 
