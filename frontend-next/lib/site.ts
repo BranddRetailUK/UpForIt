@@ -1,6 +1,7 @@
 export const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
+  { href: "/music", label: "Music & Mixes" },
   { href: "/merch", label: "Merch" },
   { href: "/socials", label: "Socials" },
   { href: "/contact", label: "Contact" },
