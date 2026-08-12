@@ -61,7 +61,8 @@ STANDALONE_STOREFRONT_KEY=server-only registry key; default/upforit production v
 STANDALONE_STOREFRONT_UPFORIT_SECRET=server-only shared HMAC secret; required for checkout, confirmation, customer merch-order history, cache revalidation, and checkout requester hashing
 DATABASE_URL=server-only Postgres connection; required for email signup persistence and durable checkout intent/rate limiting
 NEXT_PUBLIC_META_PIXEL_ID=public Meta dataset/pixel identifier; the only Meta value allowed in the browser bundle
-META_CONVERSIONS_API_ACCESS_TOKEN=server-only token for consent-gated Lead and merch Purchase events
+META_CONVERSIONS_API_ACCESS_TOKEN=server-only token for consent-gated Lead and ticket conversion events, plus dormant merch Purchase delivery when explicitly enabled
+META_MERCH_TRACKING_ENABLED=server-configured fail-closed feature flag; false/unset keeps Meta conversion measurement ticket-only while preserving dormant merch instrumentation for a future reviewed launch; only its non-secret boolean state is passed into browser tracking context
 META_AD_ACCOUNT_ID=server-only `act_...` identifier used by the Meta Ads Insights helper
 META_MARKETING_API_ACCESS_TOKEN=server-only `ads_read` token used by the Meta Ads Insights helper
 META_APP_ID,META_APP_SECRET=server-only Meta developer app credentials; app secret is used to generate Insights appsecret_proof
@@ -133,7 +134,7 @@ POST_/api/admin/simulated-purchase=admin-only and APP_ENV=testing-only purchase 
 POST_/api/admin/orders/:id/resend=staff-only confirmation email requeue
 POST_/api/merch/cart=public dynamic canonical cart refresh with optional account session enrichment; fetch Good Game catalogue no-store; drop unknown/unavailable variants; cap each quantity 1..20; return canonical display lines + removed count/IDs and the signed-in account's available/reserved one-time 20% ticket-holder discount summary
 POST_/api/merch/checkout=node runtime; same-origin guard; validate numeric variant IDs and quantity 1..20; validate `ufi_<uuid>` intent; resolve optional authenticated account UUID/email and only that account's usable entitlement; bind account/entitlement into the durable request hash; reserve/rate-limit in Postgres; HMAC-sign the server-owned account/checkout request to Good Game; return upstream Stripe Checkout URL/payload and persist discount-session reconciliation
-GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload; paid consented sessions send deduplicated Meta Purchase CAPI event
+GET_/api/merch/confirmation=node dynamic; validate Stripe session id `cs_...`; HMAC-sign Good Game lookup; return safe upstream confirmation payload; paid consented sessions send deduplicated Meta Purchase CAPI only when META_MERCH_TRACKING_ENABLED is explicitly true
 POST_/api/merch/revalidate=node runtime; Good Game callback; read exact raw body; require timestamp within 300 seconds + constant-time HMAC; invalidate merch tag/path
 
 [site_content_sources]
@@ -305,8 +306,9 @@ current_scope=collect email only; no ESP/newsletter sync, consent ledger, confir
 
 [meta_ads_measurement]
 consent_cookie=upforit_meta_consent; granted or denied for 180 days; Meta script and server events remain disabled until granted
-browser_events=PageView,merch and ticket ViewContent,AddToCart,merch and ticket InitiateCheckout,newsletter Lead,merch and paid ticket Purchase
-server_events=new newsletter Lead, paid merch Purchase, and real paid ticket Purchase; shared event_id deduplicates matching Pixel/CAPI events
+current_scope=Meta conversion measurement is ticket-only while META_MERCH_TRACKING_ENABLED is false/unset; dormant merch instrumentation remains guarded for a future reviewed launch
+browser_events=PageView,newsletter Lead,ticket ViewContent,ticket InitiateCheckout,and paid ticket Purchase; when the merch flag is true the existing merch ViewContent,AddToCart,InitiateCheckout,and Purchase events are additionally enabled
+server_events=new newsletter Lead and ticket InitiateCheckout/Purchase; when the merch flag is true paid merch Purchase is additionally enabled; shared event_id deduplicates matching Pixel/CAPI events
 user_data=email is normalised and SHA-256 hashed server-side for new Lead; `_fbp`,`_fbc`,IP,user-agent used only after consent
 sensitive_url_rule=never send checkout session query parameters to Meta; confirmation pages scrub the browser URL before tracking
 ticket_content_ids=ticket tier UUIDs are used consistently for ViewContent, InitiateCheckout and Purchase
@@ -314,8 +316,9 @@ ticket_purchase_rule=queue only after verified Stripe payment and never for admi
 ticket_outbox=encrypted `meta_conversion_jobs` payload is inserted in the paid fulfilment transaction; the private worker delivers with stable event_id, bounded exponential retry, delivered/dead terminal states, and unique event-id deduplication
 ticket_delivery_isolation=Meta network/configuration failure never rolls back or delays a paid order, issued tickets, tier progression, or confirmation email; the worker retries independently
 ticket_refund_reporting=refunds void admission tickets and remain visible in Stripe/admin; automatic Meta Purchase reversal is intentionally absent and must be reconciled in Meta/Stripe reporting
+merch_enablement_prerequisite=before setting META_MERCH_TRACKING_ENABLED=true, add durable CAPI coverage for merch InitiateCheckout, move merch Purchase delivery to a verified payment webhook/outbox, and validate browser/server deduplication in Meta Test Events
 ads_reporting=server-only last-30-day account Insights helper is visible on the authenticated staff/admin surface together with conversion outbox status
-secrets_rule=only NEXT_PUBLIC_META_PIXEL_ID may reach client code; all access tokens and app credentials remain server-only and ignored locally
+secrets_rule=only NEXT_PUBLIC_META_PIXEL_ID and the non-secret merch-enabled boolean state may reach client code; all access tokens and app credentials remain server-only and ignored locally
 
 [database_runtime]
 module=frontend-next/lib/db.ts

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getMerchCheckoutConfirmation } from "../../../../lib/merch";
 import { reconcileMerchDiscountFromConfirmation } from "../../../../lib/merch-discounts";
 import { getMetaRequestContext, metaEventId, metaSiteUrl, sendMetaConversion } from "../../../../lib/meta";
+import { isMetaMerchTrackingEnabled } from "../../../../lib/meta-shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +32,10 @@ export async function GET(request: NextRequest) {
       paid: true,
       status: String(payload.status || "")
     });
+
+    if (!isMetaMerchTrackingEnabled(process.env.META_MERCH_TRACKING_ENABLED)) {
+      return NextResponse.json(payload, { status: response.status });
+    }
 
     const valueMinor = Math.max(0, Math.trunc(Number(payload.totalMinor || 0)));
     const currency = typeof payload.currency === "string" && /^[a-z]{3}$/i.test(payload.currency)

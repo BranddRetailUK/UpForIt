@@ -19,6 +19,7 @@ import {
 } from "../lib/meta-client";
 import {
   isMetaConsentLandingPath,
+  shouldSendMetaBrowserEvent,
   type MetaBrowserContext,
   type MetaConsent,
   type MetaEventParameters
@@ -43,6 +44,7 @@ type MetaTrackingContextValue = {
   consent: MetaConsent;
   createEventId: (prefix: string) => string;
   getBrowserContext: (eventId: string) => MetaBrowserContext;
+  merchTrackingEnabled: boolean;
   openSettings: () => void;
   track: (eventName: string, parameters?: MetaEventParameters, eventId?: string) => string;
 };
@@ -86,10 +88,12 @@ function containsSensitiveQuery(pathname: string) {
 
 export function MetaTrackingProvider({
   children,
-  pixelId
+  pixelId,
+  merchTrackingEnabled
 }: {
   children: React.ReactNode;
   pixelId: string;
+  merchTrackingEnabled: boolean;
 }) {
   const pathname = usePathname();
   const [consent, setConsent] = useState<MetaConsent>("unknown");
@@ -123,19 +127,21 @@ export function MetaTrackingProvider({
 
   const track = useCallback((eventName: string, parameters: MetaEventParameters = {}, eventId?: string) => {
     const resolvedEventId = eventId || createMetaEventId(eventName);
+    if (!shouldSendMetaBrowserEvent(parameters, merchTrackingEnabled)) return resolvedEventId;
     if (readMetaConsent() !== "granted" || !pixelId) return resolvedEventId;
     installPixel(pixelId);
     window.fbq?.("track", eventName, parameters, { eventID: resolvedEventId });
     return resolvedEventId;
-  }, [pixelId]);
+  }, [merchTrackingEnabled, pixelId]);
 
   const value = useMemo<MetaTrackingContextValue>(() => ({
     consent,
     createEventId: createMetaEventId,
     getBrowserContext: getMetaBrowserContext,
+    merchTrackingEnabled,
     openSettings: () => setSettingsOpen(true),
     track
-  }), [consent, track]);
+  }), [consent, merchTrackingEnabled, track]);
 
   const showBanner = ready && (
     settingsOpen || (consent === "unknown" && isMetaConsentLandingPath(pathname))
@@ -151,7 +157,8 @@ export function MetaTrackingProvider({
             <h2 id="cookie-banner-title">Help us measure what works?</h2>
             <p>
               With your permission, we use the Meta Pixel and Conversions API to measure visits,
-              sign-ups and purchases from our ads. Declining does not affect checkout.
+              newsletter sign-ups, ticket purchases{merchTrackingEnabled ? " and merchandise activity" : ""} from our ads.
+              Declining does not affect checkout.
             </p>
             <Link href="/privacy">How tracking works</Link>
           </div>

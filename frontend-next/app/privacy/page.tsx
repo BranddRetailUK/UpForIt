@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { isMetaMerchTrackingEnabled } from "../../lib/meta-shared";
 
 export const metadata: Metadata = {
   title: "Privacy and advertising measurement",
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
+  const merchTrackingEnabled = isMetaMerchTrackingEnabled(process.env.META_MERCH_TRACKING_ENABLED);
+
   return (
     <div className="inner-page section-wrap">
       <article className="privacy-panel">
@@ -18,17 +21,26 @@ export default function PrivacyPage() {
         </p>
 
         <h2>What Meta measurement records</h2>
-        <p>
-          With consent, the Meta Pixel records page views and actions such as viewing merchandise,
-          adding merchandise to the cart, beginning checkout, newsletter sign-up and completed purchases. Our
-          server can send matching conversion events through Meta&apos;s Conversions API so advertising results
-          remain measurable when a browser event is unavailable.
-        </p>
+        {merchTrackingEnabled ? (
+          <p>
+            With consent, the Meta Pixel records page views, newsletter sign-ups, ticket activity and merchandise
+            activity such as viewing products, adding items to the cart, beginning checkout and completed purchases.
+            Our server can send matching conversion events through Meta&apos;s Conversions API so advertising results
+            remain measurable when a browser event is unavailable.
+          </p>
+        ) : (
+          <p>
+            With consent, the Meta Pixel records page views, newsletter sign-ups and ticket activity such as viewing
+            ticket availability, beginning ticket checkout and completed ticket purchases. Our server can send matching
+            conversion events through Meta&apos;s Conversions API so advertising results remain measurable when a browser
+            event is unavailable. Merchandise sales activity is not currently sent to Meta.
+          </p>
+        )}
 
         <h2>Information used</h2>
         <p>
-          Measurement data can include the page path, event time, product or ticket identifiers, quantities,
-          order value and currency, browser information, IP address and Meta&apos;s first-party <code>_fbp</code>
+          Measurement data can include the page path, event time, {merchTrackingEnabled ? "product or ticket" : "ticket"} identifiers,
+          quantities, order value and currency, browser information, IP address and Meta&apos;s first-party <code>_fbp</code>
           and <code>_fbc</code> identifiers. For new newsletter sign-ups, email addresses are normalised and
           SHA-256 hashed on our server before being sent to Meta. We do not send payment-card details, passwords
           or Stripe checkout-session references to Meta.

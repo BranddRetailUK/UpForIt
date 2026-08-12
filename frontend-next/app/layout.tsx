@@ -5,6 +5,7 @@ import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { CartProvider } from "../components/CartProvider";
 import { MetaTrackingProvider } from "../components/MetaTrackingProvider";
+import { isMetaMerchTrackingEnabled } from "../lib/meta-shared";
 import "./globals.css";
 
 const SOCIAL_SHARE_IMAGE =
@@ -85,7 +86,10 @@ export default function RootLayout({
       className={`${display.variable} ${heavy.variable} ${body.variable}`}
     >
       <body>
-        <MetaTrackingProvider pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID || ""}>
+        <MetaTrackingProvider
+          pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID || ""}
+          merchTrackingEnabled={isMetaMerchTrackingEnabled(process.env.META_MERCH_TRACKING_ENABLED)}
+        >
           <CartProvider>
             <div className="site-shell">
               <PopArtScene />

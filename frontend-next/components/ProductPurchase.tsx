@@ -18,7 +18,7 @@ export default function ProductPurchase({
 }) {
   const available = product.variants.filter((variant) => variant.available);
   const { addLine } = useCart();
-  const { track } = useMetaTracking();
+  const { merchTrackingEnabled, track } = useMetaTracking();
   const variant = useMemo(
     () => available.find((entry) => entry.id === variantId) || available[0],
     [available, variantId]
@@ -73,15 +73,17 @@ export default function ProductPurchase({
       currency: product.currency,
       quantity: 1
     });
-    track("AddToCart", {
-      content_ids: [variant.id],
-      content_name: product.title,
-      content_category: "merch",
-      content_type: "product",
-      contents: [{ id: variant.id, quantity: 1, item_price: variant.priceMinor / 100 }],
-      value: variant.priceMinor / 100,
-      currency: product.currency.toUpperCase()
-    });
+    if (merchTrackingEnabled) {
+      track("AddToCart", {
+        content_ids: [variant.id],
+        content_name: product.title,
+        content_category: "merch",
+        content_type: "product",
+        contents: [{ id: variant.id, quantity: 1, item_price: variant.priceMinor / 100 }],
+        value: variant.priceMinor / 100,
+        currency: product.currency.toUpperCase()
+      });
+    }
   }
 
   return (

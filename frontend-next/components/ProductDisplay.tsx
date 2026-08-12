@@ -48,7 +48,7 @@ export default function ProductDisplay({
   productTitle: string;
   productSubtitle: string;
 }) {
-  const { consent, track } = useMetaTracking();
+  const { consent, merchTrackingEnabled, track } = useMetaTracking();
   const available = product.variants.filter((variant) => variant.available);
   const [variantId, setVariantId] = useState(available[0]?.id || "");
   const variant = available.find((entry) => entry.id === variantId) || available[0];
@@ -65,7 +65,7 @@ export default function ProductDisplay({
   }, [product.images]);
 
   useEffect(() => {
-    if (consent !== "granted") return;
+    if (!merchTrackingEnabled || consent !== "granted") return;
     track("ViewContent", {
       content_ids: [product.id],
       content_name: product.title,
@@ -74,7 +74,7 @@ export default function ProductDisplay({
       value: product.priceMinor / 100,
       currency: product.currency.toUpperCase()
     });
-  }, [consent, product.currency, product.id, product.priceMinor, product.title, track]);
+  }, [consent, merchTrackingEnabled, product.currency, product.id, product.priceMinor, product.title, track]);
 
   function selectVariant(nextVariantId: string) {
     const nextVariant = available.find((entry) => entry.id === nextVariantId);

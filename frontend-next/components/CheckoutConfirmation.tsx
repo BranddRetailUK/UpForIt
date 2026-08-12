@@ -16,7 +16,7 @@ type Confirmation = {
 
 export default function CheckoutConfirmation({ sessionId }: { sessionId: string }) {
   const { clearCart } = useCart();
-  const { track } = useMetaTracking();
+  const { merchTrackingEnabled, track } = useMetaTracking();
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [error, setError] = useState("");
   const trackedEventId = useRef("");
@@ -37,7 +37,7 @@ export default function CheckoutConfirmation({ sessionId }: { sessionId: string 
         if (!active) return;
         setConfirmation(payload);
         if (payload.paid) {
-          if (payload.meta?.eventId && trackedEventId.current !== payload.meta.eventId) {
+          if (merchTrackingEnabled && payload.meta?.eventId && trackedEventId.current !== payload.meta.eventId) {
             track("Purchase", {
               content_category: "merch",
               value: payload.meta.valueMinor / 100,
@@ -60,7 +60,7 @@ export default function CheckoutConfirmation({ sessionId }: { sessionId: string 
       active = false;
       if (timer) clearTimeout(timer);
     };
-  }, [clearCart, sessionId]);
+  }, [clearCart, merchTrackingEnabled, sessionId, track]);
 
   return (
     <section className="confirmation-card">

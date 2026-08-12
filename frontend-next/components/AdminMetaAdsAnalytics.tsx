@@ -2,6 +2,7 @@
 
 import { useRef, useState, type KeyboardEvent } from "react";
 import type { MetaAdsCampaignSummary, MetaAdsSummary } from "../lib/meta";
+import { useMetaTracking } from "./MetaTrackingProvider";
 
 type Props = {
   all: MetaAdsSummary;
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export default function AdminMetaAdsAnalytics({ all, campaigns }: Props) {
+  const { merchTrackingEnabled } = useMetaTracking();
   const [selectedKey, setSelectedKey] = useState("all");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const tabs = [
@@ -77,8 +79,8 @@ export default function AdminMetaAdsAnalytics({ all, campaigns }: Props) {
           <article><strong>{selected.linkClicks.toLocaleString("en-GB")}</strong><span>Link clicks</span></article>
           <article><strong>{selected.ctr.toFixed(2)}%</strong><span>CTR</span></article>
           <article><strong>£{selected.cpc.toFixed(2)}</strong><span>CPC</span></article>
-          <article><strong>{selected.purchases.toLocaleString("en-GB")}</strong><span>Purchases</span></article>
-          <article><strong>£{selected.purchaseValue.toFixed(2)}</strong><span>Purchase value</span></article>
+          <article><strong>{selected.purchases.toLocaleString("en-GB")}</strong><span>{merchTrackingEnabled ? "Purchases" : "Ticket purchases"}</span></article>
+          <article><strong>£{selected.purchaseValue.toFixed(2)}</strong><span>{merchTrackingEnabled ? "Purchase value" : "Ticket purchase value"}</span></article>
         </div>
       </div>
     </>

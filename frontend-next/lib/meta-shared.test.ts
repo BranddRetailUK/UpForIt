@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { isMetaConsentLandingPath } from "./meta-shared";
+import {
+  isMetaConsentLandingPath,
+  isMetaMerchTrackingEnabled,
+  shouldSendMetaBrowserEvent
+} from "./meta-shared";
+
+describe("Meta merch tracking flag", () => {
+  it.each([undefined, null, "", "false", "0", "yes"])("fails closed for %s", (value) => {
+    expect(isMetaMerchTrackingEnabled(value)).toBe(false);
+  });
+
+  it.each(["true", " TRUE "])("enables only an explicit true value: %s", (value) => {
+    expect(isMetaMerchTrackingEnabled(value)).toBe(true);
+  });
+
+  it("blocks merch browser events while preserving ticket events", () => {
+    expect(shouldSendMetaBrowserEvent({ content_category: "merch" }, false)).toBe(false);
+    expect(shouldSendMetaBrowserEvent({ content_category: "event tickets" }, false)).toBe(true);
+    expect(shouldSendMetaBrowserEvent({ content_category: "merch" }, true)).toBe(true);
+  });
+});
 
 describe("Meta consent landing routes", () => {
   it.each([

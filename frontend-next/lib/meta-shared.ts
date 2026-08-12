@@ -2,6 +2,10 @@ export const META_CONSENT_COOKIE = "upforit_meta_consent";
 export const META_CONSENT_GRANTED = "granted";
 export const META_CONSENT_DENIED = "denied";
 
+export function isMetaMerchTrackingEnabled(value: unknown) {
+  return typeof value === "string" && value.trim().toLowerCase() === "true";
+}
+
 const META_CONSENT_INTERNAL_ROUTE_PREFIXES = ["/admin", "/account", "/scan", "/staff"];
 const META_CONSENT_SENSITIVE_ROUTES = new Set(["/cart/confirmation", "/tickets/confirmation"]);
 
@@ -24,3 +28,10 @@ export type MetaBrowserContext = {
 };
 
 export type MetaEventParameters = Record<string, string | number | boolean | string[] | Array<Record<string, string | number>> | undefined>;
+
+export function shouldSendMetaBrowserEvent(
+  parameters: MetaEventParameters,
+  merchTrackingEnabled: boolean
+) {
+  return merchTrackingEnabled || parameters.content_category !== "merch";
+}
