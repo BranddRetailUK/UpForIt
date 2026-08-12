@@ -4164,7 +4164,7 @@ a {
     font-family: var(--font-display), Impact, sans-serif;
     font-size: clamp(2.2rem, 9vw, 3.7rem);
     text-align: center;
-    box-shadow: 6px 6px 0 var(--yellow);
+    box-shadow: none;
   }
 
   .primary-nav li:nth-child(even) a {
@@ -4187,9 +4187,16 @@ a {
     border-inline-color: var(--ink);
     background: var(--yellow);
     color: var(--paper);
-    box-shadow: 7px 7px 0 var(--pink);
     -webkit-text-stroke: 1px var(--ink);
     text-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .primary-nav__item--account a {
+    box-shadow: none;
+  }
+
+  .primary-nav__item--account a.is-active {
+    box-shadow: 7px 7px 0 var(--pink);
   }
 
   .event-facts {
