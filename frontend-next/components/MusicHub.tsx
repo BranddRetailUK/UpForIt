@@ -5,7 +5,8 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type CSSProperties
+  type CSSProperties,
+  type MouseEvent
 } from "react";
 import {
   cloudinaryArtworkUrl,
@@ -16,10 +17,12 @@ import {
 } from "../lib/cloudinary";
 import {
   filterMusicContent,
+  musicBlockMatchesFilter,
   type ArtistStoryBlock,
   type AudioMusicBlock,
   type MusicContentBlock,
   type MusicFilter,
+  type ReleaseShowcaseBlock,
   type VideoMusicBlock
 } from "../lib/music";
 
@@ -34,7 +37,8 @@ type PlaybackProps = {
 
 const FILTERS: Array<{ value: MusicFilter; label: string }> = [
   { value: "all", label: "All" },
-  { value: "audio", label: "Audio" },
+  { value: "audio", label: "Mixes" },
+  { value: "release", label: "Releases" },
   { value: "video", label: "Video" }
 ];
 
@@ -80,12 +84,25 @@ function DownloadIcon() {
   );
 }
 
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" />
+    </svg>
+  );
+}
+
 function MusicArtwork({
   publicId,
+  alt,
   title,
   shape = "square"
 }: {
   publicId?: string;
+  alt?: string;
   title: string;
   shape?: "square" | "portrait" | "video";
 }) {
@@ -99,6 +116,7 @@ function MusicArtwork({
   if (publicId) {
     const smallWidth = Math.min(480, dimensions.width);
     const smallHeight = Math.round((dimensions.height / dimensions.width) * smallWidth);
+
     return (
       <img
         className="music-artwork__image"
@@ -107,7 +125,7 @@ function MusicArtwork({
         sizes={shape === "square" ? "(max-width: 720px) 100vw, 50vw" : "100vw"}
         width={dimensions.width}
         height={dimensions.height}
-        alt={`${title} artwork`}
+        alt={alt || `${title} artwork`}
         loading="lazy"
         decoding="async"
       />
@@ -440,6 +458,113 @@ function ArtistStory({ block, visible }: { block: ArtistStoryBlock; visible: boo
   );
 }
 
+function ReleaseShareLink({ block }: { block: ReleaseShowcaseBlock }) {
+  const [copied, setCopied] = useState(false);
+
+  const shareRelease = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!navigator.share && !navigator.clipboard) return;
+
+    event.preventDefault();
+    const url = event.currentTarget.href;
+    const shareData = {
+      title: `${block.title} — ${block.artist}`,
+      text: `Check out ${block.title} by ${block.artist} on UPFORIT.`,
+      url
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (!navigator.clipboard) {
+        window.location.hash = block.id;
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    }
+  };
+
+  return (
+    <a
+      className="music-release-showcase__share"
+      href={`/music#${block.id}`}
+      onClick={shareRelease}
+    >
+      <ShareIcon />
+      <span aria-live="polite">{copied ? "Link copied" : "Share release"}</span>
+    </a>
+  );
+}
+
+function ReleaseShowcase({
+  block,
+  visible
+}: {
+  block: ReleaseShowcaseBlock;
+  visible: boolean;
+}) {
+  return (
+    <article
+      className="music-release-showcase"
+      id={block.id}
+      hidden={!visible}
+    >
+      <div className="music-release-showcase__hero">
+        <div className="music-release-showcase__artwork">
+          <MusicArtwork publicId={block.artworkPublicId} title={block.title} />
+          <span className="music-card__format-sticker">New release</span>
+        </div>
+
+        <div className="music-release-showcase__copy">
+          <p className="comic-kicker comic-kicker--pink">UPFORIT resident release</p>
+          <p className="music-card__artist">{block.artist}</p>
+          <h2>{block.title}</h2>
+
+          <p className="music-release-showcase__standfirst">{block.description}</p>
+
+          <div className="music-release-showcase__actions">
+            <a
+              className="music-release-showcase__link"
+              href={block.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View release on Bandcamp
+              <span aria-hidden="true">↗</span>
+            </a>
+            <ReleaseShareLink block={block} />
+          </div>
+        </div>
+      </div>
+
+      <div className="music-release-showcase__details">
+        <div className="music-release-showcase__artist-image">
+          <MusicArtwork
+            publicId={block.artistImagePublicId}
+            title={block.artist}
+            alt={`${block.artist}, UPFORIT resident Drum & Bass Artist`}
+          />
+          <span>UPFORIT resident</span>
+        </div>
+        <section aria-labelledby={`${block.id}-artist-heading`}>
+          <h3 id={`${block.id}-artist-heading`}>About the artist</h3>
+          {block.artistBody.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        </section>
+        <section aria-labelledby={`${block.id}-label-heading`}>
+          <h3 id={`${block.id}-label-heading`}>About Koba Audio</h3>
+          {block.labelBody.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        </section>
+      </div>
+    </article>
+  );
+}
+
 export default function MusicHub({ blocks }: MusicHubProps) {
   const [filter, setFilter] = useState<MusicFilter>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -478,7 +603,7 @@ export default function MusicHub({ blocks }: MusicHubProps) {
 
       <div className="music-feed">
         {blocks.map((block) => {
-          const visible = filter === "all" || block.kind === filter;
+          const visible = musicBlockMatchesFilter(block, filter);
           if (block.kind === "audio") {
             return (
               <AudioCard
@@ -500,6 +625,9 @@ export default function MusicHub({ blocks }: MusicHubProps) {
                 key={block.id}
               />
             );
+          }
+          if (block.kind === "release") {
+            return <ReleaseShowcase block={block} visible={visible} key={block.id} />;
           }
           return <ArtistStory block={block} visible={visible} key={block.id} />;
         })}

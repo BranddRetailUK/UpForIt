@@ -14,19 +14,21 @@ describe("music content catalogue", () => {
 
   it("does not request media for placeholder entries", () => {
     const placeholderMedia = MUSIC_CONTENT.filter(
-      (block) => block.kind !== "artist-story" && block.placeholder
+      (block) =>
+        (block.kind === "audio" || block.kind === "video") && block.placeholder
     );
 
     expect(placeholderMedia.length).toBeGreaterThan(0);
     expect(
       placeholderMedia.every(
-        (block) => block.kind === "artist-story" || !block.mediaPublicId
+        (block) => !("mediaPublicId" in block) || !block.mediaPublicId
       )
     ).toBe(true);
   });
 
   it("leads with Scott Charles's playable MiniMix video and audio", () => {
-    const [video, audio] = MUSIC_CONTENT;
+    const video = MUSIC_CONTENT[0];
+    const audio = MUSIC_CONTENT.find((block) => block.id === "warm-up-audio");
 
     expect(video).toMatchObject({
       kind: "video",
@@ -48,6 +50,22 @@ describe("music content catalogue", () => {
     );
     expect(filterMusicContent(MUSIC_CONTENT, "audio").every((block) => block.kind === "audio")).toBe(true);
     expect(filterMusicContent(MUSIC_CONTENT, "video").every((block) => block.kind === "video")).toBe(true);
+    expect(filterMusicContent(MUSIC_CONTENT, "release").every((block) => block.kind === "release")).toBe(true);
+  });
+
+  it("places the Spektral feature after the lead video and includes it in the releases view", () => {
+    expect(MUSIC_CONTENT[1]).toMatchObject({
+      id: "spektral-married-to-the-music-grift",
+      kind: "release",
+      artist: "Spektral (UK)",
+      label: "Koba Audio",
+      artworkPublicId: "a1053183844_10_eahqtq",
+      artistImagePublicId: "spektral_amzq4l",
+      releaseUrl: "https://kobaaudio.bandcamp.com/album/married-to-the-music-grift"
+    });
+    expect(filterMusicContent(MUSIC_CONTENT, "release").map((block) => block.id)).toContain(
+      "spektral-married-to-the-music-grift"
+    );
   });
 
   it("returns an independent all-view array", () => {

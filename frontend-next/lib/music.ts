@@ -3,7 +3,7 @@ import type {
   CloudinaryVideoFormat
 } from "./cloudinary";
 
-export type MusicFilter = "all" | "audio" | "video";
+export type MusicFilter = "all" | "audio" | "video" | "release";
 export type MusicPresentation = "featured" | "wide" | "square";
 
 type MusicBlockBase = {
@@ -45,17 +45,40 @@ export type ArtistStoryBlock = MusicBlockBase & {
   placeholder: boolean;
 };
 
+export type ReleaseShowcaseBlock = MusicBlockBase & {
+  kind: "release";
+  artist: string;
+  artistBody: string[];
+  artworkPublicId: string;
+  artistImagePublicId: string;
+  date: string;
+  genre: string;
+  label: string;
+  labelBody: string[];
+  placeholder: false;
+  releaseUrl: string;
+};
+
 export type MusicContentBlock =
   | AudioMusicBlock
   | VideoMusicBlock
-  | ArtistStoryBlock;
+  | ArtistStoryBlock
+  | ReleaseShowcaseBlock;
+
+export function musicBlockMatchesFilter(
+  block: MusicContentBlock,
+  filter: MusicFilter
+) {
+  if (filter === "all") return true;
+  return block.kind === filter;
+}
 
 export function filterMusicContent(
   blocks: readonly MusicContentBlock[],
   filter: MusicFilter
 ) {
   if (filter === "all") return [...blocks];
-  return blocks.filter((block) => block.kind === filter);
+  return blocks.filter((block) => musicBlockMatchesFilter(block, filter));
 }
 
 // Replace the placeholder copy and add Cloudinary public IDs here when the
@@ -74,6 +97,28 @@ export const MUSIC_CONTENT: readonly MusicContentBlock[] = [
     format: "mp4",
     presentation: "featured",
     placeholder: false
+  },
+  {
+    id: "spektral-married-to-the-music-grift",
+    kind: "release",
+    title: "Married To The Music / Grift",
+    artist: "Spektral (UK)",
+    description:
+      "Two cuts, one clear direction: breakbeats, bass and forward pressure. Married To The Music / Grift sees Spektral (UK) arrive on Koba Audio with a compact drum & bass and jungle double-header.",
+    date: "30 May 2026",
+    genre: "Drum & Bass / Jungle",
+    label: "Koba Audio",
+    artworkPublicId: "a1053183844_10_eahqtq",
+    artistImagePublicId: "spektral_amzq4l",
+    placeholder: false,
+    releaseUrl:
+      "https://kobaaudio.bandcamp.com/album/married-to-the-music-grift",
+    artistBody: [
+      "Spektral is a key member of UPFORIT and our resident Drum & Bass Artist, bringing underground selections and high-energy sets to the event. Away from the booth, his recent production run has included releases on Sub Heavy Audio, Rebellion Records and Jungle Tings Audio, alongside a collaboration with E Dappa for Grand Theft Audio. Married To The Music / Grift marks his latest release—and his arrival on Ipswich-based label Koba Audio."
+    ],
+    labelBody: [
+      "Koba Audio is an Ipswich-based drum & bass and jungle label headed by producer and DJ Conrad Subs. Its catalogue dates back to at least 2022 and combines Conrad's own releases—including the Straight Up Jungle series—with music from a widening circle of artists such as Rafiki Dubs, Talisman, DJ Axonal, Steppa Browne and Spektral (UK). The imprint keeps one foot in the sound of '90s jungle while pushing breakbeats and basslines into the present."
+    ]
   },
   {
     id: "warm-up-audio",
