@@ -466,10 +466,10 @@ function ReleaseShareLink({ block }: { block: ReleaseShowcaseBlock }) {
 
     event.preventDefault();
     const url = event.currentTarget.href;
+    const shareText = `Check out ${block.title}\n\n${url}`;
     const shareData = {
       title: `${block.title} — ${block.artist}`,
-      text: `Check out ${block.title} by ${block.artist} on UPFORIT.`,
-      url
+      text: shareText
     };
 
     try {
@@ -477,7 +477,7 @@ function ReleaseShareLink({ block }: { block: ReleaseShowcaseBlock }) {
         await navigator.share(shareData);
         return;
       }
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareText);
       setCopied(true);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -485,7 +485,7 @@ function ReleaseShareLink({ block }: { block: ReleaseShowcaseBlock }) {
         window.location.hash = block.id;
         return;
       }
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareText);
       setCopied(true);
     }
   };
