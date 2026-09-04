@@ -30,7 +30,7 @@ describe("ticket order fulfilment", () => {
         return { rows: [{
           id: "item-123",
           quantity: 3,
-          ticket_type_name: "Early Bird",
+          ticket_type_name: "General Release",
           ticket_type_id: "tier-123",
           unit_price_minor: 500,
           event_id: "event-123"

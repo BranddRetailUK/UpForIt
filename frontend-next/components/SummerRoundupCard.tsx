@@ -101,7 +101,7 @@ export default function SummerRoundupCard({
 
       <div className="coming-soon-strip">
         <span aria-hidden="true">★</span>
-        Early bird tickets now available!
+        Tickets available now!
         <span aria-hidden="true">★</span>
       </div>
       <Link className="pop-button pop-button--yellow" href="/events/summer-roundup-2026">

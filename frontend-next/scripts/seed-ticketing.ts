@@ -3,9 +3,7 @@ import { advanceTicketTierProgression } from "../lib/ticket-tiers";
 
 const EVENT_ID = "4e37f654-31f8-4c86-a59e-bf4e72c7f0a1";
 const TICKET_TYPES = [
-  ["8756ca79-53f1-4dd1-9298-c07e85fd10e1", "Early Bird", 500, 50, true, 10],
-  ["8756ca79-53f1-4dd1-9298-c07e85fd10e2", "General Release", 750, 100, false, 20],
-  ["8756ca79-53f1-4dd1-9298-c07e85fd10e3", "On The Door", 1000, null, false, 30]
+  ["8756ca79-53f1-4dd1-9298-c07e85fd10e1", "General Release", 500, null, true, 10]
 ] as const;
 
 async function main() {
@@ -35,6 +33,7 @@ async function main() {
        ON CONFLICT (id) DO UPDATE SET
          name = EXCLUDED.name, price_minor = EXCLUDED.price_minor, currency = EXCLUDED.currency,
          capacity = EXCLUDED.capacity, max_per_order = EXCLUDED.max_per_order,
+         sales_start_at = NULL, sales_end_at = NULL, archived_at = NULL,
          sort_order = EXCLUDED.sort_order, updated_at = now()`,
         [id, EVENT_ID, name, price, capacity, active, sortOrder]
       );
@@ -49,7 +48,7 @@ async function main() {
     client.release();
   }
 
-  console.log("Seeded The Summer Roundup and confirmed ticket tiers.");
+  console.log("Seeded The Summer Roundup and confirmed General Release ticket pricing.");
   await pool.end();
 }
 

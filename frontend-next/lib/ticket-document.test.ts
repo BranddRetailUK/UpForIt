@@ -24,7 +24,7 @@ describe("ticket PDF", () => {
         timezone: "Europe/London",
         ticket_number: `UFI-T-01000${index + 1}`,
         public_id: `ticket-public-${index + 1}`,
-        ticket_type_name: "Early Bird"
+        ticket_type_name: "General Release"
       }))
     });
 

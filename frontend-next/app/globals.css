@@ -1059,7 +1059,7 @@ select {
 }
 
 .ticket-tier--on_sale {
-  background: var(--yellow);
+  background: var(--paper);
 }
 
 .ticket-tier.is-inactive {

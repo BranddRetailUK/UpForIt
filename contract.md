@@ -325,17 +325,15 @@ module=frontend-next/lib/db.ts
 driver=pg Pool
 pool_lifetime=development cached on globalThis; production creates module/runtime pool without global cache
 production_tls=ssl rejectUnauthorized=false
-schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds prices/capacities and advances rather than regresses the current tier
+schema_management=versioned SQL in frontend-next/migrations; npm run db:migrate uses a Postgres advisory lock; npm run db:seed:ticketing idempotently seeds the current ticket price and availability
 tables_owned_here=signups,merch_checkout_requests,merch_discount_entitlements,merch_discount_sync_jobs,users,user_sessions,auth_tokens,auth_rate_limits,events,ticket_types,ticket_orders,ticket_order_items,tickets,stripe_event_receipts,email_jobs,meta_conversion_jobs,ticket_audit_log,schema_migrations
 tables_not_owned_here=products,variants,orders,checkout sessions,stock,fulfilment,email events; all Good Game
 
 [native_ticket_sales]
-prices=Early Bird £5; General Release £7.50; On The Door £10; exact displayed total with no booking fee
-progression=Early Bird is capped at 50 paid tickets; General Release then activates for 100 paid tickets; On The Door then activates with no capacity limit
-concurrency=checkout and admin simulation lock tier rows and count paid tickets only; open or abandoned Stripe Checkout Sessions never reduce availability
-checkout_price_lock=the tier and unit price are snapshotted when the dedicated ticket Stripe Checkout Session is created; that session keeps its original price if the sale advances before payment
-checkout_overrun=simultaneous successful payments may take a capped price tier slightly above its nominal paid-ticket threshold; those payments are honoured and the sale advances monotonically
-monotonicity=once the sale advances to a later tier it does not reopen a cheaper tier after refunds
+prices=General Release £5; exact displayed total with no booking fee
+availability=General Release has no event capacity; the existing maximum of 10 tickets per checkout remains
+concurrency=checkout and admin simulation lock the current ticket row; open or abandoned Stripe Checkout Sessions never reduce availability
+checkout_price_lock=the ticket type and unit price are snapshotted when the dedicated ticket Stripe Checkout Session is created; that session keeps its original price if pricing changes before payment
 customer_flow=/events Buy tickets -> dedicated ticket selector -> required verified account -> native ticket Stripe Checkout -> webhook fulfilment -> email/PDF/QR -> persistent account wallet
 ticket_merch_discount=first real paid ticket order grants one lifetime account entitlement regardless of ticket quantity; later ticket orders never grant another; the entitlement persists until redeemed, is revoked if its source ticket order is fully refunded while unused, excludes delivery, never stacks, and is not reissued after a merch refund; admin simulation does not qualify
 ticket_merch_discount_backfill=scottcharles.rework@gmail.com receives one available entitlement from the earliest paid ticket order during migration 004

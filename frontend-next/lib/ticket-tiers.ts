@@ -23,7 +23,7 @@ export async function advanceTicketTierProgression(client: PoolClient, eventId: 
   }>(
     `SELECT id, capacity, is_active
        FROM ticket_types
-      WHERE event_id = $1
+      WHERE event_id = $1 AND archived_at IS NULL
       ORDER BY sort_order, price_minor
       FOR UPDATE`,
     [eventId]
@@ -54,7 +54,7 @@ export async function advanceTicketTierProgression(client: PoolClient, eventId: 
             updated_at = CASE
               WHEN is_active IS DISTINCT FROM CASE WHEN $2::uuid IS NOT NULL AND id = $2::uuid THEN true ELSE false END
               THEN now() ELSE updated_at END
-      WHERE event_id = $1`,
+      WHERE event_id = $1 AND archived_at IS NULL`,
     [eventId, activeId]
   );
   return activeId;
@@ -63,7 +63,7 @@ export async function advanceTicketTierProgression(client: PoolClient, eventId: 
 export async function lockTicketTiersForCheckout(client: PoolClient, selections: TicketSelection[]) {
   const ids = selections.map((item) => item.ticketTypeId);
   const eventIds = await client.query<{ event_id: string }>(
-    "SELECT DISTINCT event_id FROM ticket_types WHERE id = ANY($1::uuid[])",
+    "SELECT DISTINCT event_id FROM ticket_types WHERE id = ANY($1::uuid[]) AND archived_at IS NULL",
     [ids]
   );
   if (eventIds.rowCount !== 1) throw new Error("One or more ticket tiers are unavailable.");
@@ -75,7 +75,8 @@ export async function lockTicketTiersForCheckout(client: PoolClient, selections:
             e.id AS event_id, e.slug AS event_slug, e.title AS event_title
        FROM ticket_types tt
        JOIN events e ON e.id = tt.event_id
-      WHERE tt.id = ANY($1::uuid[]) AND tt.is_active = true AND e.status = 'published'
+      WHERE tt.id = ANY($1::uuid[]) AND tt.archived_at IS NULL
+        AND tt.is_active = true AND e.status = 'published'
         AND (tt.sales_start_at IS NULL OR tt.sales_start_at <= now())
         AND (tt.sales_end_at IS NULL OR tt.sales_end_at > now())
       FOR UPDATE OF tt`,

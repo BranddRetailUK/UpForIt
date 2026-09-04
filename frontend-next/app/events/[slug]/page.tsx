@@ -62,7 +62,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
          FROM ticket_types tt
          LEFT JOIN ticket_order_items i ON i.ticket_type_id = tt.id
          LEFT JOIN ticket_orders o ON o.id = i.order_id
-        WHERE tt.event_id = $1
+        WHERE tt.event_id = $1 AND tt.archived_at IS NULL
         GROUP BY tt.id
         ORDER BY tt.sort_order, tt.price_minor`,
       [event.id]

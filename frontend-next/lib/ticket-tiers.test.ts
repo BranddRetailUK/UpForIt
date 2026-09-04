@@ -10,7 +10,7 @@ function checkoutClient(paidQuantity: number) {
       return { rowCount: 1, rows: [{ event_id: EVENT_ID }] };
     }
     if (sql.includes("SELECT id, capacity, is_active")) {
-      return { rowCount: 1, rows: [{ id: TIER_ID, capacity: 50, is_active: true }] };
+      return { rowCount: 1, rows: [{ id: TIER_ID, capacity: null, is_active: true }] };
     }
     if (sql.includes("GROUP BY i.ticket_type_id")) {
       return { rowCount: 1, rows: [{ ticket_type_id: TIER_ID, paid_quantity: String(paidQuantity) }] };
@@ -18,11 +18,11 @@ function checkoutClient(paidQuantity: number) {
     if (sql.includes("SELECT tt.id, tt.name")) {
       return { rowCount: 1, rows: [{
         id: TIER_ID,
-        name: "Early Bird",
+        name: "General Release",
         price_minor: 500,
         currency: "gbp",
         max_per_order: 10,
-        capacity: 50,
+        capacity: null,
         event_id: EVENT_ID,
         event_slug: "summer-roundup-2026",
         event_title: "The Summer Roundup"
@@ -40,15 +40,16 @@ function checkoutClient(paidQuantity: number) {
 }
 
 describe("ticket checkout availability", () => {
-  it("allocates against paid sales only", async () => {
-    const client = checkoutClient(49);
-    const result = await lockTicketTiersForCheckout(client as never, [{ ticketTypeId: TIER_ID, quantity: 1 }]);
-    expect(result.tiers[0]).toMatchObject({ id: TIER_ID, price_minor: 500 });
+  it("keeps General Release available without an event capacity", async () => {
+    const client = checkoutClient(10_000);
+    const result = await lockTicketTiersForCheckout(client as never, [{ ticketTypeId: TIER_ID, quantity: 10 }]);
+    expect(result.tiers[0]).toMatchObject({ id: TIER_ID, name: "General Release", price_minor: 500, capacity: null });
+    expect(client.query.mock.calls.some(([sql]) => String(sql).includes("WHERE i.ticket_type_id = $1"))).toBe(false);
   });
 
-  it("still prevents one checkout from exceeding the paid tier remainder", async () => {
-    const client = checkoutClient(49);
-    await expect(lockTicketTiersForCheckout(client as never, [{ ticketTypeId: TIER_ID, quantity: 2 }]))
-      .rejects.toThrow("Early Bird has sold out.");
+  it("retains the per-order checkout limit", async () => {
+    const client = checkoutClient(0);
+    await expect(lockTicketTiersForCheckout(client as never, [{ ticketTypeId: TIER_ID, quantity: 11 }]))
+      .rejects.toThrow("Maximum 10 General Release tickets per order.");
   });
 });

@@ -47,6 +47,7 @@ export default async function AdminPage() {
        FROM ticket_types tt
        LEFT JOIN ticket_order_items i ON i.ticket_type_id = tt.id
        LEFT JOIN ticket_orders o ON o.id = i.order_id
+       WHERE tt.archived_at IS NULL
        GROUP BY tt.id ORDER BY tt.sort_order, tt.price_minor`
     ),
     getPool().query<Order>(
@@ -150,7 +151,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="admin-panel admin-section--tiers">
-        <h2>Ticket tiers</h2>
+        <h2>Ticket pricing</h2>
         <div className="admin-table-wrap"><table className="admin-table admin-tier-table"><thead><tr><th className="admin-tier-col--tier">Tier</th><th className="admin-tier-col--price">Price</th><th className="admin-tier-col--capacity">Capacity</th><th className="admin-tier-col--paid">Paid</th><th className="admin-tier-col--pending">Open checkouts</th><th className="admin-tier-col--remaining">Remaining</th><th className="admin-tier-col--status">Status</th></tr></thead><tbody>
           {tiers.rows.map((tier) => {
             const paid = Number(tier.paid_quantity);
