@@ -103,8 +103,8 @@ export default function ProductDisplay({
             />
             {product.images.length > 1 && (
               <>
-                <button type="button" className="product-gallery__arrow is-previous" onClick={() => moveImage(-1)} aria-label="Show previous product image">←</button>
-                <button type="button" className="product-gallery__arrow is-next" onClick={() => moveImage(1)} aria-label="Show next product image">→</button>
+                <button type="button" className="product-gallery__arrow is-previous" onClick={() => moveImage(-1)} aria-label="Show previous product image">Prev</button>
+                <button type="button" className="product-gallery__arrow is-next" onClick={() => moveImage(1)} aria-label="Show next product image">Next</button>
               </>
             )}
           </div>
@@ -123,7 +123,7 @@ export default function ProductDisplay({
         )}
       </section>
       <section className="product-summary">
-        <p className="comic-kicker comic-kicker--pink">Official UPFORIT gear</p>
+
         <h1 className={productSubtitle ? "product-summary__heading--split" : undefined}>
           <span className="product-summary__title">{productTitle}</span>
           {productSubtitle && <span className="product-summary__subtitle">{productSubtitle}</span>}

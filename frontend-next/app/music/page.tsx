@@ -61,7 +61,7 @@ export default function MusicPage() {
   return (
     <div className="music-page">
       <header className="music-page__intro section-wrap">
-        <p className="comic-kicker comic-kicker--pink">Turn it up</p>
+
         <div className="music-page__title-lockup">
           <span aria-hidden="true">♪</span>
           <h1>Music <i>&amp;</i> Mixes</h1>

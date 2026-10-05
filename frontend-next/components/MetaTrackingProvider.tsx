@@ -153,7 +153,7 @@ export function MetaTrackingProvider({
       {showBanner ? (
         <section className="cookie-banner" role="dialog" aria-modal="false" aria-labelledby="cookie-banner-title">
           <div>
-            <p className="comic-kicker comic-kicker--yellow">Your choice</p>
+
             <h2 id="cookie-banner-title">Help us measure what works?</h2>
             <p>
               With your permission, we use the Meta Pixel and Conversions API to measure visits,

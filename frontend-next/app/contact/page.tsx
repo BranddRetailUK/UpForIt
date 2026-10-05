@@ -12,7 +12,7 @@ export default function ContactPage() {
   return (
     <div className="inner-page section-wrap">
       <header className="page-intro">
-        <p className="comic-kicker comic-kicker--pink">Let&apos;s talk</p>
+
         <h1>Contact</h1>
         <p>
           Bookings, collaborations or a general question? Drop us a message on
@@ -21,7 +21,6 @@ export default function ContactPage() {
       </header>
 
       <section className="contact-panel" aria-labelledby="contact-heading">
-        <div className="contact-panel__burst" aria-hidden="true">POW!</div>
         <h2 id="contact-heading">Message UPFORIT</h2>
         <p>Choose a social and head straight to our official profile.</p>
         <div className="contact-links">

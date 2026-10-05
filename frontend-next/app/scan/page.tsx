@@ -23,7 +23,7 @@ export default async function ScannerPage() {
     return (
       <div className="inner-page section-wrap account-page scanner-ended-page">
         <section className="account-panel">
-          <p className="comic-kicker comic-kicker--pink">Scanner locked</p>
+
           <h1>Access needed</h1>
           <p>Ask Scott to display the scanner enrolment QR, then scan it with this device.</p>
         </section>
@@ -35,7 +35,7 @@ export default async function ScannerPage() {
     <div className="admin-shell section-wrap scanner-page">
       <header className="admin-header">
         <div>
-          <p className="comic-kicker comic-kicker--yellow">Door team</p>
+
           <h1>Ticket scanner</h1>
           <p>{scannerSession ? `${scannerSession.device_label} · ${scannerSession.event_title}` : `Signed in as ${accountAccess?.email}`}</p>
         </div>

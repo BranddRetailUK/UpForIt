@@ -33,7 +33,6 @@ export default function MerchProductCard({
             sizes="(max-width: 900px) 50vw, 360px"
           />
         ) : null}
-        <span>Shop it!</span>
       </div>
       <div className="merch-card__copy">
         <Heading className={subtitle ? "merch-card__heading--split" : undefined}>

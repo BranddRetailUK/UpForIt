@@ -1,24 +1,17 @@
 import type { Metadata } from "next";
-import { Archivo_Black, Bangers, Space_Grotesk } from "next/font/google";
-import PopArtScene from "../components/PopArtScene";
+import { Archivo_Black, Space_Grotesk } from "next/font/google";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { CartProvider } from "../components/CartProvider";
 import { MetaTrackingProvider } from "../components/MetaTrackingProvider";
 import { isMetaMerchTrackingEnabled } from "../lib/meta-shared";
 import "./globals.css";
+import "./industrial.css";
 
 const SOCIAL_SHARE_IMAGE =
-  "https://res.cloudinary.com/brandduk/image/upload/v1785833927/UPFORIT_Summer_Round_Up_PP_hjq2nh.png";
+  "https://res.cloudinary.com/brandduk/image/upload/v1791200584/UPFORIT/industrial-2026/industrial-banner.png";
 const FAVICON_IMAGE =
   "https://res.cloudinary.com/brandduk/image/upload/v1786281482/LOGO_FAV_smiley_c4wm5v.png";
-
-const display = Bangers({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap"
-});
 
 const heavy = Archivo_Black({
   weight: "400",
@@ -41,7 +34,7 @@ export const metadata: Metadata = {
     template: "UPFORIT | %s"
   },
   description:
-    "Discover upcoming UPFORIT events, event news and future merch.",
+    "UPFORIT events, music, mixes and clothing.",
   icons: {
     icon: [{ url: FAVICON_IMAGE, type: "image/png" }],
     shortcut: [{ url: FAVICON_IMAGE, type: "image/png" }],
@@ -53,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "UPFORIT | Events, Music & Good Vibes",
     description:
-      "Discover upcoming UPFORIT events, event news and future merch.",
+      "UPFORIT events, music, mixes and clothing.",
     type: "website",
     url: "/",
     siteName: "UPFORIT",
@@ -61,16 +54,16 @@ export const metadata: Metadata = {
     images: [
       {
         url: SOCIAL_SHARE_IMAGE,
-        width: 1254,
-        height: 1254,
-        alt: "UPFORIT Summer Roundup"
+        width: 2172,
+        height: 724,
+        alt: "UPFORIT Events"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
     title: "UPFORIT | Events, Music & Good Vibes",
-    description: "Discover upcoming UPFORIT events, event news and future merch.",
+    description: "UPFORIT events, music, mixes and clothing.",
     images: [SOCIAL_SHARE_IMAGE]
   }
 };
@@ -83,7 +76,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${heavy.variable} ${body.variable}`}
+      className={`${heavy.variable} ${body.variable}`}
     >
       <body>
         <MetaTrackingProvider
@@ -92,9 +85,10 @@ export default function RootLayout({
         >
           <CartProvider>
             <div className="site-shell">
-              <PopArtScene />
+
               <SiteHeader />
-              <main className="site-main">{children}</main>
+              <a className="skip-link" href="#main-content">Skip to content</a>
+              <main id="main-content" className="site-main">{children}</main>
               <SiteFooter />
             </div>
           </CartProvider>

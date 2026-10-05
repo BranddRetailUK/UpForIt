@@ -274,7 +274,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       <aside className={`cart-drawer${drawerOpen ? " is-open" : ""}`} aria-hidden={!drawerOpen} aria-label="Shopping cart">
         <div className="cart-drawer__head">
           <div>
-            <p className="comic-kicker comic-kicker--pink">Your haul</p>
+
             <h2>Cart</h2>
           </div>
           <button type="button" className="cart-drawer__close" onClick={() => setDrawerOpen(false)} aria-label="Close cart">×</button>

@@ -1,3 +1,7 @@
+import { PAST_EVENTS } from "../../../lib/past-events";
+import EventArchive from "../../../components/EventArchive";
+import EventsPage from "../page";
+import { publicTicketSalesOpen } from "../../../lib/event-visibility";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CloudinaryImage from "../../../components/CloudinaryImage";
@@ -42,12 +46,16 @@ function formatEventTime(value: Date, timeZone: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  if (slug !== "summer-roundup-2026") return { title: "Event" };
-  return { title: "The Summer Roundup tickets", description: "Buy tickets for The Summer Roundup on 26 September 2026." };
+  const archived = PAST_EVENTS.find(event => event.slug === slug);
+  if (!archived) return { title: "Event" };
+  return { title: `${archived.title} — Past event`, description: `${archived.title}, ${archived.dateLabel}. Original flyer and lineup.`, alternates: { canonical: `/events/${slug}` }, openGraph: { images: [{ url: cloudinaryUrl(archived.flyer, { width: 1200 }), alt: archived.title }] } };
 }
 
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const archived = PAST_EVENTS.find(event => event.slug === slug);
+  if (archived) return <EventArchive event={archived} />;
+  if (!publicTicketSalesOpen()) return <EventsPage />;
   const eventResult = await getPool().query<EventRow>(
     `SELECT id, title, venue_name, starts_at, ends_at, timezone
        FROM events WHERE slug = $1 AND status = 'published'`,

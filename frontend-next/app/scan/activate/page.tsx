@@ -9,7 +9,7 @@ export default async function ScannerActivationPage({ searchParams }: { searchPa
   return (
     <div className="inner-page section-wrap account-page scanner-activation-page">
       <section className="account-panel">
-        <p className="comic-kicker comic-kicker--yellow">Door team</p>
+
         <h1>{relink ? "Relink scanner" : "Activate scanner"}</h1>
         <p>{relink
           ? "Restoring access for this enrolled device. Its existing name and scan history will be kept."

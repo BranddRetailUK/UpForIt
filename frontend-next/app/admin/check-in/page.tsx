@@ -13,7 +13,7 @@ export default async function CheckInPage() {
   if (user.role !== "admin") redirect(user.role === "staff" ? "/scan" : "/account");
   return (
     <div className="admin-shell section-wrap">
-      <header className="admin-header"><div><p className="comic-kicker comic-kicker--yellow">Door team</p><h1>Ticket check-in</h1></div><Link href="/admin">Back to admin</Link></header>
+      <header className="admin-header"><div><h1>Ticket check-in</h1></div><Link href="/admin">Back to admin</Link></header>
       <section className="admin-panel"><AdminCheckIn /></section>
     </div>
   );

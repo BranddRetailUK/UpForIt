@@ -1,0 +1,38 @@
+{
+  "industrial-speaker": {
+    "publicId": "UPFORIT/industrial-2026/industrial-speaker",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png",
+    "width": 1536,
+    "height": 1024
+  },
+  "industrial-banner": {
+    "publicId": "UPFORIT/industrial-2026/industrial-banner",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791200584/UPFORIT/industrial-2026/industrial-banner.png",
+    "width": 2172,
+    "height": 724
+  },
+  "approved-logo": {
+    "publicId": "UPFORIT/industrial-2026/approved-logo",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791200590/UPFORIT/industrial-2026/approved-logo.png",
+    "width": 2172,
+    "height": 724
+  },
+  "clothing-promo": {
+    "publicId": "UPFORIT/industrial-2026/clothing-promo",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791201534/UPFORIT/industrial-2026/clothing-promo.png",
+    "width": 1536,
+    "height": 1024
+  },
+  "june-2026-flyer": {
+    "publicId": "UPFORIT/industrial-2026/june-2026-flyer",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791201544/UPFORIT/industrial-2026/june-2026-flyer.png",
+    "width": 1054,
+    "height": 1492
+  },
+  "summer-2026-flyer": {
+    "publicId": "UPFORIT/industrial-2026/summer-2026-flyer",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791201562/UPFORIT/industrial-2026/summer-2026-flyer.jpg",
+    "width": 2480,
+    "height": 3508
+  }
+}

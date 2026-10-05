@@ -12,7 +12,7 @@ export default function SocialsPage() {
   return (
     <div className="inner-page section-wrap">
       <header className="page-intro">
-        <p className="comic-kicker comic-kicker--yellow">Keep up with us</p>
+
         <h1>Socials</h1>
       </header>
 
@@ -32,7 +32,7 @@ export default function SocialsPage() {
               <strong>{social.name}</strong>
               <span>{social.handle}</span>
             </span>
-            <span className="social-card__arrow" aria-hidden="true">↗</span>
+
           </a>
         ))}
       </section>

@@ -12,7 +12,7 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
   return (
     <div className="inner-page section-wrap cart-page">
       <header className="page-intro">
-        <p className="comic-kicker comic-kicker--pink">Nearly yours</p>
+
         <h1>Your cart</h1>
       </header>
       <CartPageClient cancelled={checkout === "cancelled"} />

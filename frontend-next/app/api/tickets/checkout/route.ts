@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
     }
     const message = error instanceof Error ? error.message : "Checkout could not be started.";
     console.error("Ticket checkout failed", message);
-    const status = message.includes("unavailable") || message.includes("Maximum") || message.includes("sold out") ? 409 : 500;
+    const status = message === "TICKETING_DISABLED" || message.includes("unavailable") || message.includes("Maximum") || message.includes("sold out") ? 409 : 500;
     return NextResponse.json({ error: message === "TICKETING_DISABLED" ? "Ticket sales are not open." : message }, { status });
   }
 }

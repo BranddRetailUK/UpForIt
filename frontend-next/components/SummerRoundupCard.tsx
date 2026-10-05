@@ -61,7 +61,7 @@ export default function SummerRoundupCard({
         </div>
       ) : (
         <>
-          <p className="event-card__eyebrow">UPFORIT presents</p>
+
           <h2 className="event-card__title">
             <CloudinaryImage
               asset={CLOUDINARY_ASSETS.summerRoundup}

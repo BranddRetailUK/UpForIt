@@ -104,7 +104,7 @@ export default async function AccountPage() {
             />
           </div>
           <div>
-            <p className="comic-kicker comic-kicker--yellow">Your UPFORIT profile</p>
+
             <h1>Hi, {firstName}!</h1>
             <p>Tickets, merch orders and account details—all together.</p>
           </div>
@@ -127,7 +127,7 @@ export default async function AccountPage() {
           <main className="account-dashboard__main">
             <section className="account-card" id="tickets">
               <div className="account-card__heading">
-                <div><p className="comic-kicker comic-kicker--blue">Your entry pass</p><h2>Ticket wallet</h2></div>
+                <div><h2>Ticket wallet</h2></div>
                 <Link href="/events">Find an event</Link>
               </div>
               {ticketOrders.length ? (
@@ -143,19 +143,19 @@ export default async function AccountPage() {
                       <div className="account-ticket__meta">
                         <strong>{order.ticket_count} ticket{order.ticket_count === "1" ? "" : "s"}</strong>
                         <span>£{(order.total_minor / 100).toFixed(2)}</span>
-                        <b>View tickets →</b>
+                        <b>View tickets </b>
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <div className="account-empty"><strong>No tickets yet</strong><p>When you buy tickets, your QR codes and downloads will appear here.</p><Link href="/events">See events →</Link></div>
+                <div className="account-empty"><strong>No tickets yet</strong><p>When you buy tickets, your QR codes and downloads will appear here.</p><Link href="/events">See events </Link></div>
               )}
             </section>
 
             <section className="account-card" id="merch-orders">
               <div className="account-card__heading">
-                <div><p className="comic-kicker comic-kicker--pink">Your purchases</p><h2>Merch orders</h2></div>
+                <div><h2>Merch orders</h2></div>
                 <Link href="/merch">Shop merch</Link>
               </div>
               {!merchHistory.available ? (
@@ -182,14 +182,14 @@ export default async function AccountPage() {
                   ))}
                 </div>
               ) : (
-                <div className="account-empty"><strong>No merch orders yet</strong><p>Your UPFORIT merch purchases will appear here after checkout.</p><Link href="/merch">Browse merch →</Link></div>
+                <div className="account-empty"><strong>No merch orders yet</strong><p>Your UPFORIT merch purchases will appear here after checkout.</p><Link href="/merch">Browse merch </Link></div>
               )}
             </section>
           </main>
 
           <aside className="account-dashboard__side">
             <section className="account-card account-card--compact" id="profile">
-              <div className="account-card__heading"><div><p className="comic-kicker comic-kicker--yellow">The basics</p><h2>Profile</h2></div></div>
+              <div className="account-card__heading"><div><h2>Profile</h2></div></div>
               <AccountProfileForm displayName={user.displayName} email={user.email} />
               <div className="account-profile-facts">
                 <span><b>Account status</b><strong>{user.emailVerified ? "Email verified" : "Verification needed"}</strong></span>
@@ -198,15 +198,15 @@ export default async function AccountPage() {
             </section>
 
             <section className="account-card account-card--compact">
-              <div className="account-card__heading"><div><p className="comic-kicker comic-kicker--pink">Stay secure</p><h2>Security</h2></div></div>
+              <div className="account-card__heading"><div><h2>Security</h2></div></div>
               <p>Reset your password by email at any time. Doing so signs out your other sessions.</p>
-              <Link className="account-text-link" href="/account/forgot-password">Reset password →</Link>
+              <Link className="account-text-link" href="/account/forgot-password">Reset password </Link>
               <div className="account-logout"><LogoutButton /></div>
             </section>
 
             {user.role === "admin" ? (
               <section className="account-card account-card--compact">
-                <div className="account-card__heading"><div><p className="comic-kicker comic-kicker--blue">Team access</p><h2>Tools</h2></div></div>
+                <div className="account-card__heading"><div><h2>Tools</h2></div></div>
                 <div className="account-actions">
                   <Link className="pop-button pop-button--pink" href="/admin">Ticket admin</Link>
                   <Link className="pop-button pop-button--yellow" href="/scan">Ticket scanner</Link>
@@ -217,7 +217,7 @@ export default async function AccountPage() {
             <section className="account-card account-card--compact account-help">
               <strong>Need a hand?</strong>
               <p>For ticket or account questions, visit our contact page.</p>
-              <Link className="account-text-link" href="/contact">Get help →</Link>
+              <Link className="account-text-link" href="/contact">Get help </Link>
             </section>
           </aside>
         </div>

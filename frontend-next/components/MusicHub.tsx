@@ -447,7 +447,7 @@ function ArtistStory({ block, visible }: { block: ArtistStoryBlock; visible: boo
         <span className="music-card__format-sticker">Artist story</span>
       </div>
       <div className="music-artist-story__copy">
-        <p className="comic-kicker comic-kicker--yellow">Meet the artists</p>
+
         <p className="music-card__artist">{block.artist}</p>
         <h2>{block.title}</h2>
         <p className="music-artist-story__standfirst">{block.description}</p>
@@ -521,7 +521,7 @@ function ReleaseShowcase({
         </div>
 
         <div className="music-release-showcase__copy">
-          <p className="comic-kicker comic-kicker--pink">UPFORIT resident release</p>
+
           <p className="music-card__artist">{block.artist}</p>
           <h2>{block.title}</h2>
 
@@ -578,7 +578,7 @@ export default function MusicHub({ blocks }: MusicHubProps) {
     <section className="music-hub section-wrap" aria-labelledby="music-feed-heading">
       <div className="music-filter-bar">
         <div>
-          <p className="music-filter-bar__eyebrow">Dig through the crate</p>
+
           <h2 id="music-feed-heading">Latest sessions</h2>
         </div>
         <div className="music-filters" aria-label="Filter music content">

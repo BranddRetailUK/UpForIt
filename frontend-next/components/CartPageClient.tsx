@@ -142,7 +142,7 @@ export default function CartPageClient({ cancelled = false }: { cancelled?: bool
       </section>
       {lines.length > 0 && (
         <aside className="cart-summary">
-          <p className="comic-kicker">Order recap</p>
+
           {discount && (
             <p className="cart-summary__discount-unlocked" role="status">
               <strong>Ticket perk unlocked!</strong>

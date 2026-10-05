@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { publicTicketSalesOpen } from "./event-visibility";
 
 let stripe: Stripe | undefined;
 
@@ -14,6 +15,6 @@ export function getStripe() {
 }
 
 export function assertTicketingEnabled() {
-  if (process.env.TICKETING_ENABLED !== "true") throw new Error("TICKETING_DISABLED");
+  if (!publicTicketSalesOpen() || process.env.TICKETING_ENABLED !== "true") throw new Error("TICKETING_DISABLED");
 }
 

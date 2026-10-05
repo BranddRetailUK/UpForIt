@@ -67,7 +67,7 @@ export default function CheckoutConfirmation({ sessionId }: { sessionId: string 
       <div className="confirmation-card__burst" aria-hidden="true">YES!</div>
       {confirmation?.paid ? (
         <>
-          <p className="comic-kicker comic-kicker--pink">Payment complete</p>
+
           <h1>Order confirmed</h1>
           <p>Your order number is <strong>{confirmation.orderNumber}</strong>.</p>
           <p>We’ll email you now and again when Good Game Apparel ships your order.</p>
@@ -75,7 +75,7 @@ export default function CheckoutConfirmation({ sessionId }: { sessionId: string 
         </>
       ) : (
         <>
-          <p className="comic-kicker comic-kicker--pink">Hold tight</p>
+
           <h1>Confirming your order</h1>
           <p>{error || "Stripe has sent you back safely. We’re assigning your UFI order number now…"}</p>
           {error && <Link className="pop-button pop-button--pink" href="/contact">Contact UPFORIT</Link>}

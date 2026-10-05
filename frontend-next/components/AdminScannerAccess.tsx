@@ -116,7 +116,7 @@ export default function AdminScannerAccess({ events }: { events: EventOption[] }
     <div className="admin-scanner-access">
       <div className="admin-scanner-access__heading">
         <div>
-          <p className="comic-kicker comic-kicker--blue">Door team</p>
+
           <h2>Scanner access</h2>
         </div>
         <a className="admin-scanner-access__open" href="/scan">Open scanner</a>

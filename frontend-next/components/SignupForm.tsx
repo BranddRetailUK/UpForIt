@@ -72,6 +72,7 @@ export default function SignupForm() {
           className="signup-input"
           type="email"
           name="email"
+          aria-label="Email address"
           placeholder="Enter your email"
           autoComplete="email"
           required

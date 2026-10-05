@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import CloudinaryImage from "./CloudinaryImage";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import { PRIMARY_NAV_ITEMS } from "../lib/site";
-import CloudinaryImage from "./CloudinaryImage";
 import CartHeaderButton from "./CartHeaderButton";
 
 export default function SiteHeader() {
@@ -95,11 +95,11 @@ export default function SiteHeader() {
       <div className="site-header__inner">
         <Link className="brand-link" href="/" aria-label="UPFORIT home">
           <CloudinaryImage
-            asset={CLOUDINARY_ASSETS.navLogo}
+            asset={CLOUDINARY_ASSETS.industrialLogo}
+            maxWidth={720}
             alt="UPFORIT"
             className="brand-link__image"
             sizes="(max-width: 760px) 142px, 180px"
-            maxWidth={360}
             priority
           />
         </Link>

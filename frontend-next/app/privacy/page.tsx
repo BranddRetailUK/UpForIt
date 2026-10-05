@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <div className="inner-page section-wrap">
       <article className="privacy-panel">
-        <p className="comic-kicker comic-kicker--yellow">Straight up</p>
+
         <h1>Privacy and ad measurement</h1>
         <p>
           UPFORIT uses essential storage needed for features such as the merch cart. We only activate

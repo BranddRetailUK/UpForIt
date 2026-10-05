@@ -1,0 +1,245 @@
+/* UPFORIT / Industrial identity. Operational layouts retain their established structure. */
+:root { --font-display:var(--font-heavy); color-scheme: dark; --yellow:#efff00; --pink:#7c8300; --blue:#101110; --blue-light:#262723; --blue-deep:#111210; --muted:#e8e8de; --shadow:0 0 0 1px #373832; --shadow-small:0 0 0 1px #373832; }
+html,body { background:#101110; color:#f3f2ec; }
+body { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' opacity='.035' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); }
+::selection { background:var(--yellow); color:#080908; }
+a,button,input { -webkit-tap-highlight-color:transparent; }
+:focus-visible { outline:2px solid var(--yellow); outline-offset:5px; }
+.section-wrap { width:min(1280px,calc(100% - 96px)); }
+.site-header { padding:15px 48px; border-bottom:1px solid #34352d; background:#0d0e0d; box-shadow:none; }
+.site-header__inner { max-width:1440px; min-height:44px; gap:20px; }
+.brand-link { width:136px; transform:none; }
+.primary-nav a { font-family:var(--font-body),Arial,sans-serif; font-size:11px; letter-spacing:.13em; padding:14px 12px; }
+.primary-nav a::after { height:2px; background:var(--yellow); }
+.primary-nav a:hover,.primary-nav a.is-active { transform:none; }
+.header-profile,.header-cart,.menu-toggle { background:transparent; border:1px solid #494b40; box-shadow:none; transform:none; color:#f3f2ec; }
+.header-profile { width:36px; height:36px; }
+.header-profile svg { width:18px; }
+.header-cart { font-family:var(--font-body),Arial,sans-serif; font-size:10px; letter-spacing:.1em; }
+.header-profile:hover { box-shadow:none; transform:none; }
+.skip-link { position:fixed; top:10px; left:10px; z-index:100; padding:14px; background:var(--yellow); color:#000; transform:translateY(-200%); }
+.skip-link:focus { transform:none; }
+.eyebrow { font:600 10px/1.5 var(--font-body),Arial,sans-serif; letter-spacing:.18em; text-transform:uppercase; color:#b8bbb0; }
+.signal-dot { display:inline-block; width:7px; height:7px; margin-right:10px; background:var(--yellow); border-radius:50%; }
+.bass-hero { position:relative; min-height:650px; overflow:hidden; background:#070807; }
+.bass-hero__texture { position:absolute; inset:0; background:linear-gradient(90deg,rgba(5,6,5,.08),transparent 70%),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') right center/cover; }
+.bass-hero__content { position:relative; padding-top:67px; padding-bottom:24px; }
+.bass-hero .eyebrow { color:#d0d2c5; }
+.bass-hero h1 { margin:32px 0 24px; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(52px,6.7vw,99px); letter-spacing:-.065em; line-height:1.02; max-width:950px; }
+.industrial-home em,.bass-events em,.archive-detail em { font-style:normal; color:var(--yellow); }
+.bass-hero h1 em { display:inline-block; transform:skew(-7deg); }
+.bass-hero__intro { max-width:360px; font-size:15px; line-height:1.7; color:#c2c4b8; }
+.industrial-actions { display:flex; flex-wrap:wrap; align-items:center; gap:28px; margin-top:30px; }
+.industrial-button { display:inline-flex; justify-content:space-between; align-items:center; gap:32px; padding:18px 23px; min-height:52px; background:var(--yellow); color:#090a07; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; border:1px solid var(--yellow); transition:background .2s,color .2s; }
+.industrial-button:hover { background:#fff; border-color:#fff; }
+.industrial-button span { font-size:20px; line-height:1; }
+.industrial-link { display:inline-flex; align-items:center; gap:16px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; padding-block:10px; }
+.industrial-link:hover { color:var(--yellow); }
+.bass-hero__foot { display:flex; justify-content:space-between; margin-top:68px; font-size:9px; letter-spacing:.15em; color:#a7aa9e; }
+.bass-tape { position:relative; display:flex; justify-content:space-evenly; align-items:center; gap:20px; padding:16px 28px; background:var(--yellow); color:#111; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(11px,1.35vw,19px); letter-spacing:-.03em; border-block:3px solid #111; }
+.bass-tape b { font-size:27px; line-height:1; }
+.bass-intro { padding-block:88px 72px; display:grid; grid-template-columns:1fr 2fr; gap:32px; }
+.bass-intro h2,.bass-newsletter h2 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(32px,4vw,55px); line-height:1.06; letter-spacing:-.055em; }
+.bass-intro > div > p { margin-top:23px; max-width:550px; color:#acafa3; line-height:1.8; font-size:15px; }
+.bass-principles { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,1fr); border-block:1px solid #36382e; margin-top:22px; }
+.bass-principles span { padding:24px 0; font-size:10px; color:var(--yellow); letter-spacing:.05em; }
+.bass-principles span+span { border-left:1px solid #36382e; padding-left:30px; }
+.bass-principles strong { margin-left:20px; font-size:14px; color:#dfdfd7; letter-spacing:0; font-weight:500; }
+.bass-discover { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.discover-card { position:relative; overflow:hidden; min-height:395px; padding:34px; border:1px solid #414337; background:#171915; display:flex; flex-direction:column; align-items:flex-start; }
+.discover-card--music { background:linear-gradient(90deg,#080908b3,#08090840),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') center/cover; }
+.discover-card--merch { background:#e4e5dc; color:#111; }
+.discover-card--merch .eyebrow { color:#55584a; }
+.discover-card h2 { z-index:1; margin-top:33px; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(40px,4.8vw,66px); line-height:1; letter-spacing:-.06em; }
+.discover-card--merch h2 em { color:#111; }
+.discover-card p { position:relative; z-index:1; font-size:13px; margin:22px 0 28px; }
+.discover-card__action { position:relative; z-index:1; border-top:1px solid #737566; padding-top:18px; display:flex; justify-content:space-between; width:100%; margin-top:auto; font-size:11px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+.discover-card__action span { font-size:20px; }
+.discover-card:hover .discover-card__action span { transform:translate(3px,-3px); }
+.merch-watermark { position:absolute; right:-6px; top:12px; font-family:var(--font-heavy),Impact,sans-serif; font-size:130px; line-height:.85; transform:rotate(-13deg); letter-spacing:-.1em; color:#caccbe; pointer-events:none; }
+.bass-newsletter { display:grid; grid-template-columns:1fr 1fr; gap:70px; align-items:center; padding-block:90px; scroll-margin-top:90px; }
+.bass-newsletter h2 { margin-top:20px; }
+.bass-newsletter > div > p:not(.eyebrow) { margin-top:20px; color:#adb0a3; font-size:13px; line-height:1.8; }
+.bass-newsletter .signup-form { display:flex; flex-wrap:wrap; gap:0; margin:0; max-width:none; }
+.bass-newsletter .signup-input { flex:1; width:0; min-width:140px; color:#fff; background:#1b1d17; border:1px solid #545746; box-shadow:none; min-height:56px; padding:16px; font-family:inherit; font-size:13px; }
+.bass-newsletter .signup-input::placeholder { color:#929787; }
+.bass-newsletter .btn { font-family:var(--font-body),Arial,sans-serif; font-size:11px; letter-spacing:.05em; background:var(--yellow); border:0; padding:18px 22px; box-shadow:none; color:#111; }
+.bass-newsletter .form-note { font-size:10px!important; margin-top:14px!important; }
+.form-note a { text-decoration:underline; text-underline-offset:3px; }
+.signup-message { flex-basis:100%; color:#fff; }
+.bass-section-heading { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:28px; }
+.bass-section-heading h2 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(22px,2.6vw,34px); letter-spacing:-.045em; line-height:1.2; margin-top:14px; }
+.bass-archive { padding-block:48px 60px; border-top:1px solid #36382e; }
+.past-event { display:flex; align-items:center; gap:26px; padding:20px; border:1px solid #3b3d33; background:#191b16; }
+.past-event img { width:100px; height:100px; object-fit:cover; filter:saturate(.5); }
+.past-event__status { color:#999d8e; font-size:9px; letter-spacing:.13em; }
+.past-event h3 { font-family:var(--font-heavy),Impact,sans-serif; font-size:23px; letter-spacing:-.04em; margin:9px 0; }
+.past-event p { font-size:12px; color:#aaa; }
+.past-event__link { margin-left:auto; font-size:11px; text-transform:uppercase; letter-spacing:.07em; display:flex; gap:30px; }
+.past-event:hover { border-color:var(--yellow); }
+.bass-social { display:flex; align-items:center; justify-content:space-between; padding-block:20px 60px; gap:20px; }
+.bass-social > div { display:flex; gap:30px; }
+.bass-social a { font-size:12px; }
+.bass-social a span { color:var(--yellow); margin-left:16px; }
+.site-footer { border-top:1px solid #36382e; background:#090a08; color:#d4d7c9; box-shadow:none; padding:32px 48px 25px; }
+.site-footer__inner { max-width:1280px; }
+.footer-nav a { font-family:var(--font-body),Arial,sans-serif; font-size:10px; }
+.footer-socials a { background:transparent; border:0; box-shadow:none; transform:none; width:28px; height:28px; }
+.site-footer__legal { font-size:10px; color:#8f9383; border-color:#36382e; }
+.bass-events { padding-block:70px 90px; }
+.bass-events header { padding:50px; background:linear-gradient(90deg,#080908bf,#08090840),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') center/cover; border:1px solid #3b3d33; }
+.bass-events h1,.archive-detail h1 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(35px,5.5vw,74px); line-height:1.05; letter-spacing:-.065em; margin:25px 0; }
+.bass-events header > p:not(.eyebrow) { color:#c3c5b9; margin-bottom:25px; font-size:14px; }
+.bass-events > section { margin-top:65px; }
+.archive-detail { padding-block:45px 90px; }
+.archive-detail__grid { margin-top:35px; display:grid; grid-template-columns:1fr 1.2fr; align-items:center; gap:55px; }
+.archive-detail__grid > img { width:100%; height:auto; }
+.archive-detail h1 { font-size:clamp(34px,4.2vw,59px); }
+.archive-detail p { line-height:1.7; }
+.archive-detail dl { margin-block:28px; }
+.archive-detail dl > div { padding:13px 0; border-bottom:1px solid #36382e; }
+.archive-detail dt { font-size:9px; color:var(--yellow); letter-spacing:.12em; }
+.archive-detail dd { margin:6px 0 0; font-size:13px; }
+.archive-detail .industrial-button { margin-top:24px; }
+.archive-lineup { border-top:1px solid #36382e; margin-top:50px; padding-top:25px; }
+.archive-lineup p { margin-bottom:16px; }
+.archive-lineup > span { color:#a4a998; font-size:12px; }
+/* Shared screens: a quieter, consistent monochrome surface with yellow accents. */
+.inner-page { padding-block:65px 90px; }
+.page-intro h1,.music-page__title-lockup h1 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(42px,7vw,88px); letter-spacing:-.055em; line-height:1; text-shadow:none; -webkit-text-stroke:0; transform:none; }
+.page-intro > p:last-child { color:#b9bdad; border:0; background:none; box-shadow:none; font-weight:400; }
+.comic-kicker { color:var(--yellow); background:transparent; border:0; box-shadow:none; transform:none; font:600 10px/1.5 var(--font-body),Arial,sans-serif; letter-spacing:.16em; text-shadow:none; padding:0; }
+.pop-button,.btn { box-shadow:none; border-width:1px; font-family:var(--font-body),Arial,sans-serif; font-size:12px; background:var(--yellow); color:#111; }
+.pop-button:hover,.btn:hover:not(:disabled) { box-shadow:none; transform:translateY(-2px); }
+.merch-card,.merch-card:nth-child(even),.music-card,.music-card--featured,.music-card--audio.music-card--wide,.music-card--square:nth-of-type(odd),.music-card--square:nth-of-type(even),.music-artist-story,.music-release-showcase,.contact-panel,.social-card,.placeholder-card { transform:none; border:1px solid #44473a; box-shadow:none; background:#1b1d17; color:#f1f2e8; }
+.merch-card:hover { box-shadow:none; transform:translateY(-3px); }
+.merch-card__copy :is(h2,h3) { font-family:var(--font-body),Arial,sans-serif; font-size:17px; line-height:1.4; }
+.merch-card__copy p { color:var(--yellow); }
+.merch-powered-banner { background:transparent; color:#b9bdad; border:0; box-shadow:none; transform:none; font-size:10px; }
+.music-page__title-lockup > span { display:none; }
+.music-page__title-lockup h1 i { color:var(--yellow); }
+.music-filter-bar { background:#1b1d17; color:#fff; box-shadow:none; border:1px solid #44473a; }
+.music-filter-bar__eyebrow,.music-card__artist { color:var(--yellow); }
+.music-filters button { color:#111; box-shadow:none; }
+.music-filters button.is-active { background:var(--yellow); color:#111; }
+.music-card h2,.music-artist-story h2,.music-release-showcase h2 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(28px,3.8vw,50px); line-height:1.04; letter-spacing:-.04em; }
+.music-release-showcase__details { background:#dddeda; color:#111; }
+.music-artist-story blockquote { background:var(--yellow); color:#111; box-shadow:none; transform:none; }
+.mix-audio-player__play,.mix-audio-player__download,.mix-video-frame__custom-play,.music-release-showcase__link,.music-release-showcase__share { box-shadow:none; transform:none; background:var(--yellow); color:#111; }
+.contact-panel h2,.placeholder-card h2 { font-family:var(--font-heavy),Impact,sans-serif; line-height:1.1; font-size:clamp(28px,4vw,48px); }
+.contact-links a { background:var(--yellow); color:#111; box-shadow:none; transform:none; }
+.social-card__arrow,.social-card__icon { color:var(--yellow); }
+.placeholder-card__splat { display:none; }
+/* Keep light transaction and administrative surfaces readable. */
+.account-panel,.account-dashboard,.auth-panel,.cart-panel,.checkout-panel,.product-panel,.privacy-panel,.cookie-banner,.signup-modal,.admin-panel,.scanner-panel,.ticket-selector,.sticker-panel { color:#111; }
+input,select,textarea { color-scheme:light; }
+.cookie-banner { box-shadow:0 0 40px #0008; border:1px solid #555; background:#e9eadf; }
+.cookie-banner .comic-kicker,.account-panel .comic-kicker,.privacy-panel .comic-kicker { color:#555d00; }
+.cookie-banner .btn { min-height:44px; }
+@media(min-width:1500px) { .bass-hero__texture { background-size:100% auto; } }
+@media(max-width:1000px) { .section-wrap { width:calc(100% - 56px); } .site-header { padding-inline:28px; } .primary-nav a { padding-inline:8px; font-size:10px; } .bass-hero { min-height:590px; } .bass-hero__content { padding-top:60px; } .bass-hero__texture { background-position:65% center; } .bass-newsletter { gap:30px; } }
+@media(max-width:900px) { .primary-nav::before { background:#0d0e0df5; backdrop-filter:blur(15px); clip-path:none; } .primary-nav a { font-size:25px; padding:15px; } .menu-toggle { width:38px; height:36px; padding:5px; } .menu-toggle span { height:2px; margin:5px 0; } .menu-toggle.is-open span:nth-child(1) { transform:translateY(7px) rotate(45deg); } .menu-toggle.is-open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); } .bass-hero h1 { font-size:clamp(50px,8.5vw,77px); } }
+@media(max-width:640px) { .section-wrap { width:calc(100% - 36px); } .site-header { padding:13px 18px; } .brand-link { width:110px; } .site-header__inner { gap:12px; } .header-actions { gap:0; } .header-cart { padding:6px; font-size:9px; } .bass-hero { min-height:600px; } .bass-hero__content { padding-top:48px; } .bass-hero__texture { background-position:63% center; opacity:.62; } .bass-hero__texture::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,#07080780,transparent); } .bass-hero .eyebrow { font-size:8px; letter-spacing:.12em; } .bass-hero h1 { font-size:clamp(41px,10.7vw,67px); margin-top:40px; line-height:1.08; } .bass-hero__intro { font-size:14px; max-width:290px; } .industrial-actions { gap:15px; } .industrial-button { padding:16px; font-size:10px; gap:20px; } .industrial-link { font-size:10px; gap:7px; } .bass-hero__foot { margin-top:62px; font-size:7px; gap:10px; } .bass-tape { padding:14px 10px; gap:8px; font-size:8px; letter-spacing:-.03em; } .bass-tape b { font-size:18px; } .bass-tape b:last-child { display:none; } .bass-intro { padding-block:55px 35px; grid-template-columns:1fr; gap:20px; } .bass-intro h2,.bass-newsletter h2 { font-size:37px; } .bass-intro > div > p { font-size:14px; } .bass-principles { grid-template-columns:1fr; gap:0; margin-top:10px; } .bass-principles span { padding:17px 0; } .bass-principles span+span { border-left:0; border-top:1px solid #36382e; padding-left:0; } .bass-discover { grid-template-columns:1fr; gap:16px; } .discover-card { padding:25px; min-height:340px; } .discover-card h2 { font-size:49px; } .bass-newsletter { grid-template-columns:1fr; padding-block:58px; gap:30px; } .bass-section-heading { align-items:start; flex-direction:column; gap:8px; } .bass-section-heading h2 { font-size:25px; } .past-event { padding:14px; gap:14px; flex-wrap:wrap; } .past-event img { width:70px; height:70px; } .past-event h3 { font-size:17px; } .past-event p { font-size:10px; } .past-event__status { font-size:8px; } .past-event__link { width:100%; padding-top:12px; border-top:1px solid #36382e; justify-content:space-between; } .bass-social { flex-direction:column; align-items:start; gap:22px; padding-bottom:40px; } .bass-social > div { gap:20px; flex-wrap:wrap; } .bass-social a span { margin-left:4px; } .site-footer { padding-inline:18px; } .bass-events { padding-block:30px 60px; } .bass-events header { padding:30px 20px; } .bass-events h1 { font-size:36px; } .archive-detail__grid { grid-template-columns:1fr; gap:30px; } .archive-detail__grid > img { max-width:360px; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { transition:none!important; animation:none!important; } }
+.header-cart::before { content:none; }
+.brand-link { width:180px; }
+.footer-brand { display:block; width:180px; margin:0 auto 25px; }
+.footer-brand img { width:100%; height:auto; }
+@media(max-width:640px) { .brand-link { width:145px; } }
+/* Simplified presentation: no decorative microcopy or directional arrows. */
+.bass-intro { grid-template-columns:1fr; }
+.bass-intro > div:first-of-type { max-width:780px; }
+.bass-intro > div > p { color:#f3f2ec; font-size:17px; }
+.bass-hero { min-height:590px; }
+.bass-hero__content { padding-top:70px; padding-bottom:85px; }
+.bass-hero h1 { margin-top:0; }
+.discover-card h2 { margin-top:0; }
+.bass-social { justify-content:flex-end; }
+.bass-newsletter h2 { margin-top:0; }
+.past-event__status,.past-event p { color:#f3f2ec; font-size:13px; }
+.product-gallery__arrow { width:auto; padding-inline:12px; font:700 12px var(--font-body),Arial,sans-serif; }
+.site-footer__legal { color:#e2e4d8; font-size:12px; }
+@media(max-width:640px) { .bass-hero { min-height:460px; } .bass-hero__content { padding-top:65px; padding-bottom:65px; } .bass-hero h1 { margin-top:0; } .past-event__status,.past-event p { font-size:11px; } }
+.bass-discover { padding-top:50px; }
+/* Merch collection, product selection, cart and checkout share the industrial system. */
+.merch-intro { width:100%; max-width:none; text-align:left; padding:15px 0 32px; border-bottom:1px solid #414438; }
+.merch-title-lockup { width:auto; margin:0; }
+.merch-title-lockup h1 { font-size:clamp(44px,6vw,76px); }
+.merch-powered-banner { position:static; margin:18px 0 0; padding:0; color:#f0f2e7; font:500 13px var(--font-body),Arial,sans-serif; text-align:left; }
+.merch-grid { margin-top:32px; gap:24px; }
+.merch-card { border:1px solid #3e4136; background:#161812; }
+.merch-card__image { border:0; background:#e8e8e2; }
+.merch-card__image span { background:#111; color:#fff; border:1px solid #777; font:700 12px var(--font-body),Arial,sans-serif; transform:none; padding:8px 10px; }
+.merch-card__copy { padding:22px; }
+.merch-card__copy :is(h2,h3) { text-align:left; font-size:17px; text-wrap:initial; }
+.merch-card__heading--split .merch-card__title-main { color:#fff; -webkit-text-stroke:0; text-shadow:none; font-size:14px; margin-bottom:8px; }
+.merch-card__copy p { font:700 18px var(--font-body),Arial,sans-serif; color:var(--yellow); }
+.product-layout { gap:40px; }
+.product-summary { background:#181a14; border:1px solid #414438; color:#fff; padding:32px; box-shadow:none; }
+.product-summary h1 { margin-top:0; font-size:clamp(26px,3vw,40px); line-height:1.08; letter-spacing:-.04em; text-wrap:initial; }
+.product-summary__heading--split .product-summary__title { font-size:16px; color:#fff; -webkit-text-stroke:0; text-shadow:none; margin-bottom:14px; letter-spacing:0; }
+.product-summary__price { color:var(--yellow); font:700 28px var(--font-body),Arial,sans-serif; }
+.product-purchase { gap:22px; margin-top:26px; }
+.product-purchase__divider { height:1px; background:#414438; }
+.product-purchase label { font-size:12px; letter-spacing:.06em; gap:10px; }
+.product-purchase select { color-scheme:dark; color:#fff; background:#10120e; border:1px solid #646951; min-height:52px; padding:14px; border-radius:0; }
+.product-purchase__button { min-height:56px; border:0; }
+.product-purchase__note { font-size:13px; color:#f0f2e7; }
+.product-gallery__focus,.product-gallery__thumbnails img { border:1px solid #414438; box-shadow:none; }
+.product-gallery__arrow { width:auto; padding:10px 14px; height:38px; border:1px solid #484c3b; background:#10120e; color:#fff; box-shadow:none; }
+.product-gallery__thumbnails { grid-auto-columns:minmax(75px,20%); gap:12px; }
+.product-description { border:1px solid #414438; background:#181a14; color:#fff; box-shadow:none; padding:32px; margin-top:40px; }
+.product-description h2 { font-size:25px; letter-spacing:-.03em; }
+.product-description__content { font-size:15px; }
+.cart-drawer { background:#12140f; color:#fff; border-left:1px solid #53583e; box-shadow:-20px 0 60px #0006; }
+.cart-drawer__head { border-bottom:1px solid #414438; align-items:center; }
+.cart-drawer__head h2 { font-size:32px; }
+.cart-drawer__close { background:transparent; color:#fff; border:1px solid #53583e; box-shadow:none; width:40px; height:40px; }
+.cart-line { border:1px solid #414438; background:#1a1d15; color:#fff; box-shadow:none; padding:18px; }
+.cart-line > img { border:0; }
+.cart-line__title,.cart-drawer .cart-line__title { font-family:var(--font-body),Arial,sans-serif; font-size:18px; font-weight:700; line-height:1.3; }
+.cart-line__title--split .cart-line__title-main { font-size:13px; color:#fff; -webkit-text-stroke:0; text-shadow:none; margin-bottom:6px; }
+.cart-line__copy > strong { color:var(--yellow); font-size:18px; margin-top:12px; }
+.cart-page-lines .cart-line__variant { font-size:14px; color:#fff; -webkit-text-stroke:0; text-shadow:none; font-weight:400; }
+.cart-line__controls button,.cart-line__controls span { border:1px solid #555b43; background:#11130e; color:#fff; min-width:36px; min-height:36px; }
+.cart-line__controls .cart-line__remove { color:#fff; background:transparent; border:0; text-decoration:underline; text-underline-offset:4px; }
+.cart-line__controls button:hover { color:#111; background:var(--yellow); }
+.cart-summary { background:#181b13; color:#fff; border:1px solid #53583e; box-shadow:none; padding:26px; }
+.cart-summary > div { border-bottom:1px solid #414438; font-size:14px; }
+.cart-summary > .cart-summary__total { font-size:20px; padding-top:24px; color:var(--yellow); }
+.cart-summary small { color:#fff; font-size:13px; }
+.cart-summary .cart-summary__discount-unlocked { color:#fff; background:#272d17; border:1px solid #717c43; box-shadow:none; transform:none; }
+.cart-summary > .cart-summary__discount-row { color:var(--yellow); }
+.cart-empty { border:1px solid #414438; margin-top:25px; }
+.cart-empty > span { display:none; }
+.cart-empty h3 { font-size:22px; }
+.cart-empty a { background:var(--yellow); color:#111; padding:16px 22px; margin-top:25px; text-decoration:none; font-size:12px; text-transform:uppercase; }
+.cart-alert { background:#30361a; color:#fff; border:1px solid #767f49; box-shadow:none; }
+.cart-alert.is-error { background:#421d1d; color:#fff; border-color:#a55b5b; }
+.confirmation-card { background:#181b13; color:#fff; border:1px solid #53583e; box-shadow:none; }
+.confirmation-card h1 { font-size:clamp(32px,5vw,55px); line-height:1.08; letter-spacing:-.04em; }
+.confirmation-card__burst { display:none; }
+.cart-page-layout { margin-top:35px; }
+@media(max-width:640px) { .bass-discover { padding-top:25px; } .merch-grid { gap:14px; } .merch-card__copy { padding:14px; } .merch-card__copy :is(h2,h3) { font-size:14px; } .product-summary,.product-description { padding:22px; } .product-layout { gap:24px; } .cart-line { padding:12px; } .cart-page-lines .cart-line { grid-template-columns:85px minmax(0,1fr); } .cart-page-lines .cart-line > img { width:85px; height:105px; } .cart-drawer { padding:18px; width:min(480px,100%); } }
+
+.discover-card--merch { background:linear-gradient(90deg,#070807b3,transparent 85%),url("https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,w_1200/v1791201534/UPFORIT/industrial-2026/clothing-promo.png") center/cover; color:#fff; }
+.discover-card--merch h2 { font-size:clamp(32px,3.7vw,50px); }
+.discover-card--merch h2 em { color:var(--yellow); }
+.discover-card--merch .discover-card__action { text-shadow:0 1px 6px #000; }
+.past-event-list { display:grid; gap:16px; }
+.past-event img { height:120px; width:85px; object-fit:contain; filter:none; background:#080908; }
+.past-event__date { color:#fff; font-size:14px; }
+.archive-detail__grid { align-items:start; }
+.archive-flyer img { width:100%; height:auto; }
+.archive-detail h1 { text-transform:uppercase; margin-top:0; }
+.archive-detail h2 { font-size:20px; margin:24px 0 10px; }
+.archive-detail__status { color:var(--yellow); font-weight:700; }
+.archive-sound { margin-top:24px; }
+.merch-intro,.merch-powered-banner { text-align:center; }
+.merch-title-lockup { margin-inline:auto; }
+.music-filter-bar h2 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(24px,3vw,38px); line-height:1.1; letter-spacing:-.04em; text-shadow:none; transform:none; }
+.music-filter-bar { padding:26px; }
+.music-filters { gap:8px; }
+.music-filters button,.music-filters button:hover,.music-filters button.is-active { border:1px solid #5c6249; box-shadow:none; transform:none; font-family:var(--font-body),Arial,sans-serif; font-weight:700; font-size:12px; padding:13px 18px; letter-spacing:.04em; }
+.music-filters button { background:transparent; color:#fff; }
+.music-filters button:hover,.music-filters button.is-active { background:var(--yellow); color:#111; border-color:var(--yellow); }

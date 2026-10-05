@@ -116,7 +116,7 @@ export default function TicketSelector({
                     [tier.id]: Math.max(0, (current[tier.id] ?? 1) - 1)
                   }))}
                 >
-                  ←
+                  −
                 </button>
                 <output aria-live="polite" aria-label={`${tier.name} ticket count`}>{quantity}</output>
                 <button
@@ -128,7 +128,7 @@ export default function TicketSelector({
                     [tier.id]: Math.min(maximum, (current[tier.id] ?? 1) + 1)
                   }))}
                 >
-                  →
+                  +
                 </button>
               </div>
             ) : null}
