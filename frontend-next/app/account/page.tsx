@@ -106,7 +106,6 @@ export default async function AccountPage() {
           <div>
 
             <h1>Hi, {firstName}!</h1>
-            <p>Tickets, merch orders and account details—all together.</p>
           </div>
         </header>
 
@@ -124,7 +123,7 @@ export default async function AccountPage() {
         ) : null}
 
         <div className="account-dashboard__grid">
-          <main className="account-dashboard__main">
+          <div className="account-dashboard__main">
             <section className="account-card" id="tickets">
               <div className="account-card__heading">
                 <div><h2>Ticket wallet</h2></div>
@@ -185,7 +184,7 @@ export default async function AccountPage() {
                 <div className="account-empty"><strong>No merch orders yet</strong><p>Your UPFORIT merch purchases will appear here after checkout.</p><Link href="/merch">Browse merch </Link></div>
               )}
             </section>
-          </main>
+          </div>
 
           <aside className="account-dashboard__side">
             <section className="account-card account-card--compact" id="profile">

@@ -1,3 +1,4 @@
+import { SOCIAL_SHARE_IMAGE } from "../lib/social-metadata";
 import type { Metadata } from "next";
 import { Archivo_Black, Space_Grotesk } from "next/font/google";
 import SiteFooter from "../components/SiteFooter";
@@ -8,8 +9,6 @@ import { isMetaMerchTrackingEnabled } from "../lib/meta-shared";
 import "./globals.css";
 import "./industrial.css";
 
-const SOCIAL_SHARE_IMAGE =
-  "https://res.cloudinary.com/brandduk/image/upload/v1791200584/UPFORIT/industrial-2026/industrial-banner.png";
 const FAVICON_IMAGE =
   "https://res.cloudinary.com/brandduk/image/upload/v1786281482/LOGO_FAV_smiley_c4wm5v.png";
 
@@ -30,7 +29,7 @@ const body = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.upforitevents.co.uk"),
   title: {
-    default: "UPFORIT | Events, Music & Good Vibes",
+    default: "UPFORIT | Events, Music & Clothing",
     template: "UPFORIT | %s"
   },
   description:
@@ -44,27 +43,20 @@ export const metadata: Metadata = {
     canonical: "/"
   },
   openGraph: {
-    title: "UPFORIT | Events, Music & Good Vibes",
+    title: "UPFORIT | Events, Music & Clothing",
     description:
       "UPFORIT events, music, mixes and clothing.",
     type: "website",
     url: "/",
     siteName: "UPFORIT",
     locale: "en_GB",
-    images: [
-      {
-        url: SOCIAL_SHARE_IMAGE,
-        width: 2172,
-        height: 724,
-        alt: "UPFORIT Events"
-      }
-    ]
+    images: [SOCIAL_SHARE_IMAGE]
   },
   twitter: {
     card: "summary_large_image",
-    title: "UPFORIT | Events, Music & Good Vibes",
+    title: "UPFORIT | Events, Music & Clothing",
     description: "UPFORIT events, music, mixes and clothing.",
-    images: [SOCIAL_SHARE_IMAGE]
+    images: [SOCIAL_SHARE_IMAGE.url]
   }
 };
 

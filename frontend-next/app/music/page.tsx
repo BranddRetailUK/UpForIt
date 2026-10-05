@@ -1,3 +1,4 @@
+import { SOCIAL_SHARE_IMAGE } from "../../lib/social-metadata";
 import type { Metadata } from "next";
 import MusicHub from "../../components/MusicHub";
 import { MUSIC_CONTENT } from "../../lib/music";
@@ -25,7 +26,8 @@ export async function generateMetadata({ searchParams }: MusicPageProps): Promis
       openGraph: {
         title: "UPFORIT | Music & Mixes",
         description: MUSIC_PAGE_DESCRIPTION,
-        url: "/music"
+        url: "/music",
+        images: [SOCIAL_SHARE_IMAGE]
       }
     };
   }
