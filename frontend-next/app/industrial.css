@@ -370,6 +370,7 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 @media(max-width:640px) {
   .industrial-button,.industrial-link { font-size:11px; }
   .header-cart { font-size:9.9px; }
+  .bass-newsletter h2 { text-align:center; }
 }
 @media(max-width:720px) {
   .admin-scanner-table .text-button { font-size:.748rem; }
