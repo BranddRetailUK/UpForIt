@@ -91,6 +91,8 @@ a,button,input { -webkit-tap-highlight-color:transparent; }
 .bass-events h1,.archive-detail h1 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(35px,5.5vw,74px); line-height:1.05; letter-spacing:-.065em; margin:25px 0; }
 .bass-events header > p:not(.eyebrow) { color:#c3c5b9; margin-bottom:25px; font-size:14px; }
 .bass-events > section { margin-top:65px; }
+.bass-events > section:first-child { margin-top:0; }
+.bass-events > header:last-child { margin-top:65px; }
 .archive-detail { padding-block:45px 90px; }
 .archive-detail__grid { margin-top:35px; display:grid; grid-template-columns:1fr 1.2fr; align-items:center; gap:55px; }
 .archive-detail__grid > img { width:100%; height:auto; }
