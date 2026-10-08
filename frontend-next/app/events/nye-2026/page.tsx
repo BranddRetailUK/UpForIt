@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import CloudinaryImage from "../../../components/CloudinaryImage";
 import SignupForm from "../../../components/SignupForm";
 import NyeCountdown from "../../../components/NyeCountdown";
-import { CLOUDINARY_ASSETS } from "../../../lib/cloudinary";
+import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../../../lib/cloudinary";
 
 const description = "See out 2026 with UPFORIT at McCarthys Sports Bar, Bletchley. 31 December, doors open 5pm. £10 on the door. Lineup to be revealed.";
 
@@ -15,9 +14,9 @@ export const metadata: Metadata = {
     title: "UPFORIT presents NYE 2026",
     description,
     url: "/events/nye-2026",
-    images: [{ url: "/brand/nye-2026/teaser.png", width: 1500, height: 1500, alt: "UPFORIT NYE 2026 teaser" }]
+    images: [{ url: cloudinaryUrl(CLOUDINARY_ASSETS.nye2026Teaser, { width: 1500 }), width: 1500, height: 1500, alt: "UPFORIT NYE 2026 teaser" }]
   },
-  twitter: { card: "summary_large_image", title: "UPFORIT presents NYE 2026", description, images: ["/brand/nye-2026/teaser.png"] }
+  twitter: { card: "summary_large_image", title: "UPFORIT presents NYE 2026", description, images: [cloudinaryUrl(CLOUDINARY_ASSETS.nye2026Teaser, { width: 1500 })] }
 };
 
 export default function NyeEventPage() {
@@ -42,7 +41,7 @@ export default function NyeEventPage() {
             </div>
           </div>
           <figure className="nye-event__teaser">
-            <Image src="/brand/nye-2026/teaser.png" alt="UPFORIT NYE 2026 square teaser, with a mystery artist concealed by yellow and black glitch distortion. 31 December." width={1500} height={1500} sizes="(max-width: 800px) 90vw, (max-width: 1400px) 46vw, 620px" preload />
+            <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Teaser} alt="UPFORIT NYE 2026 square teaser, with a mystery artist concealed by yellow and black glitch distortion. 31 December." sizes="(max-width: 800px) 90vw, (max-width: 1400px) 46vw, 620px" priority />
           </figure>
         </div>
       </section>
