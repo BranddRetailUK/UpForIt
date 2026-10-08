@@ -346,6 +346,11 @@ input,select,textarea { color-scheme:light; }
   8%,54% { transform:translateX(calc(var(--speaker-shift) * -.5)); }
 }
 .nye-hero__paint { position:absolute; z-index:-1; inset:0; background:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') center/100% 100% no-repeat; pointer-events:none; }
+/* Anchor each painted corner independently without distorting the artwork. */
+:is(.industrial-home,.nye-list-banner) .nye-hero__paint { background:none; }
+:is(.industrial-home,.nye-list-banner) .nye-hero__paint::before,:is(.industrial-home,.nye-list-banner) .nye-hero__paint::after { content:''; position:absolute; top:0; bottom:0; width:50%; background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png'); background-size:auto 145%; background-repeat:no-repeat; }
+:is(.industrial-home,.nye-list-banner) .nye-hero__paint::before { left:0; background-position:left top; }
+:is(.industrial-home,.nye-list-banner) .nye-hero__paint::after { right:0; background-position:right bottom; }
 .nye-hero__content { width:min(800px,70%); margin:auto; padding:38px 0 48px; text-align:center; }
 .nye-hero__brand { display:block; width:340px; max-width:65%; height:auto; margin:0 auto; }
 .nye-hero__eyebrow { margin:4px 0 17px; color:#fff; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.55em; padding-left:.55em; }
@@ -436,4 +441,25 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
   .nye-event__teaser { transform:none; }
   .nye-event__strip span:last-child { display:none; }
   .nye-event__updates { grid-template-columns:1fr; gap:26px; padding-block:48px 60px; }
+}
+
+/* Featured upcoming event uses the NYE campaign artwork. */
+.nye-list-banner { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); align-items:center; gap:42px; padding:40px 60px; border:1px solid #454835; border-bottom:3px solid #f2ff00; }
+.nye-list-banner__content { min-width:0; text-align:center; }
+.nye-list-banner__label { margin:0 0 24px; color:#f2ff00; font-size:10px; letter-spacing:.16em; }
+.nye-list-banner .nye-hero__brand { width:240px; max-width:75%; }
+.nye-list-banner .nye-hero__eyebrow { font-size:9px; }
+.nye-list-banner .nye-hero__title { max-width:500px; margin:0 auto 24px; }
+.nye-list-banner .nye-hero__date { font-size:12px; gap:7px; padding:12px 18px; margin-bottom:22px; }
+.nye-list-banner .nye-hero__venue { font-size:20px; }
+.nye-list-banner .nye-hero__speakers { opacity:.35; }
+.nye-list-banner__art { display:block; width:100%; max-width:420px; justify-self:center; border:1px solid #555a36; }
+.nye-list-banner__art img { display:block; width:100%; height:auto; }
+.nye-list-banner__art:hover { border-color:#f2ff00; }
+@media(max-width:1000px) { .nye-list-banner { padding:32px; gap:26px; } }
+@media(max-width:700px) {
+  .nye-list-banner { grid-template-columns:1fr; padding:30px 18px; gap:32px; }
+  .nye-list-banner .nye-hero__date { font-size:11px; gap:5px; padding:12px 10px; }
+  .nye-list-banner .nye-hero__venue { font-size:18px; }
+  .nye-list-banner__art { max-width:360px; }
 }
