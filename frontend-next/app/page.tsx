@@ -21,7 +21,7 @@ export default function Home() {
           <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
           <p className="nye-hero__entry">£10 on the door</p>
           <div className="industrial-actions nye-hero__actions">
-            <a className="industrial-button" href="#stay-connected">Stay in the loop</a>
+            <Link className="industrial-button" href="/events/nye-2026">CHECK THE EVENT</Link>
             <Link className="industrial-link" href="/music">Explore the UPFORIT sound</Link>
           </div>
         </div>

@@ -395,3 +395,45 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
   .admin-scanner-table .text-button { font-size:.748rem; }
   .admin-scanner-row-button { font-size:.638rem; }
 }
+
+/* NYE event teaser and announcement signup. */
+.nye-event em { color:#f2ff00; font-style:normal; }
+.nye-event__layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.08fr); align-items:center; gap:60px; padding-block:42px 64px; }
+.nye-event__copy { text-align:center; }
+.nye-event__back { display:block; width:fit-content; margin-bottom:36px; color:#c3c5b8; font-size:10px; }
+.nye-event__hero .nye-hero__brand { width:308px; max-width:71.5%; }
+.nye-event__hero .nye-hero__title { margin-bottom:28px; }
+.nye-event__headline { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(25px,3vw,42px); line-height:1.08; letter-spacing:-.045em; margin:0; }
+.nye-countdown { display:flex; justify-content:center; margin:26px auto 30px; max-width:390px; }
+.nye-countdown__unit { position:relative; flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.nye-countdown__number { color:#fff; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(30px,3.7vw,48px); line-height:1; font-variant-numeric:tabular-nums; }
+.nye-countdown__dots { position:absolute; left:0; transform:translateX(-50%); color:#f2ff00; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(30px,3.7vw,48px); line-height:1; }
+.nye-countdown__label { color:#c3c5b8; font-size:9px; letter-spacing:.15em; text-transform:uppercase; }
+.nye-event__hero .nye-hero__date { font-size:13px; gap:8px; padding:14px 18px; }
+.nye-event__hero .nye-hero__venue { font-size:21px; }
+.nye-event__hero .nye-hero__speakers { opacity:.3; }
+.nye-event__teaser { margin:0; min-width:0; }
+.nye-event__teaser img { display:block; width:100%; height:auto; }
+.nye-event__teaser figcaption { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; padding:22px 12px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#f2ff00; }
+.nye-event__teaser figcaption > span:last-child { color:#c3c5b8; }
+.nye-event__strip { display:flex; justify-content:space-around; gap:24px; overflow:hidden; padding:16px 24px; background:#f2ff00; color:#090909; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(13px,2vw,22px); white-space:nowrap; }
+.nye-event__updates { padding-block:74px 90px; }
+.nye-event__updates .form-note { color:#adb0a3; line-height:1.7; }
+@media(max-width:640px) {
+  .nye-event__hero .nye-hero__brand { max-width:82.5%; }
+}
+@media(max-width:1000px) {
+  .nye-event__layout { gap:32px; }
+  .nye-event__hero .nye-hero__date { flex-direction:column; }
+  .nye-event__hero .nye-hero__date > span[aria-hidden] { display:none; }
+}
+@media(max-width:800px) {
+  .nye-event__layout { grid-template-columns:1fr; max-width:600px; gap:38px; padding-block:22px 44px; }
+  .nye-event__back { margin-bottom:25px; }
+  .nye-event__headline { font-size:32px; }
+  .nye-event__hero .nye-hero__date { flex-direction:row; }
+  .nye-event__hero .nye-hero__date > span[aria-hidden] { display:inline; }
+  .nye-event__teaser { transform:none; }
+  .nye-event__strip span:last-child { display:none; }
+  .nye-event__updates { grid-template-columns:1fr; gap:26px; padding-block:48px 60px; }
+}
