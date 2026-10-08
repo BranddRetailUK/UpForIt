@@ -1,6 +1,4 @@
 import Link from "next/link";
-import CloudinaryImage from "./CloudinaryImage";
-import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import { NAV_ITEMS, SOCIAL_LINKS } from "../lib/site";
 import CookieSettingsButton from "./CookieSettingsButton";
 import SocialBrandIcon from "./SocialBrandIcon";
@@ -8,7 +6,6 @@ import SocialBrandIcon from "./SocialBrandIcon";
 export default function SiteFooter() {
   return (
     <footer className="site-footer">
-      <Link href="/" className="footer-brand" aria-label="UPFORIT home"><CloudinaryImage asset={CLOUDINARY_ASSETS.industrialLogo} maxWidth={540} sizes="180px" alt="UPFORIT" /></Link>
       <div className="site-footer__inner">
         <nav className="footer-nav" aria-label="Footer navigation">
           {NAV_ITEMS.map((item) => (
