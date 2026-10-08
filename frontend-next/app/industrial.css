@@ -327,6 +327,7 @@ input,select,textarea { color-scheme:light; }
 
 /* NYE campaign: original flyer lettering, torn speaker edges and paint. */
 .nye-hero { position:relative; isolation:isolate; overflow:hidden; background:#080908 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') center/760px auto; border-bottom:3px solid #f2ff00; }
+.nye-hero { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_760/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') 2x); }
 .nye-hero::before { content:''; position:absolute; z-index:-1; inset:0; background:radial-gradient(ellipse at 50% 42%,#dce60020,transparent 60%),linear-gradient(90deg,transparent,#0007 30%,#0007 70%,transparent); }
 .nye-hero__speakers { position:absolute; z-index:-1; inset:0; pointer-events:none; }
 /* Each edge uses the original aspect ratio, independently anchored to the banner. */
@@ -462,4 +463,13 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
   .nye-list-banner .nye-hero__date { font-size:11px; gap:5px; padding:12px 10px; }
   .nye-list-banner .nye-hero__venue { font-size:18px; }
   .nye-list-banner__art { max-width:360px; }
+}
+
+/* Keep original artwork on Retina screens and tall/mobile banners. */
+@media(min-width:1001px) {
+  .industrial-home .nye-hero__speakers::before,.industrial-home .nye-hero__speakers::after { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') 2x); }
+  .industrial-home .nye-hero__paint::before,.industrial-home .nye-hero__paint::after { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') 2x); }
+}
+@media(max-width:640px) {
+  .nye-hero .nye-hero__eyebrow { font-size:9.9px; margin:2px 0 10px; }
 }

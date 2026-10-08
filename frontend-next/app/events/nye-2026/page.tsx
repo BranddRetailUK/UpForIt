@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import CloudinaryImage from "../../../components/CloudinaryImage";
 import SignupForm from "../../../components/SignupForm";
 import NyeCountdown from "../../../components/NyeCountdown";
+import NyeBannerPreload from "../../../components/NyeBannerPreload";
 import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../../../lib/cloudinary";
 
-const description = "See out 2026 with UPFORIT at McCarthys Sports Bar, Bletchley. 31 December, doors open 5pm. £10 on the door. Lineup to be revealed.";
+const description = "See out 2026 with UPFORIT at McCarthys Sports Bar, Bletchley. 31 December, doors open 5pm. Lineup to be revealed.";
 
 export const metadata: Metadata = {
   title: "NYE 2026 — 31 December",
@@ -22,26 +23,26 @@ export const metadata: Metadata = {
 export default function NyeEventPage() {
   return (
     <div className="nye-event">
+      <NyeBannerPreload />
       <section className="nye-hero nye-event__hero" aria-labelledby="nye-title">
         <div className="nye-hero__speakers" aria-hidden="true" />
         <div className="nye-hero__paint" aria-hidden="true" />
         <div className="section-wrap nye-event__layout">
           <div className="nye-event__copy">
-            <CloudinaryImage className="nye-hero__brand" asset={CLOUDINARY_ASSETS.nye2026Logo} alt="UPFORIT" maxWidth={1020} sizes="(max-width: 640px) 240px, 340px" priority />
+            <CloudinaryImage className="nye-hero__brand" asset={CLOUDINARY_ASSETS.nye2026Logo} alt="UPFORIT" maxWidth={1020} sizes="308px" priority />
             <p className="nye-hero__eyebrow">Presents</p>
             <h1 id="nye-title" className="nye-hero__title">
-              <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Title} alt="NYE 2026" sizes="(max-width: 800px) 90vw, 540px" priority />
+              <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Title} alt="NYE 2026" sizes="(max-width: 640px) calc(100vw - 36px), (max-width: 696px) calc(100vw - 96px), (max-width: 800px) 600px, (max-width: 1000px) calc((100vw - 128px) / 2.08), (max-width: 1376px) calc((100vw - 156px) / 2.08), 587px" priority />
             </h1>
             <NyeCountdown />
             <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
             <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
-            <p className="nye-hero__entry">£10 on the door</p>
             <div className="industrial-actions nye-hero__actions">
               <a className="industrial-button" href="#nye-updates">Get event updates</a>
             </div>
           </div>
           <figure className="nye-event__teaser">
-            <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Teaser} alt="UPFORIT NYE 2026 square teaser, with a mystery artist concealed by yellow and black glitch distortion. 31 December." sizes="(max-width: 800px) 90vw, (max-width: 1400px) 46vw, 620px" priority />
+            <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Teaser} alt="UPFORIT NYE 2026 square teaser, with a mystery artist concealed by yellow and black glitch distortion. 31 December." sizes="(max-width: 640px) calc(100vw - 36px), (max-width: 696px) calc(100vw - 96px), (max-width: 800px) 600px, (max-width: 1000px) calc((100vw - 128px) * .51923), (max-width: 1376px) calc((100vw - 156px) * .51923), 634px" priority />
           </figure>
         </div>
       </section>

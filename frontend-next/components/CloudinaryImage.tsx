@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { preload } from "react-dom";
 import {
   cloudinaryUrl,
   type CloudinaryAsset
@@ -41,6 +42,10 @@ export default function CloudinaryImage({
         `${cloudinaryUrl(asset, { width, format })} ${Math.min(width, asset.width)}w`
     )
     .join(", ");
+
+  if (priority) {
+    preload(src, { as: "image", imageSrcSet: srcSet, imageSizes: sizes, fetchPriority: "high" });
+  }
 
   return (
     <img

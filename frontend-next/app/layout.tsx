@@ -70,6 +70,7 @@ export default function RootLayout({
       lang="en"
       className={`${heavy.variable} ${body.variable}`}
     >
+      <head><link rel="preconnect" href="https://res.cloudinary.com" /></head>
       <body>
         <MetaTrackingProvider
           pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID || ""}

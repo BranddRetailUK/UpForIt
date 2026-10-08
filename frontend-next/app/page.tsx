@@ -4,10 +4,12 @@ import CloudinaryImage from "../components/CloudinaryImage";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import SignupForm from "../components/SignupForm";
 import PastEventCard from "../components/PastEventCard";
+import NyeBannerPreload from "../components/NyeBannerPreload";
 
 export default function Home() {
   return (
     <div className="industrial-home">
+      <NyeBannerPreload />
       <section className="nye-hero" aria-labelledby="home-title">
         <div className="nye-hero__speakers" aria-hidden="true" />
         <div className="nye-hero__paint" aria-hidden="true" />
@@ -19,7 +21,6 @@ export default function Home() {
           </h1>
           <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
           <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
-          <p className="nye-hero__entry">£10 on the door</p>
           <div className="industrial-actions nye-hero__actions">
             <Link className="industrial-button" href="/events/nye-2026">CHECK THE EVENT</Link>
             <Link className="industrial-link" href="/music">Explore the UPFORIT sound</Link>
