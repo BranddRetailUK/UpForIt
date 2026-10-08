@@ -24,6 +24,8 @@ const CLOUDINARY_BASE_URL = `https://res.cloudinary.com/${CLOUD_NAME}/image/uplo
 const CLOUDINARY_MEDIA_BASE_URL = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload`;
 
 export const CLOUDINARY_ASSETS = {
+  nye2026Logo: { publicId: "UPFORIT/nye-2026/upforit-logo", format: "png", width: 2172, height: 724 },
+  nye2026Title: { publicId: "UPFORIT/nye-2026/nye-2026", format: "png", width: 2172, height: 724 },
   industrialLogo: { publicId: "UPFORIT/industrial-2026/approved-logo", format: "png", width: 2172, height: 724 },
   summerArchive: { publicId: "UPFORIT_Summer_Round_Up_PP_hjq2nh", format: "png", width: 1254, height: 1254 },
   navLogo: {

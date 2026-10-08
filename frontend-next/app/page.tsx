@@ -1,6 +1,7 @@
 import { PAST_EVENTS } from "../lib/past-events";
 import Link from "next/link";
-import Image from "next/image";
+import CloudinaryImage from "../components/CloudinaryImage";
+import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
 import SignupForm from "../components/SignupForm";
 import PastEventCard from "../components/PastEventCard";
 
@@ -11,10 +12,10 @@ export default function Home() {
         <div className="nye-hero__speakers" aria-hidden="true" />
         <div className="nye-hero__paint" aria-hidden="true" />
         <div className="nye-hero__content">
-          <Image className="nye-hero__brand" src="/brand/nye-2026/upforit-logo.png" alt="UPFORIT" width={2172} height={724} sizes="(max-width: 640px) 240px, 340px" />
+          <CloudinaryImage className="nye-hero__brand" asset={CLOUDINARY_ASSETS.nye2026Logo} alt="UPFORIT" maxWidth={1020} sizes="(max-width: 640px) 240px, 340px" priority />
           <p className="nye-hero__eyebrow">Presents</p>
           <h1 id="home-title" className="nye-hero__title">
-            <Image src="/brand/nye-2026/nye-2026.png" alt="NYE 2026" width={2172} height={724} sizes="(max-width: 640px) 90vw, 800px" preload />
+            <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Title} alt="NYE 2026" sizes="(max-width: 640px) 90vw, (max-width: 1143px) 70vw, 800px" priority />
           </h1>
           <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
           <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
