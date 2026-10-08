@@ -331,8 +331,20 @@ input,select,textarea { color-scheme:light; }
 .nye-hero__speakers { position:absolute; z-index:-1; inset:0; pointer-events:none; }
 /* Each edge uses the original aspect ratio, independently anchored to the banner. */
 .nye-hero__speakers::before,.nye-hero__speakers::after { content:''; position:absolute; top:0; bottom:0; width:25%; background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png'); background-size:auto 145%; background-repeat:no-repeat; }
-.nye-hero__speakers::before { left:0; background-position:left center; }
-.nye-hero__speakers::after { right:0; background-position:right center; }
+.nye-hero__speakers::before { left:18px; background-position:left center; }
+.nye-hero__speakers::after { right:18px; background-position:right center; }
+@media(prefers-reduced-motion:no-preference) {
+  .nye-hero__speakers::before,.nye-hero__speakers::after { --speaker-shift:3px; animation:nye-speaker-vibration 6.4s linear infinite; }
+  .nye-hero__speakers::after { --speaker-shift:-3px; }
+}
+/* Two brief bass rattles per cycle, with stillness between each burst. */
+@keyframes nye-speaker-vibration {
+  0%,9%,48%,55%,100% { transform:translateX(0); }
+  1%,3%,5%,49%,51% { transform:translateX(var(--speaker-shift)); }
+  2%,4%,6%,50%,52% { transform:translateX(calc(var(--speaker-shift) * -1)); }
+  7%,53% { transform:translateX(calc(var(--speaker-shift) * .5)); }
+  8%,54% { transform:translateX(calc(var(--speaker-shift) * -.5)); }
+}
 .nye-hero__paint { position:absolute; z-index:-1; inset:0; background:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') center/100% 100% no-repeat; pointer-events:none; }
 .nye-hero__content { width:min(800px,70%); margin:auto; padding:38px 0 48px; text-align:center; }
 .nye-hero__brand { display:block; width:340px; max-width:65%; height:auto; margin:0 auto; }
@@ -351,8 +363,8 @@ input,select,textarea { color-scheme:light; }
   .nye-hero__brand { width:240px; max-width:75%; }
   .nye-hero__speakers { opacity:.55; }
   .nye-hero__speakers::before,.nye-hero__speakers::after { width:45%; background-size:auto 110%; }
-  .nye-hero__speakers::before { left:-70px; }
-  .nye-hero__speakers::after { right:-70px; }
+  .nye-hero__speakers::before { left:-35px; }
+  .nye-hero__speakers::after { right:-35px; }
   .nye-hero__paint { opacity:.8; }
   .nye-hero__eyebrow { margin:10px 0 22px; font-size:9px; }
   .nye-hero .nye-hero__title { margin-bottom:27px; }
