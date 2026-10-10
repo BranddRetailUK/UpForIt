@@ -18,7 +18,6 @@ import {
   readMetaConsent
 } from "../lib/meta-client";
 import {
-  isMetaConsentLandingPath,
   shouldSendMetaBrowserEvent,
   type MetaBrowserContext,
   type MetaConsent,
@@ -143,9 +142,8 @@ export function MetaTrackingProvider({
     track
   }), [consent, merchTrackingEnabled, track]);
 
-  const showBanner = ready && (
-    settingsOpen || (consent === "unknown" && isMetaConsentLandingPath(pathname))
-  );
+  // Show cookie choices only when opened from the footer, never automatically.
+  const showBanner = ready && settingsOpen;
 
   return (
     <MetaTrackingContext.Provider value={value}>
