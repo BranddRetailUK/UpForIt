@@ -43,8 +43,8 @@
 .competition .mix-hero{isolation:isolate;background:#101010 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1200/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') center/cover}
 .mix-hero-speakers,.mix-hero-bars{position:absolute;inset:0;pointer-events:none;z-index:-1}
 .mix-hero-speakers::before,.mix-hero-speakers::after{content:"";position:absolute;top:0;bottom:0;width:25%;background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1200/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png');background-size:auto 145%;background-repeat:no-repeat}
-.mix-hero-speakers::before{left:18px;background-position:left center}
-.mix-hero-speakers::after{right:18px;background-position:right center}
+.mix-hero-speakers::before{left:-8px;background-position:left center}
+.mix-hero-speakers::after{right:-8px;background-position:right center}
 .mix-hero-bars::before,.mix-hero-bars::after{content:"";position:absolute;top:0;bottom:0;width:50%;background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1200/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png');background-size:auto 145%;background-repeat:no-repeat}
 .mix-hero-bars::before{left:0;background-position:left top}
 .mix-hero-bars::after{right:0;background-position:right bottom}
@@ -53,8 +53,8 @@
 @media(max-width:760px){.mix-hero-speakers{opacity:.45}.mix-hero-speakers::before,.mix-hero-speakers::after{width:35%;background-size:auto 110%}.mix-hero-speakers::before{left:-35px}.mix-hero-speakers::after{right:-35px}.mix-hero-bars::before,.mix-hero-bars::after{background-size:auto 110%;width:25%}.competition .mix-hero-inner{padding-top:36px;padding-bottom:36px}}
 .competition .mix-hero{background-image:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.6)),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1200/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png')}
 /* Bleed speaker artwork past the banner and soften the inner crop. */
-.mix-hero-speakers::before{left:-2px;mask-image:linear-gradient(to right,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 70%,transparent 100%)}
-.mix-hero-speakers::after{right:-2px;mask-image:linear-gradient(to left,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to left,#000 70%,transparent 100%)}
+.mix-hero-speakers::before{left:-8px;mask-image:linear-gradient(to right,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 70%,transparent 100%)}
+.mix-hero-speakers::after{right:-8px;mask-image:linear-gradient(to left,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to left,#000 70%,transparent 100%)}
 @media(max-width:760px){.mix-hero-speakers::before{left:-35px}.mix-hero-speakers::after{right:-35px}}
 .mix-submit fieldset{border:0;padding:0;margin:0;min-width:0}.mix-submit fieldset:disabled{opacity:.65}.mix-account-prompt,.mix-deadline{font-size:13px;line-height:1.7;color:#fff;margin-bottom:20px}.mix-account-prompt a{color:var(--yellow);text-decoration:underline}.competition button:disabled{cursor:not-allowed;opacity:.55}.mix-empty{margin-bottom:20px}
 /* Give submission controls more room across the available desktop width. */
