@@ -62,12 +62,9 @@ export async function generateMetadata({ searchParams }: MusicPageProps): Promis
 export default function MusicPage() {
   return (
     <div className="music-page">
-      <header className="music-page__intro section-wrap">
-
-        <div className="music-page__title-lockup">
-          <span aria-hidden="true">♪</span>
-          <h1>Music <i>&amp;</i> Mixes</h1>
-          <span aria-hidden="true">★</span>
+      <header className="music-page__banner">
+        <div className="music-page__banner-content section-wrap">
+          <h1>Music <span>&amp; Mixes</span></h1>
         </div>
       </header>
 

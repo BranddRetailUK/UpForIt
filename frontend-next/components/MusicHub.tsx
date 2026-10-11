@@ -18,12 +18,9 @@ import {
   cloudinaryVideoUrl
 } from "../lib/cloudinary";
 import {
-  filterMusicContent,
-  musicBlockMatchesFilter,
   type ArtistStoryBlock,
   type AudioMusicBlock,
   type MusicContentBlock,
-  type MusicFilter,
   type ReleaseShowcaseBlock,
   type VideoMusicBlock
 } from "../lib/music";
@@ -36,13 +33,6 @@ type PlaybackProps = {
   activeId: string | null;
   onPlay: (id: string) => void;
 };
-
-const FILTERS: Array<{ value: MusicFilter; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "audio", label: "Mixes" },
-  { value: "release", label: "Releases" },
-  { value: "video", label: "Video" }
-];
 
 const WAVEFORM_BARS = [
   34, 58, 78, 48, 88, 64, 40, 72, 96, 54, 30, 68, 82, 44, 74, 92,
@@ -561,46 +551,15 @@ function ReleaseShowcase({
 }
 
 export default function MusicHub({ blocks }: MusicHubProps) {
-  const [filter, setFilter] = useState<MusicFilter>("all");
   const [activeId, setActiveId] = useState<string | null>(null);
   const publishedBlocks = blocks.filter((block) => !block.placeholder);
-  const visibleBlocks = filterMusicContent(publishedBlocks, filter);
   const firstVideoId = publishedBlocks.find(block => block.kind === "video")?.id;
 
-  const selectFilter = (nextFilter: MusicFilter) => {
-    if (nextFilter === filter) return;
-    setFilter(nextFilter);
-  };
-
   return (
-    <section className="music-hub section-wrap" aria-labelledby="music-feed-heading">
-      <div className="music-filter-bar">
-        <div>
-
-          <h2 id="music-feed-heading">Latest sessions</h2>
-        </div>
-        <div className="music-filters" aria-label="Filter music content">
-          {FILTERS.map((option) => (
-            <button
-              type="button"
-              className={filter === option.value ? "is-active" : undefined}
-              aria-pressed={filter === option.value}
-              onClick={() => selectFilter(option.value)}
-              key={option.value}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <p className="sr-only" aria-live="polite">
-        Showing {visibleBlocks.length} {filter === "all" ? "music and artist" : filter} {visibleBlocks.length === 1 ? "item" : "items"}.
-      </p>
-
+    <section className="music-hub section-wrap" aria-label="Music and mixes">
       <div className="music-feed">
         {publishedBlocks.map((block) => {
-          const visible = musicBlockMatchesFilter(block, filter);
+          const visible = true;
           if (block.kind === "audio") {
             return (
               <AudioCard

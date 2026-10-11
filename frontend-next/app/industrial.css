@@ -491,3 +491,18 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 
 .home-mix-banner--in-feed { width:100%; margin:0; grid-column:1 / -1; }
 .mix-video-frame__custom-play,.mix-video-frame__custom-play:hover { transform:translate(-50%,-50%); box-shadow:none; border:1px solid var(--yellow); font-family:var(--font-body),Arial,sans-serif; font-size:13.2px; padding:16px 22px; min-height:54px; }
+
+/* Music landing banner */
+.music-page { padding-top:0; }
+.music-page__banner { position:relative; overflow:hidden; border-bottom:3px solid var(--yellow); background:#111 url('/brand/industrial-speaker.png') right center/cover no-repeat; }
+.music-page__banner::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#080808a6 0%,#08080855 45%,transparent 75%); }
+.music-page__banner-content { position:relative; min-height:clamp(300px,30vw,460px); display:flex; align-items:center; padding-top:54px; padding-bottom:54px; }
+.music-page__banner h1 { margin:0; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(54px,7vw,100px); font-weight:900; line-height:.98; letter-spacing:-.045em; text-transform:uppercase; color:#fff; text-shadow:0 3px 20px #0008; }
+.music-page__banner h1 span { display:block; color:var(--yellow); }
+.music-page .music-hub { margin-top:clamp(32px,4vw,56px); }
+.music-page .music-feed { margin-top:0; }
+@media(max-width:600px) {
+ .music-page__banner { background-position:65% center; }
+ .music-page__banner::before { background:linear-gradient(90deg,#080808bb,#08080833); }
+ .music-page__banner-content { min-height:280px; }
+}
