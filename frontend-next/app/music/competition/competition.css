@@ -57,3 +57,7 @@
 .mix-hero-speakers::after{right:-2px;mask-image:linear-gradient(to left,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to left,#000 70%,transparent 100%)}
 @media(max-width:760px){.mix-hero-speakers::before{left:-35px}.mix-hero-speakers::after{right:-35px}}
 .mix-submit fieldset{border:0;padding:0;margin:0;min-width:0}.mix-submit fieldset:disabled{opacity:.65}.mix-account-prompt,.mix-deadline{font-size:13px;line-height:1.7;color:#fff;margin-bottom:20px}.mix-account-prompt a{color:var(--yellow);text-decoration:underline}.competition button:disabled{cursor:not-allowed;opacity:.55}.mix-empty{margin-bottom:20px}
+/* Give submission controls more room across the available desktop width. */
+.competition .mix-layout{width:min(1600px,calc(100% - 64px));grid-template-columns:minmax(0,1fr) clamp(360px,32vw,480px)}
+@media(min-width:761px) and (max-width:1000px){.competition .mix-layout{width:calc(100% - 48px);grid-template-columns:minmax(0,1fr) 340px;gap:24px}}
+@media(max-width:760px){.competition .mix-layout{width:calc(100% - 36px);grid-template-columns:1fr}}

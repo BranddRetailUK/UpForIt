@@ -127,7 +127,7 @@ export default function MixCompetition() {
         <p className="mix-notice" role="status">{notice}</p>
       </section>
       <aside className="mix-sidebar">
-        <section className="mix-submit" id="submit-mix"><p className="mix-eyebrow">STEP UP. GET HEARD.</p><h2>GOT A MIX?</h2>
+        <section className="mix-submit" id="submit-mix" aria-label="Submit your mix">
           <div className="mix-tabs" aria-label="Submission method">{["Upload", "Link"].map(item => <button key={item} type="button" aria-pressed={mode === item} onClick={() => { setMode(item); setFormMessage(""); }}>{item}</button>)}</div>
           {data && !data.verified && <p className="mix-account-prompt"><a href="/account/login?next=%2Fmusic%2Fcompetition">Sign in</a> or <a href="/account/signup?next=%2Fmusic%2Fcompetition">create an account</a> and verify your email to enter.</p>}
           {data?.hasEntry && <p className="mix-notice">Your entry has been received. Contact us if you need to change it.</p>}
