@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserForSessionToken, SESSION_COOKIE } from "./auth";
 export function mixOrigin(request:NextRequest){
  const origin=request.headers.get('origin');
- if(!origin||new URL(origin).host!==request.nextUrl.host)throw new Error('Invalid request origin.');
+ const publicOrigin=process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+ if(!origin||new URL(origin).origin!==new URL(publicOrigin).origin)throw new Error('Invalid request origin.');
 }
 export async function mixUser(request:NextRequest){
  mixOrigin(request);
