@@ -40,5 +40,23 @@
     "url": "https://res.cloudinary.com/brandduk/image/upload/v1791204569/UPFORIT/industrial-2026/social-share-clean.png",
     "width": 1734,
     "height": 907
+  },
+  "mix-competition-dj": {
+    "publicId": "UPFORIT/site/mix-competition-dj",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791733887/UPFORIT/site/mix-competition-dj.webp",
+    "width": 2172,
+    "height": 724
+  },
+  "mix-competition-share": {
+    "publicId": "UPFORIT/site/mix-competition-share",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791733889/UPFORIT/site/mix-competition-share.jpg",
+    "width": 1200,
+    "height": 630
+  },
+  "soundcloud-logo": {
+    "publicId": "UPFORIT/site/soundcloud-logo",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791733889/UPFORIT/site/soundcloud-logo.png",
+    "width": 120,
+    "height": 15
   }
 }

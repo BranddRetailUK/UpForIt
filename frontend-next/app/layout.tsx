@@ -10,7 +10,7 @@ import "./globals.css";
 import "./industrial.css";
 
 const FAVICON_IMAGE =
-  "https://res.cloudinary.com/brandduk/image/upload/v1786281482/LOGO_FAV_smiley_c4wm5v.png";
+  "https://res.cloudinary.com/brandduk/image/upload/f_png,c_limit,w_180/v1786281482/LOGO_FAV_smiley_c4wm5v.png";
 
 const heavy = Archivo_Black({
   weight: "400",

@@ -22,7 +22,7 @@ a,button,input { -webkit-tap-highlight-color:transparent; }
 .eyebrow { font:600 10px/1.5 var(--font-body),Arial,sans-serif; letter-spacing:.18em; text-transform:uppercase; color:#b8bbb0; }
 .signal-dot { display:inline-block; width:7px; height:7px; margin-right:10px; background:var(--yellow); border-radius:50%; }
 .bass-hero { position:relative; min-height:650px; overflow:hidden; background:#080808; }
-.bass-hero__texture { position:absolute; inset:0; background:linear-gradient(90deg,rgba(5,5,5,.08),transparent 70%),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') right center/cover; }
+.bass-hero__texture { position:absolute; inset:0; background:linear-gradient(90deg,rgba(5,5,5,.08),transparent 70%),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1536/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') right center/cover; }
 .bass-hero__content { position:relative; padding-top:67px; padding-bottom:24px; }
 .bass-hero .eyebrow { color:#d0d2c5; }
 .bass-hero h1 { margin:32px 0 24px; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(52px,6.7vw,99px); letter-spacing:-.065em; line-height:1.02; max-width:950px; }
@@ -47,7 +47,7 @@ a,button,input { -webkit-tap-highlight-color:transparent; }
 .bass-principles strong { margin-left:20px; font-size:14px; color:#dfdfd7; letter-spacing:0; font-weight:500; }
 .bass-discover { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .discover-card { position:relative; overflow:hidden; min-height:395px; padding:34px; border:1px solid #424242; background:#181818; display:flex; flex-direction:column; align-items:flex-start; }
-.discover-card--music { background:linear-gradient(90deg,#090909b3,#09090940),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') center/cover; }
+.discover-card--music { background:linear-gradient(90deg,#090909b3,#09090940),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1536/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') center/cover; }
 .discover-card--merch { background:#e4e5dc; color:#111; }
 .discover-card--merch .eyebrow { color:#565656; }
 .discover-card h2 { z-index:1; margin-top:33px; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(40px,4.8vw,66px); line-height:1; letter-spacing:-.06em; }
@@ -87,7 +87,7 @@ a,button,input { -webkit-tap-highlight-color:transparent; }
 .footer-socials a { background:transparent; border:0; box-shadow:none; transform:none; width:28px; height:28px; }
 .site-footer__legal { font-size:10px; color:#919191; border-color:#373737; }
 .bass-events { padding-block:70px 90px; }
-.bass-events header { padding:50px; background:linear-gradient(90deg,#090909bf,#09090940),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') center/cover; border:1px solid #3c3c3c; }
+.bass-events header { padding:50px; background:linear-gradient(90deg,#090909bf,#09090940),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1536/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') center/cover; border:1px solid #3c3c3c; }
 .bass-events h1,.archive-detail h1 { font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(35px,5.5vw,74px); line-height:1.05; letter-spacing:-.065em; margin:25px 0; }
 .bass-events header > p:not(.eyebrow) { color:#c3c5b9; margin-bottom:25px; font-size:14px; }
 .bass-events > section { margin-top:65px; }
@@ -222,7 +222,7 @@ input,select,textarea { color-scheme:light; }
 .cart-page-layout { margin-top:35px; }
 @media(max-width:640px) { .bass-discover { padding-top:25px; } .merch-grid { gap:14px; } .merch-card__copy { padding:14px; } .merch-card__copy :is(h2,h3) { font-size:14px; } .product-summary,.product-description { padding:22px; } .product-layout { gap:24px; } .cart-line { padding:12px; } .cart-page-lines .cart-line { grid-template-columns:85px minmax(0,1fr); } .cart-page-lines .cart-line > img { width:85px; height:105px; } .cart-drawer { padding:18px; width:min(480px,100%); } }
 
-.discover-card--merch { background:linear-gradient(90deg,#080808b3,transparent 85%),url("https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,w_1200/v1791201534/UPFORIT/industrial-2026/clothing-promo.png") center/cover; color:#fff; }
+.discover-card--merch { background:linear-gradient(90deg,#080808b3,transparent 85%),url("https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1200/v1791201534/UPFORIT/industrial-2026/clothing-promo.png") center/cover; color:#fff; }
 .discover-card--merch h2 { font-size:clamp(32px,3.7vw,50px); }
 .discover-card--merch h2 em { color:var(--yellow); }
 .discover-card--merch .discover-card__action { text-shadow:0 1px 6px #000; }
@@ -328,12 +328,12 @@ input,select,textarea { color-scheme:light; }
 }
 
 /* NYE campaign: original flyer lettering, torn speaker edges and paint. */
-.nye-hero { position:relative; isolation:isolate; overflow:hidden; background:#090909 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') center/760px auto; border-bottom:3px solid #f2ff00; }
-.nye-hero { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_760/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') 2x); }
+.nye-hero { position:relative; isolation:isolate; overflow:hidden; background:#090909 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') center/760px auto; border-bottom:3px solid #f2ff00; }
+.nye-hero { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_760/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') 2x); }
 .nye-hero::before { content:''; position:absolute; z-index:-1; inset:0; background:radial-gradient(ellipse at 50% 42%,#ffffff08,transparent 60%),linear-gradient(90deg,transparent,#0007 30%,#0007 70%,transparent); }
 .nye-hero__speakers { position:absolute; z-index:-1; inset:0; pointer-events:none; }
 /* Each edge uses the original aspect ratio, independently anchored to the banner. */
-.nye-hero__speakers::before,.nye-hero__speakers::after { content:''; position:absolute; top:0; bottom:0; width:25%; background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png'); background-size:auto 145%; background-repeat:no-repeat; }
+.nye-hero__speakers::before,.nye-hero__speakers::after { content:''; position:absolute; top:0; bottom:0; width:25%; background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png'); background-size:auto 145%; background-repeat:no-repeat; }
 .nye-hero__speakers::before { left:18px; background-position:left center; }
 .nye-hero__speakers::after { right:18px; background-position:right center; }
 @media(prefers-reduced-motion:no-preference) {
@@ -348,10 +348,10 @@ input,select,textarea { color-scheme:light; }
   7%,53% { transform:translateX(calc(var(--speaker-shift) * .5)); }
   8%,54% { transform:translateX(calc(var(--speaker-shift) * -.5)); }
 }
-.nye-hero__paint { position:absolute; z-index:-1; inset:0; background:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') center/100% 100% no-repeat; pointer-events:none; }
+.nye-hero__paint { position:absolute; z-index:-1; inset:0; background:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') center/100% 100% no-repeat; pointer-events:none; }
 /* Anchor each painted corner independently without distorting the artwork. */
 :is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint { background:none; }
-:is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint::before,:is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint::after { content:''; position:absolute; top:0; bottom:0; width:50%; background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png'); background-size:auto 145%; background-repeat:no-repeat; }
+:is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint::before,:is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint::after { content:''; position:absolute; top:0; bottom:0; width:50%; background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png'); background-size:auto 145%; background-repeat:no-repeat; }
 :is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint::before { left:0; background-position:left top; }
 :is(.industrial-home,.nye-list-banner,.nye-event) .nye-hero__paint::after { right:0; background-position:right bottom; }
 .nye-hero__content { width:min(800px,70%); margin:auto; padding:38px 0 48px; text-align:center; }
@@ -469,8 +469,8 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 
 /* Keep original artwork on Retina screens and tall/mobile banners. */
 @media(min-width:1001px) {
-  .industrial-home .nye-hero__speakers::before,.industrial-home .nye-hero__speakers::after { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') 2x); }
-  .industrial-home .nye-hero__paint::before,.industrial-home .nye-hero__paint::after { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') 2x); }
+  .industrial-home .nye-hero__speakers::before,.industrial-home .nye-hero__speakers::after { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') 2x); }
+  .industrial-home .nye-hero__paint::before,.industrial-home .nye-hero__paint::after { background-image:image-set(url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') 1x,url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1520/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') 2x); }
 }
 @media(max-width:640px) {
   .nye-hero .nye-hero__eyebrow { font-size:9.9px; margin:2px 0 10px; }
@@ -478,7 +478,7 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 .admin-section-nav{display:flex;gap:12px;margin:0 0 28px;flex-wrap:wrap}.admin-section-nav a{padding:14px 20px;border:1px solid #555;text-transform:uppercase;font-size:12px;font-weight:700}.admin-section-nav a[aria-current=page]{background:var(--yellow);color:#111}.competition-admin .admin-panel{margin-block:24px}.competition-admin .admin-panel>p{line-height:1.7;margin-block:14px}.competition-admin-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-block:20px}.competition-admin label{display:block;line-height:1.7;font-size:14px}.competition-admin-fields input,.competition-admin-fields select,.competition-admin-vote input{display:block;width:100%;padding:12px;background:#111;color:#fff;border:1px solid #555;font:inherit}.competition-admin-entry{padding:20px 0;border-bottom:1px solid #555}.competition-admin-entry summary{cursor:pointer;line-height:1.8}.competition-admin-entry audio{width:100%;margin:15px 0}.competition-admin-entry h3{margin:22px 0}.competition-admin-vote{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.competition-admin-vote input{max-width:350px}.competition-admin button:not(.industrial-button){padding:10px 14px;background:#252525;color:#fff;border:1px solid #555}.competition-admin .industrial-button{margin-top:16px}.competition-admin button:disabled{opacity:.5;cursor:not-allowed}.competition-admin .mix-player{display:flex;gap:12px;align-items:center}.competition-admin .mix-play{border-radius:50%;background:var(--yellow);color:#111}.competition-admin .mix-track{flex:1}.competition-admin .mix-wave{display:flex;align-items:center;height:45px;gap:1px}.competition-admin .mix-wave i{flex:1;background:#888}.competition-admin .mix-seek{width:100%}.competition-admin .mix-time{display:flex;justify-content:space-between}.competition-admin .sc-attribution{font-size:12px;text-decoration:underline}
 
 /* Competition campaign banner beneath the music and clothing cards. */
-.home-mix-banner { position:relative; isolation:isolate; overflow:hidden; margin-top:24px; border:1px solid #454545; border-bottom:3px solid var(--yellow); background:linear-gradient(90deg,#0001,#0004 50%,#0002),url('/brand/mix-competition-dj.webp') center/cover; }
+.home-mix-banner { position:relative; isolation:isolate; overflow:hidden; margin-top:24px; border:1px solid #454545; border-bottom:3px solid var(--yellow); background:linear-gradient(90deg,#0001,#0004 50%,#0002),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1600/v1791733887/UPFORIT/site/mix-competition-dj.webp') center/cover; }
 .home-mix-banner__content { position:relative; text-align:center; padding:58px 24px 54px; }
 .home-mix-banner h2 { margin:0; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(32px,4.5vw,60px); line-height:1.1; letter-spacing:-.045em; color:#fff; text-shadow:0 2px 16px #000; }
 .home-mix-banner h2 em { display:block; color:var(--yellow); font-style:normal; }
@@ -494,7 +494,7 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 
 /* Music landing banner */
 .music-page { padding-top:0; }
-.page-art-banner { position:relative; overflow:hidden; border-bottom:3px solid var(--yellow); background:#111 url('/brand/industrial-speaker.png') right center/cover no-repeat; }
+.page-art-banner { position:relative; overflow:hidden; border-bottom:3px solid var(--yellow); background:#111 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1536/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png') right center/cover no-repeat; }
 .page-art-banner::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#080808a6 0%,#08080855 45%,transparent 75%); }
 .page-art-banner__content { position:relative; min-height:clamp(300px,30vw,460px); display:flex; align-items:center; padding-top:54px; padding-bottom:54px; }
 .page-art-banner h1 { margin:0; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(54px,7vw,100px); font-weight:900; line-height:.98; letter-spacing:-.045em; text-transform:uppercase; color:#fff; text-shadow:0 3px 20px #0008; }
@@ -508,7 +508,7 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 }
 
 .merch-page { padding-top:0; }
-.page-art-banner--merch { background:#090909 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,w_1600/v1791201534/UPFORIT/industrial-2026/clothing-promo.png') right center/auto 150% no-repeat; }
+.page-art-banner--merch { background:#090909 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1536/v1791201534/UPFORIT/industrial-2026/clothing-promo.png') right center/auto 150% no-repeat; }
 .page-art-banner--merch::before { background:linear-gradient(90deg,#090909 0%,#090909 28%,#090909b3 43%,#09090922 58%,transparent 75%); }
 .page-art-banner--merch .page-art-banner__content { flex-direction:column; align-items:flex-start; justify-content:center; }
 .page-art-banner__credit { margin:24px 0 0; color:#fff; font-size:14px; line-height:1.5; }
@@ -518,4 +518,13 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
  .page-art-banner--merch::before { background:linear-gradient(90deg,#090909c9,#09090988 60%,#09090933); }
  .page-art-banner--merch h1 { font-size:clamp(40px,10vw,54px); }
  .page-art-banner__credit { font-size:12px; margin-top:20px; }
+}
+
+/* Small screens receive smaller CDN derivatives instead of desktop originals. */
+@media(max-width:600px) {
+ .page-art-banner--music { background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_768/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png'); }
+ .page-art-banner--merch { background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_768/v1791201534/UPFORIT/industrial-2026/clothing-promo.png'); }
+ .home-mix-banner { background-image:linear-gradient(90deg,#0001,#0004 50%,#0002),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_960/v1791733887/UPFORIT/site/mix-competition-dj.webp'); }
+ .discover-card--music { background-image:linear-gradient(90deg,#090909b3,#09090940),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_768/v1791200570/UPFORIT/industrial-2026/industrial-speaker.png'); }
+ .discover-card--merch { background-image:linear-gradient(90deg,#080808b3,transparent 85%),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_768/v1791201534/UPFORIT/industrial-2026/clothing-promo.png'); }
 }

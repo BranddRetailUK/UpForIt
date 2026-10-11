@@ -5,7 +5,7 @@ import { MUSIC_CONTENT } from "../../lib/music";
 
 const RELEASE_SHARE_DESCRIPTION = "Check out Married To The Music / Grift";
 const RELEASE_SHARE_IMAGE =
-  "https://res.cloudinary.com/brandduk/image/upload/v1786528232/a1053183844_10_eahqtq.jpg";
+  "https://res.cloudinary.com/brandduk/image/upload/f_jpg,q_85,c_limit,w_1200/v1786528232/a1053183844_10_eahqtq.jpg";
 const RELEASE_SHARE_ID = "spektral-married-to-the-music-grift";
 const MUSIC_PAGE_DESCRIPTION =
   "Listen to UPFORIT artist mixes, watch live sessions and meet the artists behind the music.";
