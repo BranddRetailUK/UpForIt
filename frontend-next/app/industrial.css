@@ -476,3 +476,25 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
   .nye-hero .nye-hero__eyebrow { font-size:9.9px; margin:2px 0 10px; }
 }
 .admin-section-nav{display:flex;gap:12px;margin:0 0 28px;flex-wrap:wrap}.admin-section-nav a{padding:14px 20px;border:1px solid #555;text-transform:uppercase;font-size:12px;font-weight:700}.admin-section-nav a[aria-current=page]{background:var(--yellow);color:#111}.competition-admin .admin-panel{margin-block:24px}.competition-admin .admin-panel>p{line-height:1.7;margin-block:14px}.competition-admin-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-block:20px}.competition-admin label{display:block;line-height:1.7;font-size:14px}.competition-admin-fields input,.competition-admin-fields select,.competition-admin-vote input{display:block;width:100%;padding:12px;background:#111;color:#fff;border:1px solid #555;font:inherit}.competition-admin-entry{padding:20px 0;border-bottom:1px solid #555}.competition-admin-entry summary{cursor:pointer;line-height:1.8}.competition-admin-entry audio{width:100%;margin:15px 0}.competition-admin-entry h3{margin:22px 0}.competition-admin-vote{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.competition-admin-vote input{max-width:350px}.competition-admin button:not(.industrial-button){padding:10px 14px;background:#252525;color:#fff;border:1px solid #555}.competition-admin .industrial-button{margin-top:16px}.competition-admin button:disabled{opacity:.5;cursor:not-allowed}.competition-promo{padding-block:28px;border-bottom:1px solid #444}.competition-promo h2{font-size:26px}.competition-promo p{margin:12px 0 20px;font-size:16px}.competition-admin .mix-player{display:flex;gap:12px;align-items:center}.competition-admin .mix-play{border-radius:50%;background:var(--yellow);color:#111}.competition-admin .mix-track{flex:1}.competition-admin .mix-wave{display:flex;align-items:center;height:45px;gap:1px}.competition-admin .mix-wave i{flex:1;background:#888}.competition-admin .mix-seek{width:100%}.competition-admin .mix-time{display:flex;justify-content:space-between}.competition-admin .sc-attribution{font-size:12px;text-decoration:underline}
+
+/* Competition campaign banner beneath the music and clothing cards. */
+.home-mix-banner { position:relative; isolation:isolate; overflow:hidden; margin-top:24px; border:1px solid #454545; border-bottom:3px solid var(--yellow); background:linear-gradient(#0009,#0009),url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452861/UPFORIT/nye-2026/centre-paper-texture.png') center/cover; }
+.home-mix-banner__speakers,.home-mix-banner__paint { position:absolute; inset:0; z-index:-1; pointer-events:none; }
+.home-mix-banner__speakers::before,.home-mix-banner__speakers::after { content:''; position:absolute; top:-2px; bottom:-2px; width:28%; background:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png') no-repeat; background-size:auto 150%; }
+.home-mix-banner__speakers::before { left:-3px; background-position:left center; mask-image:linear-gradient(to right,#000 65%,transparent); }
+.home-mix-banner__speakers::after { right:-3px; background-position:right center; mask-image:linear-gradient(to left,#000 65%,transparent); }
+.home-mix-banner__paint::before,.home-mix-banner__paint::after { content:''; position:absolute; inset-block:0; width:30%; background:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png') no-repeat; background-size:auto 150%; }
+.home-mix-banner__paint::before { left:0; background-position:left top; }
+.home-mix-banner__paint::after { right:0; background-position:right bottom; }
+.home-mix-banner__content { position:relative; text-align:center; padding:58px 24px 54px; }
+.home-mix-banner h2 { margin:0; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(32px,4.5vw,60px); line-height:1.1; letter-spacing:-.045em; color:#fff; text-shadow:0 2px 16px #000; }
+.home-mix-banner h2 em { display:block; color:var(--yellow); font-style:normal; }
+.home-mix-banner p { margin:20px 0 26px; font-size:18px; line-height:1.5; color:#fff; }
+@media(max-width:640px) {
+ .home-mix-banner { margin-top:16px; }
+ .home-mix-banner__content { padding:40px 18px; }
+ .home-mix-banner__speakers { opacity:.45; }
+ .home-mix-banner__speakers::before { left:-28px; }
+ .home-mix-banner__speakers::after { right:-28px; }
+ .home-mix-banner p { font-size:16px; margin:18px 0 24px; }
+}

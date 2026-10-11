@@ -27,11 +27,19 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="section-wrap competition-promo"><h2>DJ MIX COMPETITION</h2><p>Win a set at UPFORIT NYE. Upload your mix or vote for your favourite.</p><a className="industrial-button" href="/music/competition">Mix Competition</a></section>
 
       <section className="bass-discover section-wrap" aria-label="Explore UPFORIT">
         <Link href="/music" className="discover-card discover-card--music"><h2>TURN IT<br /><em>UP.</em></h2><span className="discover-card__action">Music &amp; mixes </span></Link>
         <Link href="/merch" className="discover-card discover-card--merch"><h2>UP FOR IT<br /><em>CLOTHING.</em></h2><span className="discover-card__action">Shop the collection </span></Link>
+      </section>
+      <section className="home-mix-banner section-wrap" aria-labelledby="home-mix-title">
+        <div className="home-mix-banner__speakers" aria-hidden="true" />
+        <div className="home-mix-banner__paint" aria-hidden="true" />
+        <div className="home-mix-banner__content">
+          <h2 id="home-mix-title">DJ MIX <em>COMPETITION</em></h2>
+          <p>Win a set at UPFORIT NYE.</p>
+          <Link className="industrial-button" href="/music/competition">Enter or vote</Link>
+        </div>
       </section>
       <section className="bass-newsletter section-wrap" id="stay-connected" aria-labelledby="signup-heading"><div><h2 id="signup-heading">DON’T MISS<br />THE <em>NEXT ONE.</em></h2></div><div className="bass-newsletter__form"><SignupForm /></div></section>
       <section className="bass-archive section-wrap" aria-labelledby="archive-title"><div className="bass-section-heading"><div><h2 id="archive-title">GOOD TIMES. <em>ON RECORD.</em></h2></div><Link className="industrial-link" href="/events">Event archive </Link></div><div className="past-event-list">{PAST_EVENTS.map(event => <PastEventCard key={event.slug} event={event} />)}</div></section>

@@ -113,7 +113,6 @@ export default function MixCompetition() {
         {!data && !loadError && <p>Loading competition…</p>}
         {data?.winner && <div className="mix-empty"><h2>OUR NYE WINNER: {data.winner.artist}</h2><p>{data.winner.title}</p></div>}
         {data?.tied && <p className="mix-notice">Voting has closed with a tie. The winner will be confirmed here.</p>}
-        {data && <p className="mix-deadline">Submissions {data.submissionsOpen ? "open" : "closed"} · Voting {data.votingOpen ? "open" : "closed"}<br />Voting closes {new Date(data.settings.voting_close_at).toLocaleString("en-GB",{timeZone:"Europe/London",dateStyle:"long",timeStyle:"short"})} (UK time).</p>}
         {data && !shown.length && <div className="mix-empty"><h2>BE THE FIRST TO ENTER</h2><p>No mixes have been submitted yet.</p><a className="mix-button" href="#submit-mix">SUBMIT YOUR MIX</a></div>}
         {data && !data.verified && <p className="mix-account-prompt">Listen freely. To vote, <a href="/account/login?next=%2Fmusic%2Fcompetition">sign in</a> or <a href="/account/signup?next=%2Fmusic%2Fcompetition">create an account</a> and confirm your email.</p>}
         <div className="mix-card-list">{shown.map((entry, index) => <article className="mix-card" key={entry.id} id={entry.id}>
