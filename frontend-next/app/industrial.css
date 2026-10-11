@@ -494,15 +494,28 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 
 /* Music landing banner */
 .music-page { padding-top:0; }
-.music-page__banner { position:relative; overflow:hidden; border-bottom:3px solid var(--yellow); background:#111 url('/brand/industrial-speaker.png') right center/cover no-repeat; }
-.music-page__banner::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#080808a6 0%,#08080855 45%,transparent 75%); }
-.music-page__banner-content { position:relative; min-height:clamp(300px,30vw,460px); display:flex; align-items:center; padding-top:54px; padding-bottom:54px; }
-.music-page__banner h1 { margin:0; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(54px,7vw,100px); font-weight:900; line-height:.98; letter-spacing:-.045em; text-transform:uppercase; color:#fff; text-shadow:0 3px 20px #0008; }
-.music-page__banner h1 span { display:block; color:var(--yellow); }
+.page-art-banner { position:relative; overflow:hidden; border-bottom:3px solid var(--yellow); background:#111 url('/brand/industrial-speaker.png') right center/cover no-repeat; }
+.page-art-banner::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#080808a6 0%,#08080855 45%,transparent 75%); }
+.page-art-banner__content { position:relative; min-height:clamp(300px,30vw,460px); display:flex; align-items:center; padding-top:54px; padding-bottom:54px; }
+.page-art-banner h1 { margin:0; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(54px,7vw,100px); font-weight:900; line-height:.98; letter-spacing:-.045em; text-transform:uppercase; color:#fff; text-shadow:0 3px 20px #0008; }
+.page-art-banner h1 span { display:block; color:var(--yellow); }
 .music-page .music-hub { margin-top:clamp(32px,4vw,56px); }
 .music-page .music-feed { margin-top:0; }
 @media(max-width:600px) {
- .music-page__banner { background-position:65% center; }
- .music-page__banner::before { background:linear-gradient(90deg,#080808bb,#08080833); }
- .music-page__banner-content { min-height:280px; }
+ .page-art-banner { background-position:65% center; }
+ .page-art-banner::before { background:linear-gradient(90deg,#080808bb,#08080833); }
+ .page-art-banner__content { min-height:280px; }
+}
+
+.merch-page { padding-top:0; }
+.page-art-banner--merch { background:#090909 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,w_1600/v1791201534/UPFORIT/industrial-2026/clothing-promo.png') right center/auto 150% no-repeat; }
+.page-art-banner--merch::before { background:linear-gradient(90deg,#090909 0%,#090909 28%,#090909b3 43%,#09090922 58%,transparent 75%); }
+.page-art-banner--merch .page-art-banner__content { flex-direction:column; align-items:flex-start; justify-content:center; }
+.page-art-banner__credit { margin:24px 0 0; color:#fff; font-size:14px; line-height:1.5; }
+.merch-page__catalogue { padding-top:clamp(32px,4vw,56px); padding-bottom:80px; }
+@media(max-width:600px) {
+ .page-art-banner--merch { background-position:60% center; background-size:auto 110%; }
+ .page-art-banner--merch::before { background:linear-gradient(90deg,#090909c9,#09090988 60%,#09090933); }
+ .page-art-banner--merch h1 { font-size:clamp(40px,10vw,54px); }
+ .page-art-banner__credit { font-size:12px; margin-top:20px; }
 }

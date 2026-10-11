@@ -20,17 +20,15 @@ export default async function MerchPage() {
     unavailable = true;
   }
   return (
-    <div className="inner-page section-wrap merch-page">
-      <header className="page-intro merch-intro">
-        <div className="merch-title-lockup">
-          <h1>Merch</h1>
-          <p className="merch-powered-banner">
-            <span>Powered by</span>{" "}
-            <strong>Good Game Apparel</strong>
-          </p>
+    <div className="merch-page">
+      <header className="page-art-banner page-art-banner--merch">
+        <div className="page-art-banner__content section-wrap">
+          <h1>UP FOR IT<span>CLOTHING</span></h1>
+          <p className="page-art-banner__credit">Powered by <strong>Good Game Apparel</strong></p>
         </div>
       </header>
 
+      <div className="merch-page__catalogue section-wrap">
       {products.length > 0 ? (
         <section className="merch-grid" aria-label="UPFORIT products">
           {products.map((product, index) => (
@@ -48,8 +46,7 @@ export default async function MerchPage() {
           </Link>
         </section>
       )}
-
-
+      </div>
     </div>
   );
 }
