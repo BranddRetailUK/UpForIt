@@ -58,5 +58,11 @@
     "url": "https://res.cloudinary.com/brandduk/image/upload/v1791733889/UPFORIT/site/soundcloud-logo.png",
     "width": 120,
     "height": 15
+  },
+  "merch-banner-wide": {
+    "publicId": "UPFORIT/site/merch-banner-wide",
+    "url": "https://res.cloudinary.com/brandduk/image/upload/v1791734713/UPFORIT/site/merch-banner-wide.png",
+    "width": 2172,
+    "height": 724
   }
 }

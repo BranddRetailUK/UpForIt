@@ -23,7 +23,7 @@ export default async function MerchPage() {
     <div className="merch-page">
       <header className="page-art-banner page-art-banner--merch">
         <div className="page-art-banner__content section-wrap">
-          <h1>UP FOR IT<span>CLOTHING</span></h1>
+          <h1>UPFORIT<span>CLOTHING</span></h1>
         </div>
       </header>
 
