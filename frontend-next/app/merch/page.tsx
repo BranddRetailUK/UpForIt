@@ -24,7 +24,6 @@ export default async function MerchPage() {
       <header className="page-art-banner page-art-banner--merch">
         <div className="page-art-banner__content section-wrap">
           <h1>UP FOR IT<span>CLOTHING</span></h1>
-          <p className="page-art-banner__credit">Powered by <strong>Good Game Apparel</strong></p>
         </div>
       </header>
 

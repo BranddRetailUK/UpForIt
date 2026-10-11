@@ -511,13 +511,11 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 .page-art-banner--merch { background:#090909 url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_1536/v1791201534/UPFORIT/industrial-2026/clothing-promo.png') right center/auto 150% no-repeat; }
 .page-art-banner--merch::before { background:linear-gradient(90deg,#090909 0%,#090909 28%,#090909b3 43%,#09090922 58%,transparent 75%); }
 .page-art-banner--merch .page-art-banner__content { flex-direction:column; align-items:flex-start; justify-content:center; }
-.page-art-banner__credit { margin:24px 0 0; color:#fff; font-size:14px; line-height:1.5; }
 .merch-page__catalogue { padding-top:clamp(32px,4vw,56px); padding-bottom:80px; }
 @media(max-width:600px) {
  .page-art-banner--merch { background-position:60% center; background-size:auto 110%; }
  .page-art-banner--merch::before { background:linear-gradient(90deg,#090909c9,#09090988 60%,#09090933); }
  .page-art-banner--merch h1 { font-size:clamp(40px,10vw,54px); }
- .page-art-banner__credit { font-size:12px; margin-top:20px; }
 }
 
 /* Small screens receive smaller CDN derivatives instead of desktop originals. */
