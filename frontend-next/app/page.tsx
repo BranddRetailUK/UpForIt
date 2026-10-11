@@ -27,6 +27,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <section className="section-wrap competition-promo"><h2>DJ MIX COMPETITION</h2><p>Win a set at UPFORIT NYE. Upload your mix or vote for your favourite.</p><a className="industrial-button" href="/music/competition">Mix Competition</a></section>
+
       <section className="bass-discover section-wrap" aria-label="Explore UPFORIT">
         <Link href="/music" className="discover-card discover-card--music"><h2>TURN IT<br /><em>UP.</em></h2><span className="discover-card__action">Music &amp; mixes </span></Link>
         <Link href="/merch" className="discover-card discover-card--merch"><h2>UP FOR IT<br /><em>CLOTHING.</em></h2><span className="discover-card__action">Shop the collection </span></Link>

@@ -134,7 +134,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
         </p>
         <p>
           Click the link to activate your account. Keep this page open and you’ll be signed in automatically and {nextPath
-            ? "taken back to the tickets."
+            ? nextPath.startsWith("/music/competition") ? "taken back to the mix competition." : "taken back to where you left off."
             : "taken to your account."}
         </p>
         <p className={`account-created__polling account-created__polling--${verificationState}`}>

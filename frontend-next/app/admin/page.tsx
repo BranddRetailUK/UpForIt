@@ -1,3 +1,4 @@
+import AdminNavigation from "../../components/AdminNavigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -98,6 +99,7 @@ export default async function AdminPage() {
         </nav>
       </header>
 
+      <AdminNavigation active="tickets" />
       <section className="admin-metrics" aria-label="Ticket metrics">
         <article><strong>{metrics.paid_orders}</strong><span>Paid orders</span></article>
         <article><strong>£{(Number(metrics.revenue_minor) / 100).toFixed(2)}</strong><span>Revenue</span></article>

@@ -75,10 +75,11 @@ describe("music content catalogue", () => {
     expect(result).not.toBe(blocks);
   });
 
-  it("places the music route between events and merch in global navigation", () => {
-    expect(NAV_ITEMS.slice(1, 4)).toEqual([
+  it("places music and the competition between events and merch in global navigation", () => {
+    expect(NAV_ITEMS.slice(1, 5)).toEqual([
       { href: "/events", label: "Events" },
       { href: "/music", label: "Music & Mixes" },
+      { href: "/music/competition", label: "Mix Competition" },
       { href: "/merch", label: "Merch" }
     ]);
   });

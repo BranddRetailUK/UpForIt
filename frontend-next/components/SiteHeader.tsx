@@ -127,7 +127,7 @@ export default function SiteHeader() {
               const active =
                 item.href === "/"
                   ? pathname === "/"
-                  : pathname.startsWith(item.href);
+                  : item.href === "/music" ? pathname === "/music" : pathname.startsWith(item.href);
 
               return (
                 <li
