@@ -71,7 +71,6 @@ export default function MusicPage() {
         </div>
       </header>
 
-      <div className="section-wrap competition-promo"><h2>Win a set at UPFORIT NYE</h2><p>Enter your mix or listen and vote for your favourite DJ.</p><a className="industrial-button" href="/music/competition">Mix Competition</a></div>
       <MusicHub blocks={MUSIC_CONTENT} />
     </div>
   );

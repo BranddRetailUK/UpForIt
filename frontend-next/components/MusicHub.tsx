@@ -1,6 +1,8 @@
 "use client";
 
+import MixCompetitionBanner from "./MixCompetitionBanner";
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -334,7 +336,6 @@ function AudioCard({
     >
       <div className="music-card__artwork">
         <MusicArtwork publicId={block.artworkPublicId} title={block.title} />
-        <span className="music-card__format-sticker">Audio mix</span>
       </div>
       <div className="music-card__copy">
         <p className="music-card__artist">{block.artist}</p>
@@ -409,7 +410,6 @@ function VideoCard({
         ) : (
           <MusicArtwork publicId={posterId} title={block.title} shape="video" />
         )}
-        <span className="music-card__format-sticker">Video mix</span>
         {canPlay && !playing && !mediaError ? (
           <button
             className="mix-video-frame__custom-play"
@@ -444,7 +444,6 @@ function ArtistStory({ block, visible }: { block: ArtistStoryBlock; visible: boo
     <article className="music-artist-story" hidden={!visible}>
       <div className="music-artist-story__portrait">
         <MusicArtwork publicId={block.imagePublicId} title={block.artist} shape="portrait" />
-        <span className="music-card__format-sticker">Artist story</span>
       </div>
       <div className="music-artist-story__copy">
 
@@ -517,7 +516,6 @@ function ReleaseShowcase({
       <div className="music-release-showcase__hero">
         <div className="music-release-showcase__artwork">
           <MusicArtwork publicId={block.artworkPublicId} title={block.title} />
-          <span className="music-card__format-sticker">New release</span>
         </div>
 
         <div className="music-release-showcase__copy">
@@ -548,7 +546,6 @@ function ReleaseShowcase({
             title={block.artist}
             alt={`${block.artist}, UPFORIT resident Drum & Bass Artist`}
           />
-          <span>UPFORIT resident</span>
         </div>
         <section aria-labelledby={`${block.id}-artist-heading`}>
           <h3 id={`${block.id}-artist-heading`}>About the artist</h3>
@@ -568,6 +565,7 @@ export default function MusicHub({ blocks }: MusicHubProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const publishedBlocks = blocks.filter((block) => !block.placeholder);
   const visibleBlocks = filterMusicContent(publishedBlocks, filter);
+  const firstVideoId = publishedBlocks.find(block => block.kind === "video")?.id;
 
   const selectFilter = (nextFilter: MusicFilter) => {
     if (nextFilter === filter) return;
@@ -616,13 +614,10 @@ export default function MusicHub({ blocks }: MusicHubProps) {
           }
           if (block.kind === "video") {
             return (
-              <VideoCard
-                block={block}
-                activeId={activeId}
-                onPlay={setActiveId}
-                visible={visible}
-                key={block.id}
-              />
+              <Fragment key={block.id}>
+                <VideoCard block={block} activeId={activeId} onPlay={setActiveId} visible={visible} />
+                {block.id === firstVideoId && visible && <MixCompetitionBanner inFeed />}
+              </Fragment>
             );
           }
           if (block.kind === "release") {
