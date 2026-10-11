@@ -99,7 +99,7 @@ export default function MixCompetition() {
       <div className="mix-hero-speakers" aria-hidden="true" />
       <div className="mix-hero-bars" aria-hidden="true" />
       <div className="section-wrap mix-hero-inner">
-        <h1>UPFORIT NYE<br /><em>DJ MIX COMPETITION</em></h1>
+        <h1>UPFORIT<br /><em>NYE MIX COMPETITION</em></h1>
         <p className="mix-hero-lead">Win a set at UpForIt NYE at McCarthys.</p>
         
         <div className="mix-actions"><a className="mix-button" href="#submit-mix"> SUBMIT YOUR MIX</a><a className="mix-outline" href="#how-it-works">HOW IT WORKS </a></div>
