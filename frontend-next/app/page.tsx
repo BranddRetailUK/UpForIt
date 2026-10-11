@@ -33,8 +33,6 @@ export default function Home() {
         <Link href="/merch" className="discover-card discover-card--merch"><h2>UP FOR IT<br /><em>CLOTHING.</em></h2><span className="discover-card__action">Shop the collection </span></Link>
       </section>
       <section className="home-mix-banner section-wrap" aria-labelledby="home-mix-title">
-        <div className="home-mix-banner__speakers" aria-hidden="true" />
-        <div className="home-mix-banner__paint" aria-hidden="true" />
         <div className="home-mix-banner__content">
           <h2 id="home-mix-title">DJ MIX <em>COMPETITION</em></h2>
           <p>Win a set at UPFORIT NYE.</p>
