@@ -1,0 +1,5 @@
+{
+  "name":"upforit-admin","version":"1.0.0","private":true,"type":"module",
+  "scripts":{"dev":"node server.mjs","start":"node server.mjs","check":"node --check server.mjs && node --check traffic.mjs && node --check meta.mjs && node --check data.mjs && node --check campaigns.mjs && node --check public/campaigns.js && node --check public/app.js","test":"node --test test/*.test.mjs"},
+  "engines":{"node":">=20"},"dependencies":{"bcryptjs":"3.0.3","pg":"8.17.2"}
+}

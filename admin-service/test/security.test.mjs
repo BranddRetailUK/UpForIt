@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {sameOrigin,sessionCookie,sessionToken,csvCell,validateEntry,validateSettings} from '../security.mjs';
+test('writes require exact same origin and reject cross-site requests',()=>{const origin='https://admin.example.com';assert.equal(sameOrigin({headers:{origin}},origin),true);for(const headers of [{},{origin:'https://evil.example.com'},{origin,'sec-fetch-site':'cross-site'}])assert.equal(sameOrigin({headers},origin),false);});
+test('session cookie is host-only, httpOnly, secure and strict in production',()=>{const cookie=sessionCookie('abc',43200,true);for(const part of ['HttpOnly','Secure','SameSite=Strict','Path=/','Max-Age=43200'])assert.ok(cookie.includes(part));assert.ok(!cookie.includes('Domain='));assert.equal(sessionToken({headers:{cookie:'upforit_admin_session=invalid'}}),null);});
+test('CSV escapes quotes and neutralizes spreadsheet formulas without losing text',()=>{assert.equal(csvCell('=SUM(A1)'),`"'=SUM(A1)"`);assert.equal(csvCell('a"b'),'"a""b"');});
+test('entry and date validation prevents invalid persistence',()=>{const e={artist:'DJ',title:'Mix',email:'dj@example.com',genre:'UKG',status:'published',reviewed:true,allow_download:false};assert.doesNotThrow(()=>validateEntry(e));assert.throws(()=>validateEntry({...e,status:'deleted'}));assert.throws(()=>validateEntry({...e,reviewed:'true'}));assert.throws(()=>validateSettings({submissions:true,voting:true,close:'2027-01-03',voteClose:'2027-01-02',announce:'2027-01-04'}));});
