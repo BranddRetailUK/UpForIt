@@ -711,3 +711,23 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 }
 
 .nye-event__hero--blackley .nye-hero__eyebrow { font-size:clamp(14px,1.25vw,18px); margin:10px 0 20px; }
+
+/* Homepage NYE details share the event countdown and retain centred mobile layout. */
+.industrial-home .nye-hero__venue { font-size:clamp(24px,2.8vw,36px); line-height:1.15; }
+.industrial-home .nye-countdown { margin:0 auto 24px; }
+
+.industrial-home .nye-countdown__label { color:#fff; font-weight:700; }
+@media (max-width:640px) {
+  .industrial-home .nye-hero__date { display:none; }
+}
+.industrial-home .bass-archive .past-event p { color:var(--yellow); }
+.industrial-home .bass-archive .past-event__date { display:block; margin-top:10px; }
+@media (max-width:640px) {
+  .event-updates-banner .signup-form { gap:14px; }
+  .event-updates-banner .signup-input { flex-basis:100%; width:100%; }
+  .event-updates-banner .btn { flex:0 0 auto; width:auto; min-height:48px; padding:12px 24px; }
+  .industrial-home .bass-archive { text-align:center; }
+  .industrial-home .bass-archive .bass-section-heading { align-items:center; }
+  .industrial-home .bass-archive .past-event { flex-direction:column; align-items:center; }
+  .industrial-home .bass-archive .past-event__link { margin-left:0; justify-content:center; }
+}
