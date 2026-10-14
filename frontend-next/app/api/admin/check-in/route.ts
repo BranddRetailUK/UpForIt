@@ -9,7 +9,7 @@ import { verifyTicketQrToken } from "../../../../lib/security";
 
 type TicketRow = {
   id: string; public_id: string; ticket_number: string; ticket_type_name: string; status: string;
-  checked_in_at: Date | null; display_name: string; event_title: string;
+  checked_in_at: Date | null; display_name: string; event_title: string; live_check_in: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -33,11 +33,12 @@ export async function POST(request: NextRequest) {
       const values = [lookupValue, eventId];
       const result = await client.query<TicketRow>(
         `SELECT t.id, t.public_id, t.ticket_number, t.ticket_type_name, t.status, t.checked_in_at,
-                u.display_name, e.title AS event_title
+                u.display_name, e.title AS event_title,
+                (e.status = 'published' AND now() >= e.starts_at - interval '2 hours') AS live_check_in
            FROM tickets t JOIN users u ON u.id = t.user_id JOIN events e ON e.id = t.event_id JOIN ticket_orders o ON o.id = t.order_id
           WHERE ${publicId ? "t.public_id = $1" : "upper(t.ticket_number) = upper($1)"}
-            AND t.event_id = $2 AND e.status = 'published'
-            AND now() >= e.starts_at - interval '2 hours' AND now() < e.ends_at + interval '2 hours'
+            AND t.event_id = $2 AND e.status <> 'cancelled'
+            AND now() < e.ends_at + interval '2 hours'
             AND o.status IN ('paid','refund_review') AND o.admissions_hold = false
           FOR UPDATE OF o, t`,
         values
@@ -54,6 +55,10 @@ export async function POST(request: NextRequest) {
       if (ticket.status === "checked_in") {
         await client.query("ROLLBACK");
         return NextResponse.json({ error: "This ticket has already been checked in.", ticket }, { status: 409 });
+      }
+      if (!ticket.live_check_in) {
+        await client.query("ROLLBACK");
+        return NextResponse.json({ ok: true, validationOnly: true, ticket });
       }
       await client.query(
         "UPDATE tickets SET status = 'checked_in', checked_in_at = now(), checked_in_by = $2 WHERE id = $1",

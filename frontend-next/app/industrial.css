@@ -683,3 +683,29 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 .nye-event__hero--blackley .nye-hero__actions { margin-top:18px; }
 .nye-event__hero--blackley .nye-hero__date,
 .nye-event__hero--blackley .industrial-button { text-shadow:none; }
+
+/* Door scanner: the same high-contrast palette as the public event pages. */
+:is(.scanner-page,.scanner-ended-page,.scanner-activation-page) { color:#fff; max-width:960px; padding-block:36px 64px; }
+:is(.scanner-page,.scanner-ended-page,.scanner-activation-page) :is(.admin-panel,.account-panel) { color:#fff; background:#111; border:2px solid #f2ff00; border-radius:0; box-shadow:6px 6px 0 #f2ff00; padding:28px; }
+:is(.scanner-page,.scanner-ended-page,.scanner-activation-page) h1 { color:#f2ff00; font-family:var(--font-heavy),Impact,sans-serif; font-size:clamp(34px,5vw,60px); line-height:1; text-transform:uppercase; }
+.scanner-page .admin-header { color:#fff; background:none; border:0; padding:0 0 24px; }
+.scanner-page .admin-header p { color:#fff; overflow-wrap:anywhere; }
+.scanner-page .admin-header a { color:#f2ff00; font-weight:800; }
+.check-in-tool > label,.scanner-activation label { display:grid; gap:10px; color:#fff; font-weight:800; }
+.scanner-page :is(input,select),.scanner-activation input { width:100%; min-height:52px; padding:12px; color:#fff; background:#090909; border:2px solid #fff; border-radius:0; font-size:16px; }
+.scanner-page input::placeholder,.scanner-activation input::placeholder { color:#fff; opacity:1; }
+:is(.scanner-page,.scanner-activation-page) .pop-button { min-height:54px; background:#f2ff00; color:#090909; border:2px solid #f2ff00; border-radius:0; box-shadow:none; transform:none; font-weight:900; text-transform:uppercase; }
+:is(.scanner-page,.scanner-activation-page) .pop-button:disabled { background:#111; color:#fff; border-color:#fff; opacity:1; cursor:not-allowed; }
+.scanner-page .check-in-video { border:2px solid #f2ff00; }
+.scanner-page .check-in-result { background:#111; color:#fff; border:3px solid #fff; border-radius:0; }
+.scanner-page .check-in-result.is-success { background:#f2ff00; color:#090909; border-color:#f2ff00; }
+.scanner-page .check-in-result.is-error { border-color:#ff5a5a; }
+.scanner-page .check-in-result strong { display:block; font-size:24px; text-transform:uppercase; }
+.scanner-activation small { color:#fff; }
+:is(.scanner-page,.scanner-activation-page) :is(button,input,select,a):focus-visible { outline:3px solid #fff; outline-offset:4px; }
+@media(max-width:640px) {
+ :is(.scanner-page,.scanner-ended-page,.scanner-activation-page) { text-align:center; padding-block:24px 40px; }
+ .scanner-page .admin-header { display:grid; gap:18px; justify-items:center; }
+ :is(.scanner-page,.scanner-ended-page,.scanner-activation-page) :is(.admin-panel,.account-panel) { padding:20px 16px; box-shadow:4px 4px 0 #f2ff00; }
+ .scanner-page :is(input,select) { text-align:center; }
+}

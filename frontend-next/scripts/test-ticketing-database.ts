@@ -44,6 +44,10 @@ async function main(){
  const ticket=(await pool.query('SELECT public_id FROM tickets WHERE order_id=$1 LIMIT 1',[third.id])).rows[0];
  const request=(eventId:string)=>new NextRequest('http://localhost:3000/api/admin/check-in',{method:'POST',headers:{origin:'http://localhost:3000',cookie:`upforit_session=${token}`,'content-type':'application/json'},body:JSON.stringify({eventId,code:createTicketQrToken(ticket.public_id)})});
  assert.equal((await scan(request(randomUUID()))).status,404);
+ await pool.query("UPDATE events SET status='draft',starts_at=now()+interval '30 days' WHERE id=$1",[event]);
+ const rehearsal=await scan(request(event));assert.equal(rehearsal.status,200);assert.equal((await rehearsal.json()).validationOnly,true);
+ assert.equal(await count(third.id,"status='checked_in'"),0);
+ await pool.query("UPDATE events SET status='published',starts_at=now()+interval '1 hour' WHERE id=$1",[event]);
  const scans=await Promise.all([scan(request(event)),scan(request(event))]);assert.deepEqual(scans.map(r=>r.status).sort(),[200,409]);
  await refund(third,3000);assert.equal((await scan(request(event))).status,404);
  if(process.env.TICKET_EMAIL_TEST_RECIPIENT){

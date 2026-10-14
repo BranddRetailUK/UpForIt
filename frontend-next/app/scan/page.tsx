@@ -32,7 +32,7 @@ export default async function ScannerPage() {
     );
   }
 
-  const events = accountAccess ? (await getPool().query<{id:string;title:string}>("SELECT id,title FROM events WHERE status='published' AND now() >= starts_at - interval '2 hours' AND now() < ends_at + interval '2 hours' ORDER BY starts_at")).rows : [];
+  const events = accountAccess ? (await getPool().query<{id:string;title:string}>("SELECT id,title FROM events WHERE status <> 'cancelled' AND now() < ends_at + interval '2 hours' ORDER BY starts_at")).rows : [];
   return (
     <div className="admin-shell section-wrap scanner-page">
       <header className="admin-header">

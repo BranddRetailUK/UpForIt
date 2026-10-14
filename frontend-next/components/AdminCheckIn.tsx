@@ -26,8 +26,8 @@ export default function AdminCheckIn({ events = [], fixedEventId }: {events?: Ar
       const response = await fetch("/api/admin/check-in", {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code, eventId })
       });
-      const result = await response.json() as { ok?: boolean; error?: string; ticket?: TicketResult };
-      setMessage({ ok: response.ok, text: response.ok ? "Ticket checked in" : result.error || "Check-in failed", ticket: result.ticket });
+      const result = await response.json() as { ok?: boolean; validationOnly?: boolean; error?: string; ticket?: TicketResult };
+      setMessage({ ok: response.ok, text: response.ok ? (result.validationOnly ? "Rehearsal: valid ticket — not checked in" : "Ticket checked in") : result.error || "Check-in failed", ticket: result.ticket });
     } catch {
       setMessage({ ok: false, text: "Connection lost. Check the signal and try this ticket again." });
     } finally {
@@ -66,7 +66,8 @@ export default function AdminCheckIn({ events = [], fixedEventId }: {events?: Ar
   return (
     <div className="check-in-tool">
       {!fixedEventId ? <label>Event<select value={eventId} disabled={busy || scanning} onChange={event=>setEventId(event.target.value)}>{events.map(event=><option key={event.id} value={event.id}>{event.title}</option>)}</select></label> : null}
-      {!eventId ? <p>No event is currently open for check-in.</p> : null}
+      {!eventId ? <p>No upcoming event is available. Add an event in admin before setting up a scanner.</p> : null}
+      <p>Before an event opens, scans validate tickets without admitting anyone. Live check-in starts two hours before the published event.</p>
       <button className="pop-button pop-button--yellow" type="button" disabled={busy || !eventId} onClick={() => setScanning((value) => !value)}>
         {scanning ? "Stop camera" : "Scan QR code"}
       </button>
