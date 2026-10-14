@@ -1,10 +1,12 @@
 "use client";
 
+import {ticketPrice} from "../lib/ticket-pricing";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Tier = {
+  eventSlug:string;
   id: string;
   name: string;
   priceMinor: number;
@@ -78,6 +80,7 @@ export default function AdminSimulatedPurchase({ tiers }: { tiers: Tier[] }) {
               {Array.from({ length: maximum }, (_, index) => index + 1).map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
+          <p>Total £{(ticketPrice(selectedTier.eventSlug,selectedTier.priceMinor,Math.min(quantity,maximum)).totalMinor/100).toFixed(2)} including {ticketPrice(selectedTier.eventSlug,selectedTier.priceMinor,Math.min(quantity,maximum)).freeQuantity} free admissions</p>
           <button className="pop-button pop-button--yellow" type="submit" disabled={busy || maximum < 1}>
             {busy ? "Creating tickets…" : "Buy test ticket"}
           </button>

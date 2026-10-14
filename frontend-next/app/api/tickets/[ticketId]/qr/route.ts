@@ -9,7 +9,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const user = await getUserForSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
   if (!user) return new NextResponse("Sign in required", { status: 401 });
   const result = await getPool().query<{ public_id: string; user_id: string }>(
-    "SELECT public_id, user_id FROM tickets WHERE id = $1",
+    `SELECT t.public_id,t.user_id FROM tickets t JOIN ticket_orders o ON o.id=t.order_id
+      WHERE t.id=$1 AND t.status <> 'void' AND o.admissions_hold=false AND o.status IN ('paid','refund_review')`,
     [ticketId]
   );
   const ticket = result.rows[0];

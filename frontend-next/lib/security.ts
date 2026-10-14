@@ -50,23 +50,24 @@ export function decryptJson<T>(value: string): T {
   ) as T;
 }
 
+// Existing v1 codes remain valid through a bounded verification-key overlap.
+function qrKeys() {
+  return [process.env.TICKET_QR_SIGNING_SECRET, ...(process.env.TICKET_QR_PREVIOUS_SIGNING_SECRETS || "").split(",")].filter((key): key is string => Boolean(key?.trim())).map(key => key.trim());
+}
 export function createTicketQrToken(publicId: string) {
   const secret = process.env.TICKET_QR_SIGNING_SECRET;
   if (!secret) throw new Error("TICKET_QR_SIGNING_SECRET is not set");
   const signature = createHmac("sha256", secret).update(`v1.${publicId}`).digest("base64url");
   return `v1.${publicId}.${signature}`;
 }
-
 export function verifyTicketQrToken(token: string) {
-  const [version, publicId, signature] = token.trim().split(".");
-  const secret = process.env.TICKET_QR_SIGNING_SECRET;
-  if (version !== "v1" || !publicId || !signature || !secret) return null;
-  const expected = createHmac("sha256", secret).update(`v1.${publicId}`).digest();
-  let actual: Buffer;
-  try {
-    actual = Buffer.from(signature, "base64url");
-  } catch {
-    return null;
-  }
-  return actual.length === expected.length && timingSafeEqual(actual, expected) ? publicId : null;
+  const match = /^v1\.([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.([A-Za-z0-9_-]{43})$/i.exec(token.trim());
+  if (!match) return null;
+  const [, publicId, signature] = match;
+  const actual = Buffer.from(signature, "base64url");
+  if (actual.toString("base64url") !== signature) return null;
+  return qrKeys().some(secret => {
+    const expected = createHmac("sha256",secret).update(`v1.${publicId}`).digest();
+    return actual.length === expected.length && timingSafeEqual(actual,expected);
+  }) ? publicId : null;
 }

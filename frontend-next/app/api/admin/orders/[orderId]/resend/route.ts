@@ -1,31 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAdminForRequest } from "../../../../../../lib/admin-auth";
-import { getPool } from "../../../../../../lib/db";
-import { enqueueEmail } from "../../../../../../lib/email-jobs";
-import { assertSameOrigin } from "../../../../../../lib/request";
-
-export async function POST(request: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
-  try {
-    const { orderId } = await params;
-    assertSameOrigin(request);
-    const admin = await getAdminForRequest(request);
-    if (!admin) return NextResponse.json({ error: "Administrator access required." }, { status: 403 });
-    const result = await getPool().query<{ user_id: string; email: string; display_name: string }>(
-      `SELECT o.user_id, u.email, u.display_name
-         FROM ticket_orders o JOIN users u ON u.id = o.user_id
-        WHERE o.id = $1 AND o.status = 'paid'`,
-      [orderId]
-    );
-    const order = result.rows[0];
-    if (!order) return NextResponse.json({ error: "Paid order not found." }, { status: 404 });
-    await enqueueEmail(
-      "ticket_confirmation",
-      { to: order.email, displayName: order.display_name, orderId },
-      { userId: order.user_id, orderId }
-    );
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Ticket resend failed", error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: "Ticket resend failed." }, { status: 500 });
-  }
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserForSessionToken, SESSION_COOKIE } from '../../../../../../lib/auth';
+import { getPool } from '../../../../../../lib/db';
+import { assertSameOrigin } from '../../../../../../lib/request';
+import { resendTickets } from '../../../../../../lib/ticket-resend';
+import { TicketRequestError, UUID_PATTERN } from '../../../../../../lib/ticket-checkout-input';
+export async function POST(request: NextRequest,{params}:{params:Promise<{orderId:string}>}){
+ try{
+  assertSameOrigin(request);
+  const user=await getUserForSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  if(!user)return NextResponse.json({error:'Sign in required.'},{status:401});
+  const {orderId}=await params;
+  if(!UUID_PATTERN.test(orderId))throw new TicketRequestError('Invalid order.');
+  const db=await getPool().connect();
+  try{await db.query('BEGIN');await resendTickets(db,orderId,user.id,user.role==='admin');await db.query('COMMIT');}catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
+  return NextResponse.json({ok:true});
+ }catch(error){return NextResponse.json({error:error instanceof TicketRequestError?error.message:'Ticket resend failed.'},{status:error instanceof TicketRequestError?error.status:400});}
 }

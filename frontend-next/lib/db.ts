@@ -18,9 +18,7 @@ export function getPool() {
     ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPg.pgPool = pool;
-  }
+  globalForPg.pgPool = pool;
 
   return pool;
 }

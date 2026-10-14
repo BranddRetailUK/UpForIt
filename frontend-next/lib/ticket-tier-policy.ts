@@ -9,7 +9,7 @@ export function chooseActiveTicketTier(tiers: TicketTierProgress[]) {
   if (!tiers.length) return null;
 
   let activeIndex = tiers.findIndex((tier) => tier.active);
-  if (activeIndex < 0) activeIndex = 0;
+  if (activeIndex < 0) return null;
 
   while (
     activeIndex < tiers.length - 1 &&

@@ -12,7 +12,7 @@ describe("ticket tier progression", () => {
     expect(chooseActiveTicketTier(tiers(10_000))).toBe("general");
   });
 
-  it("activates the only current tier if no tier was active", () => {
-    expect(chooseActiveTicketTier(tiers(0, false))).toBe("general");
+  it("keeps deliberately inactive tiers closed", () => {
+    expect(chooseActiveTicketTier(tiers(0, false))).toBeNull();
   });
 });

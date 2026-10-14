@@ -1,7 +1,7 @@
 import { EMAIL_JOB_MAX_ATTEMPTS } from "./email-delivery";
 
 export type TicketEmailStatus = {
-  label: "Sent" | "Failed" | "Retrying" | "Sending" | "Queued" | "—";
+  label: "Accepted" | "Delivered" | "Bounced" | "Review required" | "Cancelled" | "Failed" | "Retrying" | "Sending" | "Queued" | "—";
   tone: "sent" | "failed" | "retrying" | "neutral";
 };
 
@@ -11,7 +11,11 @@ export function getTicketEmailStatus(input: {
   jobStatus: string | null;
   attempts: number | null;
 }): TicketEmailStatus {
-  if (input.sentAt || input.jobStatus === "sent") return { label: "Sent", tone: "sent" };
+  if (input.jobStatus === "delivered") return {label: "Delivered", tone: "sent"};
+  if (input.jobStatus === "bounced") return {label: "Bounced", tone: "failed"};
+  if (input.jobStatus === "unknown") return {label: "Review required", tone: "failed"};
+  if (input.jobStatus === "cancelled") return {label: "Cancelled", tone: "neutral"};
+  if (input.jobStatus === "sent" || (!input.jobStatus && input.sentAt)) return { label: "Accepted", tone: "sent" };
   if (input.jobStatus === "failed") {
     return input.attempts !== null && input.attempts >= EMAIL_JOB_MAX_ATTEMPTS
       ? { label: "Failed", tone: "failed" }

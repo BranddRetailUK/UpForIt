@@ -17,7 +17,7 @@ describe("ticket PDF", () => {
     query.mockResolvedValue({
       rows: Array.from({ length: 4 }, (_, index) => ({
         order_number: "UFI-001001",
-        display_name: "Test Buyer",
+        display_name: ["Łukasz François", "王小明 🎟️", "A very long ticket holder name ".repeat(20), "Test Buyer"][index],
         event_title: "NYE 2026",
         venue_name: "McCarthys Sports Bar",
         starts_at: new Date("2026-09-26T11:00:00.000Z"),

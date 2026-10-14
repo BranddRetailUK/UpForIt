@@ -1,4 +1,7 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { PDFDocument, type PDFFont, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { getPool } from "./db";
 import { createTicketQrToken } from "./security";
@@ -23,7 +26,7 @@ export async function getTicketDocumentRows(orderId: string) {
        JOIN users u ON u.id = o.user_id
        JOIN events e ON e.id = o.event_id
        JOIN tickets t ON t.order_id = o.id
-      WHERE o.id = $1
+      WHERE o.id = $1 AND o.status IN ('paid','refund_review') AND o.admissions_hold=false AND t.status <> 'void'
       ORDER BY t.created_at, t.ticket_number`,
     [orderId]
   );
@@ -35,8 +38,16 @@ export async function buildTicketPdf(orderId: string, ticketRows?: TicketDocumen
   if (!tickets.length) throw new Error("No issued tickets found for this order");
   const document = await PDFDocument.create();
   document.setTitle(`${tickets[0].event_title} tickets — ${tickets[0].order_number}`);
-  const regular = await document.embedFont(StandardFonts.Helvetica);
-  const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  document.registerFontkit(fontkit);
+  const regular = await document.embedFont(await readFile(path.join(process.cwd(), 'assets/fonts/NotoSans-Regular.ttf')), {subset:true});
+  const bold = regular;
+  const supported = new Set(regular.getCharacterSet());
+  const safe = (text: string) => [...text].every(char => supported.has(char.codePointAt(0)!)) ? text.replace(/[\r\n\t]/g,' ') : 'See account for full details';
+  const fitted = (text: string, font: PDFFont, maximum: number) => {
+    let value = safe(text);
+    while (value.length > 1 && font.widthOfTextAtSize(value, 9) > 460) value = value.slice(0,-2) + '…';
+    return {text:value, size:Math.min(maximum,460/Math.max(font.widthOfTextAtSize(value,1),1))};
+  };
 
   for (const ticket of tickets) {
     const page = document.addPage([595.28, 841.89]);
@@ -44,14 +55,14 @@ export async function buildTicketPdf(orderId: string, ticketRows?: TicketDocumen
     page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0.94, 1, 0) });
     page.drawRectangle({ x: 34, y: 34, width: width - 68, height: height - 68, color: rgb(1, 1, 1), borderColor: rgb(0.05, 0.05, 0.05), borderWidth: 4 });
     page.drawText("UPFORIT", { x: 65, y: 748, size: 40, font: bold, color: rgb(0.04, 0.04, 0.04) });
-    page.drawText(ticket.event_title, { x: 65, y: 700, size: 24, font: bold, color: rgb(0.04, 0.04, 0.04) });
+    page.drawText(fitted(ticket.event_title, bold, 24).text, { x:65, y:700, size:fitted(ticket.event_title, bold, 24).size, font:bold });
     const eventDate = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "full", timeStyle: "short", timeZone: ticket.timezone
     }).format(new Date(ticket.starts_at));
-    page.drawText(eventDate, { x: 65, y: 666, size: 13, font: regular });
-    page.drawText(ticket.venue_name, { x: 65, y: 644, size: 13, font: regular });
-    page.drawText(ticket.ticket_type_name, { x: 65, y: 598, size: Math.min(21, 460 / Math.max(bold.widthOfTextAtSize(ticket.ticket_type_name, 1), 1)), font: bold });
-    page.drawText(`Ticket holder: ${ticket.display_name}`, { x: 65, y: 567, size: 12, font: regular });
+    page.drawText(fitted(eventDate, regular, 13).text, { x:65, y:666, size:fitted(eventDate, regular, 13).size, font:regular });
+    page.drawText(fitted(ticket.venue_name, regular, 13).text, { x:65, y:644, size:fitted(ticket.venue_name, regular, 13).size, font:regular });
+    page.drawText(fitted(ticket.ticket_type_name, bold, 21).text, { x:65, y:598, size:fitted(ticket.ticket_type_name, bold, 21).size, font:bold });
+    page.drawText(fitted(`Ticket holder: ${ticket.display_name}`, regular, 12).text, { x:65, y:567, size:fitted(`Ticket holder: ${ticket.display_name}`, regular, 12).size, font:regular });
     page.drawText(`Ticket: ${ticket.ticket_number}`, { x: 65, y: 545, size: 12, font: regular });
     page.drawText(`Order: ${ticket.order_number}`, { x: 65, y: 523, size: 12, font: regular });
 

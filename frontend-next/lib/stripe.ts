@@ -10,7 +10,7 @@ export function getStripe() {
   if (process.env.APP_ENV !== "production" && !secretKey.startsWith("sk_test_")) {
     throw new Error("Non-production ticketing requires a Stripe test secret key");
   }
-  stripe = new Stripe(secretKey, { appInfo: { name: "UPFORIT Tickets", version: "1.0.0" } });
+  stripe = new Stripe(secretKey, { timeout:30000, maxNetworkRetries:2, appInfo: { name: "UPFORIT Tickets", version: "1.0.0" } });
   return stripe;
 }
 

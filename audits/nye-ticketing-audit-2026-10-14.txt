@@ -1,3 +1,5 @@
+UPDATE: Remediation and current launch blockers are recorded in nye-ticketing-remediation-2026-10-14.txt. The original findings below are retained as the audit baseline, not the current implementation status.
+
 UPFORIT — NYE ticketing, admin, email and QR audit
 14 October 2026
 

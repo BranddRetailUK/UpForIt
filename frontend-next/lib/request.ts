@@ -2,11 +2,11 @@ import type { NextRequest } from "next/server";
 
 export function assertSameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (!origin || !host) return;
-
-  const originUrl = new URL(origin);
-  if (originUrl.host !== host) throw new Error("Invalid request origin");
+  if (!origin || request.headers.get("sec-fetch-site") === "cross-site") throw new Error("Invalid request origin");
+  const expected = process.env.NODE_ENV === "production" ? process.env.NEXT_PUBLIC_SITE_URL : request.nextUrl.origin;
+  try {
+    if (!expected || new URL(origin).origin !== new URL(expected).origin) throw new Error();
+  } catch { throw new Error("Invalid request origin"); }
 }
 
 export function requestIp(request: NextRequest) {

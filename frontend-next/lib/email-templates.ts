@@ -1,4 +1,3 @@
-import { CLOUDINARY_ASSETS, cloudinaryUrl } from "./cloudinary";
 
 type EmailCallToAction = {
   label: string;
@@ -6,6 +5,8 @@ type EmailCallToAction = {
 };
 
 type EmailShellOptions = {
+  ticketBanner?:boolean;
+  bannerCid?:string;
   preheader: string;
   eyebrow: string;
   title: string;
@@ -29,6 +30,7 @@ type TicketEmailOptions = {
   siteUrl: string;
   originalRecipient?: string;
   singleTicketQrCid?: string;
+  bannerCid?:string;
   singleTicketNumber?: string;
 };
 
@@ -49,18 +51,15 @@ function safeEmailUrl(value: string) {
 }
 
 function callToAction({ label, url }: EmailCallToAction) {
-  return `<table class="ufi-cta" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:26px 0 22px">
-    <tr>
-      <td bgcolor="#111111" style="border:3px solid #050505;background-color:#111111;background-image:linear-gradient(#111111,#111111)">
-        <a href="${safeEmailUrl(url)}" style="display:inline-block;padding:14px 22px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:900;line-height:20px;text-decoration:none;text-transform:uppercase">${escapeHtml(label)}</a>
-      </td>
-    </tr>
-  </table>`;
+  return `<table class="ufi-cta" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:26px 0 22px"><tr>
+    <td class="ufi-cta-cell" bgcolor="#000000" style="border:2px solid #ffffff;background-color:#000000;background-image:linear-gradient(#000000,#000000)">
+      <a class="ufi-cta-link" href="${safeEmailUrl(url)}" style="display:inline-block;padding:14px 22px;color:#ffffff;-webkit-text-fill-color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:900;line-height:20px;text-decoration:none;text-transform:uppercase">${escapeHtml(label)}</a>
+    </td></tr></table>`;
 }
 
 function directLink(url: string) {
   const href = safeEmailUrl(url);
-  return `<p style="margin:0;color:#4a4a4a!important;-webkit-text-fill-color:#4a4a4a!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">Button not working? Copy and paste this secure link:<br><a href="${href}" style="color:#333333!important;-webkit-text-fill-color:#333333!important;text-decoration:underline;word-break:break-all">${href}</a></p>`;
+  return `<p style="margin:0;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">Button not working? Copy and paste this secure link:<br><a href="${href}" style="color:#efff00!important;-webkit-text-fill-color:#efff00!important;text-decoration:underline;word-break:break-all">${href}</a></p>`;
 }
 
 function inlineTicketQrCode(contentId: string, ticketNumber?: string) {
@@ -77,124 +76,38 @@ function inlineTicketQrCode(contentId: string, ticketNumber?: string) {
   </table>`;
 }
 
-function emailShell({
-  preheader,
-  eyebrow,
-  title,
-  bodyHtml,
-  noticeTitle,
-  noticeText,
-  siteUrl,
-  originalRecipient
-}: EmailShellOptions) {
-  const homeUrl = safeEmailUrl(siteUrl);
-  const upforitLogoUrl = safeEmailUrl(cloudinaryUrl(CLOUDINARY_ASSETS.industrialLogo, { width: 240, format: "png" }));
-  const testingBanner = originalRecipient
-    ? `<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 22px">
-        <tr><td bgcolor="#f4f5de" style="border:2px solid #111111;padding:10px 12px;background-color:#f4f5de;background-image:linear-gradient(#f4f5de,#f4f5de);color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:18px">TESTING DELIVERY &mdash; originally addressed to ${escapeHtml(originalRecipient)}</td></tr>
-      </table>`
-    : "";
-
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="x-apple-disable-message-reformatting">
-    <meta name="color-scheme" content="light only">
-    <meta name="supported-color-schemes" content="light">
-    <title>${escapeHtml(title)}</title>
-    <style>
-      :root { color-scheme:light only!important;supported-color-schemes:light!important; }
-      @media only screen and (max-width:600px) {
-        .ufi-mobile-centre,
-        .ufi-mobile-centre td,
-        .ufi-mobile-centre h1,
-        .ufi-mobile-centre p { text-align:center!important; }
-        .ufi-mobile-centre .ufi-kicker,
-        .ufi-mobile-centre .ufi-cta { margin-left:auto!important;margin-right:auto!important; }
-        .ufi-mobile-centre .ufi-ticket-step-number,
-        .ufi-mobile-centre .ufi-ticket-step-copy { display:block!important;width:100%!important;box-sizing:border-box!important;text-align:center!important; }
-        .ufi-mobile-centre .ufi-ticket-step-number { padding:0 0 4px!important; }
-        .ufi-mobile-centre .ufi-ticket-step-copy { padding:0 0 16px!important; }
-        .ufi-ticket-qr__image { width:220px!important;max-width:85%!important;height:auto!important; }
-      }
-      @media (prefers-color-scheme:dark) {
-        .ufi-email-gutter,
-        .ufi-force-light { background-color:#ffffff!important;background-image:linear-gradient(#ffffff,#ffffff)!important;color:#050505!important;-webkit-text-fill-color:#050505!important; }
-      }
-      [data-ogsc] .ufi-email-gutter,
-      [data-ogsc] .ufi-force-light { background-color:#ffffff!important;background-image:linear-gradient(#ffffff,#ffffff)!important;color:#050505!important;-webkit-text-fill-color:#050505!important; }
-    </style>
-  </head>
-  <body class="ufi-email-gutter" style="margin:0;padding:0;background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff);color:#050505!important;-webkit-text-fill-color:#050505!important;color-scheme:light only;supported-color-schemes:light">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all">${escapeHtml(preheader)}</div>
-    <table class="ufi-email-gutter" role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%;border-collapse:collapse;background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff);color:#050505!important;-webkit-text-fill-color:#050505!important">
-      <tr>
-        <td align="center" style="padding:28px 12px">
-          <table role="presentation" width="640" border="0" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;border-collapse:collapse">
-            <tr>
-              <td align="center" bgcolor="#111111" style="padding:18px 20px;background-color:#111111;background-image:linear-gradient(#111111,#111111)">
-                <img src="${upforitLogoUrl}" width="240" height="80" alt="UPFORIT" style="display:block;width:240px;max-width:100%;height:auto;border:0;color:#ffffff;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:28px;font-weight:900">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
-                  <tr><td width="48%" height="8" bgcolor="#efff00" style="height:8px;font-size:0;line-height:0">&nbsp;</td><td width="28%" height="8" bgcolor="#111111" style="height:8px;font-size:0;line-height:0">&nbsp;</td><td width="24%" height="8" bgcolor="#333333" style="height:8px;font-size:0;line-height:0">&nbsp;</td></tr>
-                </table>
-              </td>
-            </tr>
-            <tr><td height="18" style="height:18px;font-size:0;line-height:0">&nbsp;</td></tr>
-            <tr>
-              <td bgcolor="#111111" style="padding:0;background-color:#111111;background-image:linear-gradient(#111111,#111111)">
-                <table class="ufi-force-light" role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%;border-collapse:collapse;background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff);color:#050505!important;-webkit-text-fill-color:#050505!important">
-                  <tr>
-                    <td class="ufi-mobile-centre" style="border:1px solid #333333;padding:34px 30px;color:#050505!important;-webkit-text-fill-color:#050505!important">
-                      ${testingBanner}
-                      <table class="ufi-kicker" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px">
-                        <tr><td bgcolor="#efff00" style="border:2px solid #050505;padding:6px 10px;background-color:#efff00;background-image:linear-gradient(#efff00,#efff00);color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:900;letter-spacing:.7px;line-height:14px;text-transform:uppercase">${escapeHtml(eyebrow)}</td></tr>
-                      </table>
-                      <h1 style="margin:0 0 24px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:34px;font-weight:900;letter-spacing:-1px;line-height:38px;text-transform:uppercase">${escapeHtml(title)}</h1>
-                      ${bodyHtml}
-                      <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f1f1eb" style="width:100%;border-collapse:collapse;margin:28px 0 0;background-color:#f1f1eb;background-image:linear-gradient(#f1f1eb,#f1f1eb)">
-                        <tr>
-                          <td width="8" bgcolor="#333333" style="width:8px;background-color:#333333;background-image:linear-gradient(#333333,#333333);font-size:0;line-height:0">&nbsp;</td>
-                          <td style="padding:14px 16px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:19px"><strong style="text-transform:uppercase">${escapeHtml(noticeTitle)}</strong><br>${escapeHtml(noticeText)}</td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr><td height="18" style="height:18px;font-size:0;line-height:0">&nbsp;</td></tr>
-            <tr>
-              <td class="ufi-mobile-centre" bgcolor="#050505" style="border:1px solid #333333;padding:20px 24px;background-color:#050505;background-image:linear-gradient(#050505,#050505);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">
-                <strong style="color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-size:14px;text-transform:uppercase">Good vibes only.</strong><br>Respect the ravers. No bad energy.<br>
-                <a href="${homeUrl}" style="color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;text-decoration:underline">upforitevents.co.uk</a>
-              </td>
-            </tr>
-            <tr><td style="padding:14px 20px 0;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;text-align:center">This is a transactional email from UPFORIT Events.</td></tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+function emailShell({preheader,eyebrow,title,bodyHtml,noticeTitle,noticeText,siteUrl,originalRecipient,ticketBanner,bannerCid}:EmailShellOptions){
+  const homeUrl=safeEmailUrl(siteUrl);
+  const banner=ticketBanner ? `<img src="${bannerCid?`cid:${escapeHtml(bannerCid)}`:safeEmailUrl(new URL('/brand/ticket-email-banner.png',siteUrl).toString())}" width="640" alt="UPFORIT — Your tickets" style="display:block;width:100%;height:auto;border:0">` : `<a href="${homeUrl}" style="font-family:Arial Black,Arial,sans-serif;font-size:48px;line-height:1;font-weight:900;letter-spacing:-2px;color:#ffffff;text-decoration:none">UPFORIT<span style="color:#efff00">.</span></a>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${escapeHtml(title)}</title><style>
+  @media only screen and (max-width:600px){.ufi-mobile-centre{text-align:center!important;padding:26px 20px!important}.ufi-cta{margin-left:auto!important;margin-right:auto!important}h1{font-size:30px!important;line-height:34px!important}.ufi-ticket-step-number,.ufi-ticket-step-copy{display:block!important;width:100%!important;text-align:center!important}.ufi-ticket-step-number{padding:12px 0 4px!important}}
+  @media(prefers-color-scheme:dark){.ufi-cta-cell{background-color:#ffffff!important;background-image:linear-gradient(#ffffff,#ffffff)!important;border-color:#000000!important}.ufi-cta-link{color:#000000!important;-webkit-text-fill-color:#000000!important}}
+  [data-ogsc] .ufi-cta-cell{background-color:#ffffff!important;background-image:linear-gradient(#ffffff,#ffffff)!important;border-color:#000000!important}[data-ogsc] .ufi-cta-link{color:#000000!important;-webkit-text-fill-color:#000000!important}
+  @media(prefers-color-scheme:dark){.ufi-dark{background:#0a0a0a!important;color:#ffffff!important}.ufi-copy{color:#ffffff!important}.ufi-yellow{background:#efff00!important;color:#050505!important}}
+  </style></head><body style="margin:0;padding:0;background:#0a0a0a;color:#ffffff;font-family:Arial,Helvetica,sans-serif"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all">${escapeHtml(preheader)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a0a0a"><tr><td align="center" style="padding:24px 10px"><table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;border-collapse:collapse;background:#101010;color:#ffffff">
+  <tr><td align="center" style="${ticketBanner?'padding:0':'padding:30px 20px'};border-top:5px solid #efff00;border-bottom:5px solid #efff00;background:#0a0a0a">${banner}</td></tr>
+  <tr><td class="ufi-mobile-centre ufi-dark" style="padding:32px;color:#ffffff;background:#101010">
+  ${originalRecipient?`<p style="padding:12px;border:2px solid #efff00;color:#ffffff;font-size:13px;font-weight:700">TESTING DELIVERY — NOT VALID FOR ENTRY<br>Originally addressed to ${escapeHtml(originalRecipient)}</p>`:''}
+  <p style="margin:0 0 12px;color:#efff00;font-size:13px;line-height:18px;letter-spacing:1px;font-weight:900;text-transform:uppercase">${escapeHtml(eyebrow)}</p>
+  <h1 style="margin:0 0 22px;font-family:Arial Black,Arial,sans-serif;font-size:36px;line-height:40px;letter-spacing:-1px;font-weight:900;color:#ffffff;text-transform:uppercase">${escapeHtml(title)}</h1>
+  ${bodyHtml}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px;border-top:3px solid #efff00"><tr><td style="padding:18px 0 0;color:#ffffff;font-size:14px;line-height:22px;font-weight:700"><strong style="color:#efff00;text-transform:uppercase">${escapeHtml(noticeTitle)}</strong><br>${escapeHtml(noticeText)}</td></tr></table>
+  </td></tr><tr><td class="ufi-mobile-centre" style="padding:22px 32px;background:#0a0a0a;border-top:1px solid #efff00;color:#ffffff;font-size:13px;line-height:22px;font-weight:700">UPFORIT EVENTS<br><a href="mailto:info@upforitevents.co.uk" style="color:#efff00">info@upforitevents.co.uk</a><br><a href="${homeUrl}" style="color:#ffffff">upforitevents.co.uk</a><p style="margin:12px 0 0">This is a transactional email from UPFORIT Events.</p></td></tr>
+  </table></td></tr></table></body></html>`;
 }
 
 export function verificationEmailHtml({ displayName, url, siteUrl, originalRecipient }: AuthEmailOptions) {
   return emailShell({
-    preheader: "One quick tap and your UPFORIT account is ready.",
-    eyebrow: "You’re on the list",
+    preheader: "Verify your email to activate your UPFORIT account.",
+    eyebrow: "Account verification",
     title: "Verify your account",
     siteUrl,
     originalRecipient,
     noticeTitle: "Secure one-time link",
     noticeText: "This verification link expires after 24 hours. If you didn’t create an UPFORIT account, you can safely ignore this email.",
-    bodyHtml: `<p style="margin:0 0 14px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:26px">Hi <strong>${escapeHtml(displayName)}</strong>,</p>
-      <p style="margin:0;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px">Your UPFORIT account is nearly ready. Verify your email to activate it, sign in and get back to the tickets.</p>
+    bodyHtml: `<p style="margin:0 0 14px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:26px">Hi <strong>${escapeHtml(displayName)}</strong>,</p>
+      <p style="margin:0;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px">Your UPFORIT account is nearly ready. Verify your email to activate it, sign in and get back to the tickets.</p>
       ${callToAction({ label: "Verify email", url })}
       ${directLink(url)}`
   });
@@ -209,8 +122,8 @@ export function resetPasswordEmailHtml({ displayName, url, siteUrl, originalReci
     originalRecipient,
     noticeTitle: "Link expires in one hour",
     noticeText: "For your security, this link can only be used once. If you didn’t request a password reset, leave your account unchanged and ignore this email.",
-    bodyHtml: `<p style="margin:0 0 14px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:26px">Hi <strong>${escapeHtml(displayName)}</strong>,</p>
-      <p style="margin:0;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px">We received a request to reset your UPFORIT password. Use the secure button below to choose a new one.</p>
+    bodyHtml: `<p style="margin:0 0 14px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:26px">Hi <strong>${escapeHtml(displayName)}</strong>,</p>
+      <p style="margin:0;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px">We received a request to reset your UPFORIT password. Use the secure button below to choose a new one.</p>
       ${callToAction({ label: "Choose new password", url })}
       ${directLink(url)}`
   });
@@ -222,10 +135,13 @@ export function ticketConfirmationEmailHtml({
   siteUrl,
   originalRecipient,
   singleTicketQrCid,
-  singleTicketNumber
+  singleTicketNumber,
+  bannerCid
 }: TicketEmailOptions) {
   const hasSingleTicketQr = Boolean(singleTicketQrCid);
   return emailShell({
+    ticketBanner:true,
+    bannerCid,
     preheader: hasSingleTicketQr
       ? "Your UPFORIT ticket and entry QR code are ready."
       : "Your UPFORIT tickets are attached and ready for the event.",
@@ -237,15 +153,15 @@ export function ticketConfirmationEmailHtml({
     noticeText: hasSingleTicketQr
       ? "Your unique QR code admits one person and can only be checked in once, so keep this email and the attached PDF private."
       : "Each ticket has its own unique QR code and admits one person. A QR code can only be checked in once, so keep your PDF private.",
-    bodyHtml: `<p style="margin:0 0 14px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:26px">Hi <strong>${escapeHtml(displayName)}</strong>,</p>
-      <p style="margin:0 0 22px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px">${hasSingleTicketQr
-        ? "You’re in! Your printable UPFORIT ticket is attached as a PDF, and your entry QR code is included below for quick access on your phone."
-        : "You’re in! Your printable UPFORIT tickets are attached as one PDF, with one ticket and one unique QR code per page."}</p>
+    bodyHtml: `<p style="margin:0 0 14px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:26px">Hi <strong>${escapeHtml(displayName)}</strong>,</p>
+      <p style="margin:0 0 22px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:25px">${hasSingleTicketQr
+        ? "Your printable UPFORIT ticket is attached as a PDF, and your entry QR code is included below for quick access on your phone."
+        : "Your printable UPFORIT tickets are attached as one PDF, with one ticket and one unique QR code per page."}</p>
       ${singleTicketQrCid ? inlineTicketQrCode(singleTicketQrCid, singleTicketNumber) : ""}
       <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
-        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#111111!important;-webkit-text-fill-color:#111111!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">01</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>Download the attached PDF</strong> and save it to your phone.</td></tr>
-        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#111111!important;-webkit-text-fill-color:#111111!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">02</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Keep your QR code private" : "Bring every ticket you purchased"}</strong>${hasSingleTicketQr ? " until you reach the entrance." : " for your group."}</td></tr>
-        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0;color:#111111!important;-webkit-text-fill-color:#111111!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">03</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 0;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Show the QR code at entry" : "Show each QR code at entry"}</strong> for quick check-in.</td></tr>
+        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">01</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>Download the attached PDF</strong> and save it to your phone.</td></tr>
+        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">02</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Keep your QR code private" : "Bring every ticket you purchased"}</strong>${hasSingleTicketQr ? " until you reach the entrance." : " for your group."}</td></tr>
+        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0;color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">03</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 0;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Show the QR code at entry" : "Show each QR code at entry"}</strong> for quick check-in.</td></tr>
       </table>
       ${callToAction({ label: "View my account", url: accountUrl })}`
   });

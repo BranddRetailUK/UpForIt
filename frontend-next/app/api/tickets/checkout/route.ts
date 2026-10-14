@@ -1,188 +1,88 @@
-import { createHash, randomUUID } from "node:crypto";
-import { NextRequest, NextResponse } from "next/server";
-import { getUserForSessionToken, SESSION_COOKIE } from "../../../../lib/auth";
-import { getPool } from "../../../../lib/db";
-import { insertMetaConversionJob } from "../../../../lib/meta-jobs";
-import { getMetaRequestContext, metaEventId, metaSiteUrl } from "../../../../lib/meta";
-import { assertSameOrigin } from "../../../../lib/request";
-import { encryptJson } from "../../../../lib/security";
-import { assertTicketingEnabled, getStripe } from "../../../../lib/stripe";
-import { lockTicketTiersForCheckout, type TicketCheckoutTier } from "../../../../lib/ticket-tiers";
+import { createHash, randomUUID } from 'node:crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import type Stripe from 'stripe';
+import { consumeRateLimit, getUserForSessionToken, SESSION_COOKIE } from '../../../../lib/auth';
+import { getPool } from '../../../../lib/db';
+import { metaEventId, getMetaRequestContext } from '../../../../lib/meta';
+import { assertSameOrigin, requestIp } from '../../../../lib/request';
+import { encryptJson } from '../../../../lib/security';
+import { assertTicketingEnabled, getStripe } from '../../../../lib/stripe';
+import { lockTicketTiersForCheckout } from '../../../../lib/ticket-tiers';
+import { ticketPriceLines } from '../../../../lib/ticket-pricing';
+import { parseTicketCheckout, TicketRequestError } from '../../../../lib/ticket-checkout-input';
 
-import { ticketPrice, ticketPriceLines } from "../../../../lib/ticket-pricing";
-
-type CheckoutItem = { ticketTypeId: string; quantity: number };
-
+type Existing = { id: string; request_hash: string; status: string; stripe_checkout_url: string | null; checkout_payload: Stripe.Checkout.SessionCreateParams | null; created_at: Date };
 export async function POST(request: NextRequest) {
-  let orderId: string | null = null;
   try {
     assertSameOrigin(request);
     assertTicketingEnabled();
     const user = await getUserForSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
-    if (!user) return NextResponse.json({ error: "Sign in to buy tickets." }, { status: 401 });
-    if (!user.emailVerified) return NextResponse.json({ error: "Verify your email before buying tickets." }, { status: 403 });
-
-    const body = (await request.json()) as { items?: CheckoutItem[]; idempotencyKey?: string; meta?: unknown };
-    const metaContext = getMetaRequestContext(request, body.meta);
-    const idempotencyKey = typeof body.idempotencyKey === "string" ? body.idempotencyKey.trim() : "";
-    const items = Array.isArray(body.items)
-      ? body.items.filter((item) => typeof item.ticketTypeId === "string" && Number.isInteger(item.quantity) && item.quantity > 0)
-      : [];
-    if (!idempotencyKey || idempotencyKey.length > 100 || items.length < 1 || items.length > 10) {
-      return NextResponse.json({ error: "Choose at least one ticket." }, { status: 400 });
-    }
-
-    const normalizedItems = [...items].sort((a, b) => a.ticketTypeId.localeCompare(b.ticketTypeId));
-    const requestHash = createHash("sha256").update(JSON.stringify(normalizedItems)).digest("hex");
-    const existing = await getPool().query<{ stripe_checkout_url: string | null; request_hash: string; status: string }>(
-      "SELECT stripe_checkout_url, request_hash, status FROM ticket_orders WHERE user_id = $1 AND idempotency_key = $2",
-      [user.id, idempotencyKey]
-    );
-    if (existing.rows[0]) {
-      if (existing.rows[0].request_hash !== requestHash) {
-        return NextResponse.json({ error: "This checkout request has already been used." }, { status: 409 });
-      }
-      if (existing.rows[0].stripe_checkout_url && existing.rows[0].status === "pending") {
-        return NextResponse.json({ url: existing.rows[0].stripe_checkout_url });
-      }
-    }
-
-    const client = await getPool().connect();
-    let checkoutRows: TicketCheckoutTier[] = [];
-    let totalMinor = 0;
-    let purchaseEventId = "";
-    try {
-      await client.query("BEGIN");
-      const locked = await lockTicketTiersForCheckout(client, normalizedItems);
-      checkoutRows = locked.tiers;
-      totalMinor = normalizedItems.reduce(
-        (sum, item, index) => sum + ticketPrice(checkoutRows[index].event_slug, checkoutRows[index].price_minor, item.quantity).totalMinor,
-        0
-      );
-
-      orderId = randomUUID();
-      purchaseEventId = metaEventId("ticket_purchase", orderId);
-      await client.query(
-        `INSERT INTO ticket_orders (
-           id, user_id, event_id, status, currency, subtotal_minor, total_minor,
-           idempotency_key, request_hash, reserved_until, meta_consent_granted,
-           meta_checkout_event_id, meta_purchase_event_id, meta_context_encrypted
-         ) VALUES (
-           $1, $2, $3, 'pending', 'gbp', $4, $4, $5, $6, now() + interval '30 minutes',
-           $7, $8, $9, $10
-         )`,
-        [
-          orderId,
-          user.id,
-          checkoutRows[0].event_id,
-          totalMinor,
-          idempotencyKey,
-          requestHash,
-          metaContext.consent,
-          metaContext.consent ? metaContext.eventId ?? null : null,
-          metaContext.consent ? purchaseEventId : null,
-          metaContext.consent ? encryptJson({
-            fbp: metaContext.fbp,
-            fbc: metaContext.fbc,
-            clientIp: metaContext.clientIp,
-            clientUserAgent: metaContext.clientUserAgent
-          }) : null
-        ]
-      );
-      for (let index = 0; index < normalizedItems.length; index += 1) {
-        const item = normalizedItems[index];
-        const tier = checkoutRows[index];
-        for (const line of ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, item.quantity)) {
-          await client.query(
-            `INSERT INTO ticket_order_items (
-               id, order_id, ticket_type_id, ticket_type_name, unit_price_minor, quantity, line_total_minor
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [randomUUID(), orderId, tier.id, line.name, line.unitPriceMinor, line.quantity, line.unitPriceMinor * line.quantity]
-          );
-        }
-      }
-      await client.query("COMMIT");
-    } catch (error) {
-      await client.query("ROLLBACK").catch(() => undefined);
-      throw error;
-    } finally {
-      client.release();
-    }
-
+    if (!user) return NextResponse.json({ error: 'Sign in to buy tickets.' }, { status: 401 });
+    if (!user.emailVerified) return NextResponse.json({ error: 'Verify your email before buying tickets.', verificationRequired: true }, { status: 403 });
+    if (!(await consumeRateLimit(`tickets:user:${user.id}`, 20, 10)) || !(await consumeRateLimit(`tickets:ip:${requestIp(request)}`, 60, 10))) throw new TicketRequestError('Too many checkout attempts. Please wait ten minutes.', 429);
+    const raw = await request.text();
+    if (raw.length > 8192) throw new TicketRequestError('Checkout request is too large.');
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch { throw new TicketRequestError('Invalid checkout request.'); }
+    const body = parseTicketCheckout(parsed);
+    const requestHash = createHash('sha256').update(JSON.stringify(body.items)).digest('hex');
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    if (!siteUrl || !orderId) throw new Error("Ticketing site URL is not configured.");
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: "payment",
-        customer_email: user.email,
-        client_reference_id: orderId,
-        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-        metadata: { ticketOrderId: orderId },
-        payment_intent_data: { metadata: { ticketOrderId: orderId } },
-        line_items: normalizedItems.flatMap((item, index) => {
-          const tier = checkoutRows[index];
-          return ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, item.quantity).map(line => ({
-            quantity: line.quantity,
-            price_data: {
-              currency: tier.currency,
-              unit_amount: line.unitPriceMinor,
-              product_data: { name: `${tier.event_title} — ${line.name}` }
-            }
-          }));
-        }),
-        success_url: `${siteUrl}/tickets/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/events/${checkoutRows[0].event_slug}?checkout=cancelled`
-      },
-      { idempotencyKey: `upforit-ticket-order-${orderId}` }
-    );
-    await getPool().query(
-      "UPDATE ticket_orders SET stripe_checkout_session_id = $2, stripe_checkout_url = $3, updated_at = now() WHERE id = $1",
-      [orderId, session.id, session.url]
-    );
-    if (metaContext.consent && metaContext.eventId) {
-      try {
-        await insertMetaConversionJob(
-          getPool(),
-          {
-            eventName: "InitiateCheckout",
-            eventId: metaContext.eventId,
-            eventSourceUrl: metaSiteUrl(`/events/${checkoutRows[0].event_slug}`),
-            valueMinor: totalMinor,
-            currency: checkoutRows[0].currency,
-            contentName: checkoutRows[0].event_title,
-            contentCategory: "event tickets",
-            contents: normalizedItems.flatMap((item, index) => {
-              const tier = checkoutRows[index];
-              return ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, item.quantity).map(line => ({
-                id: tier.id,
-                quantity: line.quantity,
-                itemPriceMinor: line.unitPriceMinor
-              }));
-            }),
-            userData: {
-              email: user.email,
-              externalId: user.id,
-              fbp: metaContext.fbp,
-              fbc: metaContext.fbc,
-              clientIp: metaContext.clientIp,
-              clientUserAgent: metaContext.clientUserAgent
-            }
-          },
-          { orderId }
-        );
-      } catch (metaError) {
-        console.error("Meta checkout job could not be queued", metaError instanceof Error ? metaError.name : "UnknownError");
+    if (!siteUrl) throw new Error('Missing site URL');
+    const stripe = getStripe(); // Validate configuration before any order is persisted.
+    const client = await getPool().connect();
+    let order: Existing;
+    try {
+      await client.query('BEGIN');
+      // Serialize user checkout creation, including requests with different keys.
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`ticket-checkout:${user.id}`]);
+      const existing = await client.query<Existing>('SELECT * FROM ticket_orders WHERE user_id = $1 AND idempotency_key = $2 FOR UPDATE', [user.id, body.idempotencyKey]);
+      if (existing.rows[0]) {
+        order = existing.rows[0];
+        if (order.request_hash !== requestHash) throw new TicketRequestError('This checkout reference belongs to a different selection.', 409);
+        if (order.status !== 'pending') throw new TicketRequestError('This checkout has finished. Check your account before starting another order.', 409);
+        if (Date.now() - new Date(order.created_at).getTime() > 23 * 3600_000) throw new TicketRequestError('This checkout needs a status check. Visit your account or contact support.', 409);
+      } else {
+        const pending = await client.query('SELECT id FROM ticket_orders WHERE user_id = $1 AND status = \'pending\'', [user.id]);
+        if (pending.rowCount) throw new TicketRequestError('You already have an open checkout. Resume or cancel it from your account first.', 409);
+        const { tiers } = await lockTicketTiersForCheckout(client, body.items);
+        const lines = body.items.flatMap((item, index) => ticketPriceLines(tiers[index].event_slug, tiers[index].name, tiers[index].price_minor, item.quantity).map(line => ({ ...line, tier: tiers[index] })));
+        const total = lines.reduce((sum, line) => sum + line.unitPriceMinor * line.quantity, 0);
+        if (tiers.some(tier => tier.currency !== 'gbp')) throw new TicketRequestError('These tickets are unavailable.', 409);
+        const id = randomUUID();
+        const meta = getMetaRequestContext(request, body.meta);
+        const payload: Stripe.Checkout.SessionCreateParams = {
+          expires_at: Math.max(Math.floor(Date.now()/1000)+31*60, Math.min(Math.floor(Date.now()/1000)+23*3600, ...tiers.map(t=>Math.floor(new Date(t.sales_deadline).getTime()/1000)))),
+          mode: 'payment', payment_method_types: ['card'], customer_email: user.email,
+          client_reference_id: id, metadata: { ticketOrderId: id },
+          payment_intent_data: { metadata: { ticketOrderId: id } },
+          line_items: lines.map(line => ({ quantity: line.quantity, price_data: { currency: 'gbp', unit_amount: line.unitPriceMinor, product_data: { name: `${line.tier.event_title} — ${line.name}` } } })),
+          success_url: `${siteUrl}/tickets/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${siteUrl}/events/${tiers[0].event_slug}?checkout=cancelled`
+        };
+        await client.query(`INSERT INTO ticket_orders (id,user_id,event_id,status,currency,subtotal_minor,total_minor,idempotency_key,request_hash,reserved_until,checkout_payload,meta_consent_granted,meta_purchase_event_id,meta_context_encrypted)
+          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '24 hours',$7::jsonb,$8,$9,$10)`,
+          [id,user.id,tiers[0].event_id,total,body.idempotencyKey,requestHash,JSON.stringify(payload),meta.consent,meta.consent ? metaEventId('ticket_purchase',id) : null,meta.consent ? encryptJson({fbp:meta.fbp,fbc:meta.fbc,clientIp:meta.clientIp,clientUserAgent:meta.clientUserAgent}) : null]);
+        for (const line of lines) await client.query(`INSERT INTO ticket_order_items (id,order_id,ticket_type_id,ticket_type_name,unit_price_minor,quantity,line_total_minor) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(),id,line.tier.id,line.name,line.unitPriceMinor,line.quantity,line.unitPriceMinor*line.quantity]);
+        order = { id,request_hash:requestHash,status:'pending',stripe_checkout_url:null,checkout_payload:payload,created_at:new Date() };
       }
-    }
+      await client.query('COMMIT');
+    } catch (error) { await client.query('ROLLBACK'); throw error; }
+    finally { client.release(); }
+    if (order.stripe_checkout_url) return NextResponse.json({ url: order.stripe_checkout_url });
+    if (!order.checkout_payload) throw new TicketRequestError('This checkout needs support. Please contact us.', 409);
+    // The exact payload is persisted. Retrying after a lost response uses the same Stripe key AND parameters.
+    const session = await stripe.checkout.sessions.create(order.checkout_payload, { idempotencyKey: `upforit-ticket-order-${order.id}` });
+    if (!session.url) throw new Error('Stripe did not return a checkout URL');
+    await getPool().query("UPDATE ticket_orders SET stripe_checkout_session_id=$2,stripe_checkout_url=$3,checkout_state='ready',updated_at=now() WHERE id=$1 AND (stripe_checkout_session_id IS NULL OR stripe_checkout_session_id=$2)", [order.id,session.id,session.url]);
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    if (orderId) {
-      await getPool().query("UPDATE ticket_orders SET status = 'failed', updated_at = now() WHERE id = $1 AND status = 'pending'", [orderId]).catch(() => undefined);
-    }
-    const message = error instanceof Error ? error.message : "Checkout could not be started.";
-    console.error("Ticket checkout failed", message);
-    const status = message === "TICKETING_DISABLED" || message.includes("unavailable") || message.includes("Maximum") || message.includes("sold out") ? 409 : 500;
-    return NextResponse.json({ error: message === "TICKETING_DISABLED" ? "Ticket sales are not open." : message }, { status });
+    const message = error instanceof Error ? error.message : '';
+    if (message === 'TICKETING_DISABLED') return NextResponse.json({ error: 'Ticket sales are not open.' }, {status:409});
+    if (message === 'Invalid request origin') return NextResponse.json({ error: message }, {status:403});
+    if (error instanceof TicketRequestError) return NextResponse.json({error:message},{status:error.status});
+    if (/unavailable|Maximum|sold out/.test(message)) return NextResponse.json({error:message},{status:409});
+    console.error('Ticket checkout requires retry', error instanceof Error ? error.name : 'UnknownError');
+    // Never declare failure or release inventory after an uncertain Stripe result.
+    return NextResponse.json({error:'Checkout could not be confirmed. Retry the same selection or check your account.'},{status:503});
   }
 }

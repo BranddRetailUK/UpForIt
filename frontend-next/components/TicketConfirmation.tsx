@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMetaTracking } from "./MetaTrackingProvider";
 
 type Status = {
@@ -23,9 +23,7 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
   const [error, setError] = useState("");
   const trackedEventId = useRef("");
 
-  useLayoutEffect(() => {
-    window.history.replaceState({}, "", "/tickets/confirmation");
-  }, []);
+  const [waiting, setWaiting] = useState(false);
 
   useEffect(() => {
     let stopped = false;
@@ -56,7 +54,8 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
           }
         }
         attempts += 1;
-        if (result.status === "pending" && attempts < 15) window.setTimeout(refresh, 2000);
+        if (result.status === "pending" && attempts < 30) window.setTimeout(refresh, 2000);
+        else if (result.status === "pending") setWaiting(true);
       } catch (refreshError) {
         if (!stopped) setError(refreshError instanceof Error ? refreshError.message : "Order not found.");
       }
@@ -66,7 +65,7 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
   }, [consent, sessionId, track]);
 
   if (error) return <p className="form-message form-message--error">{error}</p>;
-  if (!order || order.status === "pending") return <p>Payment received. We’re issuing your tickets now…</p>;
+  if (!order || order.status === "pending") return <p>{waiting ? "We are still waiting for payment confirmation. Please do not pay again. Refresh this page or check your account shortly." : "Checking your payment and ticket status…"} <Link href="/account">View account</Link></p>;
   if (order.status !== "paid") return <p>Your order status is {order.status}. Please contact us if this looks wrong.</p>;
   if (!order.order_number) return <p>Payment received. We’re issuing your order number now…</p>;
   return (

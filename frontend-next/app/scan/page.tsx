@@ -1,3 +1,4 @@
+import { getPool } from "../../lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -31,6 +32,7 @@ export default async function ScannerPage() {
     );
   }
 
+  const events = accountAccess ? (await getPool().query<{id:string;title:string}>("SELECT id,title FROM events WHERE status='published' AND now() >= starts_at - interval '2 hours' AND now() < ends_at + interval '2 hours' ORDER BY starts_at")).rows : [];
   return (
     <div className="admin-shell section-wrap scanner-page">
       <header className="admin-header">
@@ -41,7 +43,7 @@ export default async function ScannerPage() {
         </div>
         <nav>{accountAccess?.role === "admin" ? <Link href="/admin">Back to admin</Link> : scannerSession ? <ScannerEndAccessButton /> : <Link href="/account">My account</Link>}</nav>
       </header>
-      <section className="admin-panel"><AdminCheckIn /></section>
+      <section className="admin-panel"><AdminCheckIn events={events} fixedEventId={scannerSession?.event_id} /></section>
     </div>
   );
 }

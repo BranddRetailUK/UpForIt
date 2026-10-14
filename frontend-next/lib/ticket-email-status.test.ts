@@ -20,12 +20,12 @@ describe("ticket email admin status", () => {
     }).label).toBe("Retrying");
   });
 
-  it("prefers the sent timestamp over an older failed job state", () => {
+  it("shows the latest resend failure despite a previous accepted email", () => {
     expect(getTicketEmailStatus({
       orderStatus: "paid",
       sentAt: new Date(),
       jobStatus: "failed",
       attempts: 5
-    }).label).toBe("Sent");
+    }).label).toBe("Failed");
   });
 });

@@ -13,6 +13,7 @@ export type TicketCheckoutTier = {
   event_id: string;
   event_slug: string;
   event_title: string;
+  sales_deadline:Date;
 };
 
 export async function advanceTicketTierProgression(client: PoolClient, eventId: string) {
@@ -68,22 +69,24 @@ export async function lockTicketTiersForCheckout(client: PoolClient, selections:
   );
   if (eventIds.rowCount !== 1) throw new Error("One or more ticket tiers are unavailable.");
   const eventId = eventIds.rows[0].event_id;
-  await advanceTicketTierProgression(client, eventId);
+
 
   const tiers = await client.query<TicketCheckoutTier>(
     `SELECT tt.id, tt.name, tt.price_minor, tt.currency, tt.max_per_order, tt.capacity,
-            e.id AS event_id, e.slug AS event_slug, e.title AS event_title
+            e.id AS event_id, e.slug AS event_slug, e.title AS event_title, LEAST(tt.sales_end_at,e.ends_at) AS sales_deadline
        FROM ticket_types tt
        JOIN events e ON e.id = tt.event_id
       WHERE tt.id = ANY($1::uuid[]) AND tt.archived_at IS NULL
-        AND tt.is_active = true AND e.status = 'published'
+        AND tt.is_active = true AND e.status = 'published' AND e.sales_open = true AND e.ends_at > now()
+        AND (e.slug <> 'nye-2026' OR (tt.price_minor = 1000 AND tt.currency = 'gbp' AND tt.capacity IS NULL))
         AND (tt.sales_start_at IS NULL OR tt.sales_start_at <= now())
         AND (tt.sales_end_at IS NULL OR tt.sales_end_at > now())
-      FOR UPDATE OF tt`,
+      ORDER BY tt.id FOR UPDATE OF tt`,
     [ids]
   );
   if (tiers.rowCount !== selections.length) throw new Error("One or more ticket tiers are unavailable.");
 
+  if (tiers.rows[0]?.event_slug === "nye-2026" && (selections.length !== 1 || selections.reduce((sum,item)=>sum+item.quantity,0)>10)) throw new Error("Maximum 10 admissions per order.");
   const orderedTiers = selections.map((selection) => {
     const tier = tiers.rows.find((candidate) => candidate.id === selection.ticketTypeId);
     if (!tier) throw new Error("A ticket tier is unavailable.");
@@ -97,14 +100,14 @@ export async function lockTicketTiersForCheckout(client: PoolClient, selections:
     const selection = selections[index];
     const tier = orderedTiers[index];
     if (tier.capacity === null) continue;
-    // An open Stripe Checkout does not hold inventory. Paid orders alone move
-    // availability and tier progression; already-created sessions keep their price.
+    // Pending sessions retain inventory until Stripe confirms expiration/failure.
+    // Never release stock merely because a local clock timeout has elapsed.
     const allocated = await client.query<{ quantity: string }>(
       `SELECT COALESCE(sum(i.quantity), 0)::text AS quantity
          FROM ticket_order_items i
          JOIN ticket_orders o ON o.id = i.order_id
         WHERE i.ticket_type_id = $1
-          AND o.status = 'paid'`,
+          AND o.status IN ('pending', 'paid', 'refund_review')`,
       [tier.id]
     );
     if (Number(allocated.rows[0].quantity) + selection.quantity > tier.capacity) {

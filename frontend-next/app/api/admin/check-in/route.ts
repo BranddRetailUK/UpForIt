@@ -1,3 +1,5 @@
+import { consumeRateLimit } from "../../../../lib/auth";
+import { UUID_PATTERN } from "../../../../lib/ticket-checkout-input";
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../lib/db";
@@ -15,24 +17,29 @@ export async function POST(request: NextRequest) {
     assertSameOrigin(request);
     const principal = await getCheckInPrincipal(request);
     if (!principal) return NextResponse.json({ error: "Scanner access required." }, { status: 403 });
-    const body = (await request.json()) as { code?: unknown };
+    if (!await consumeRateLimit(`scan:${principal.scannerSessionId || principal.userId}`, 180, 1)) return NextResponse.json({error:"Too many scans. Wait a minute."},{status:429});
+    const body = (await request.json()) as { code?: unknown; eventId?: unknown };
+    const eventId = principal.eventId || (typeof body.eventId === "string" && UUID_PATTERN.test(body.eventId) ? body.eventId : null);
+    if (!eventId) return NextResponse.json({error:"Choose the event before scanning."},{status:400});
     const code = typeof body.code === "string" ? body.code.trim() : "";
-    if (!code) return NextResponse.json({ error: "Scan or enter a ticket code." }, { status: 400 });
+    if (!code || code.length > 200) return NextResponse.json({ error: "Scan or enter a ticket code." }, { status: 400 });
     const publicId = verifyTicketQrToken(code);
-    if (code.startsWith("v1.") && !publicId) return NextResponse.json({ error: "That QR signature is invalid." }, { status: 400 });
+    if (!publicId && !/^UFI-T-[0-9]{6,12}$/i.test(code)) return NextResponse.json({ error: "That QR signature is invalid." }, { status: 400 });
 
     const client = await getPool().connect();
     try {
       await client.query("BEGIN");
       const lookupValue = publicId || code;
-      const values = principal.eventId ? [lookupValue, principal.eventId] : [lookupValue];
+      const values = [lookupValue, eventId];
       const result = await client.query<TicketRow>(
         `SELECT t.id, t.public_id, t.ticket_number, t.ticket_type_name, t.status, t.checked_in_at,
                 u.display_name, e.title AS event_title
-           FROM tickets t JOIN users u ON u.id = t.user_id JOIN events e ON e.id = t.event_id
+           FROM tickets t JOIN users u ON u.id = t.user_id JOIN events e ON e.id = t.event_id JOIN ticket_orders o ON o.id = t.order_id
           WHERE ${publicId ? "t.public_id = $1" : "upper(t.ticket_number) = upper($1)"}
-            ${principal.eventId ? "AND t.event_id = $2" : ""}
-          FOR UPDATE OF t`,
+            AND t.event_id = $2 AND e.status = 'published'
+            AND now() >= e.starts_at - interval '2 hours' AND now() < e.ends_at + interval '2 hours'
+            AND o.status IN ('paid','refund_review') AND o.admissions_hold = false
+          FOR UPDATE OF o, t`,
         values
       );
       const ticket = result.rows[0];

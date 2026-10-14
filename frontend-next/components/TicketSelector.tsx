@@ -38,6 +38,7 @@ export default function TicketSelector({
   ));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [verificationRequired, setVerificationRequired] = useState(false);
   const activeTiers = tiers.filter((tier) => tier.active);
   const prices = activeTiers.map(tier => ticketPrice(eventSlug, tier.priceMinor, quantities[tier.id] ?? 0));
   const total = prices.reduce((sum, price) => sum + price.totalMinor, 0);
@@ -55,8 +56,23 @@ export default function TicketSelector({
     viewContentTracked.current = eventId;
   }, [consent, eventId, eventTitle, tiers, track, preview]);
 
+  const checkoutInFlight = useRef(false);
+  const checkoutKey = useRef<{selection: string; key: string} | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(`tickets:${eventId}`) || "null");
+      if (saved?.quantities) setQuantities(Object.fromEntries(tiers.filter(t => t.active).map(t => [t.id, Math.max(0, Math.min(t.maxPerOrder, t.remaining ?? t.maxPerOrder, Number(saved.quantities[t.id]) || 0))])));
+      if (saved?.checkoutKey) checkoutKey.current = saved.checkoutKey;
+    } catch {}
+  }, [eventId]);
+  useEffect(() => {
+    try { sessionStorage.setItem(`tickets:${eventId}`, JSON.stringify({quantities, checkoutKey: checkoutKey.current})); } catch {}
+  }, [quantities, eventId]);
+
   async function checkout() {
-    if (preview) return;
+    if (preview || checkoutInFlight.current) return;
+    checkoutInFlight.current = true;
     setBusy(true);
     setError("");
     try {
@@ -64,16 +80,20 @@ export default function TicketSelector({
       const selected = activeTiers
         .map((tier) => ({ tier, quantity: quantities[tier.id] ?? 0 }))
         .filter(({ quantity }) => quantity > 0);
+      const selection = JSON.stringify(selected.map(({tier, quantity}) => [tier.id, quantity]));
+      if (checkoutKey.current?.selection !== selection) checkoutKey.current = {selection, key: crypto.randomUUID()};
+      try { sessionStorage.setItem(`tickets:${eventId}`, JSON.stringify({quantities, checkoutKey: checkoutKey.current})); } catch {}
       const response = await fetch("/api/tickets/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: checkoutKey.current.key,
           items: selected.map(({ tier, quantity }) => ({ ticketTypeId: tier.id, quantity })),
           meta: getBrowserContext(eventID)
         })
       });
-      const result = (await response.json()) as { url?: string; error?: string };
+      const result = (await response.json()) as { url?: string; error?: string; verificationRequired?:boolean };
+      setVerificationRequired(Boolean(result.verificationRequired));
       if (!response.ok || !result.url) throw new Error(result.error || "Checkout could not be started.");
       track("InitiateCheckout", {
         content_ids: selected.map(({ tier }) => tier.id),
@@ -93,6 +113,7 @@ export default function TicketSelector({
     } catch (checkoutError) {
       setError(checkoutError instanceof Error ? checkoutError.message : "Checkout could not be started.");
       setBusy(false);
+      checkoutInFlight.current = false;
     }
   }
 
@@ -149,6 +170,7 @@ export default function TicketSelector({
       {eventSlug === "nye-2026" ? <div className="nye-ticket-summary" aria-live="polite"><span>{admissionCount} {admissionCount === 1 ? "admission" : "admissions"}{freeQuantity > 0 ? ` · ${freeQuantity} free` : ""}</span><strong>{freeQuantity > 0 ? `You save £${(freeQuantity * 10).toFixed(2)}` : "£10 per ticket"}</strong></div> : null}
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
+      {verificationRequired ? <button disabled={busy} onClick={async()=>{setBusy(true);try{const response=await fetch('/api/auth/resend-verification',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({next:`/events/${eventSlug}#tickets`})});const result=await response.json();setError(response.ok?'Verification email queued. Check your inbox.':result.error);}finally{setBusy(false);}}}>Resend verification email</button> : null}
       <div className="ticket-selector__action">
         {preview ? <button className="pop-button pop-button--yellow" type="button" disabled>Checkout opens when tickets go live</button> : signedIn ? (
           <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>

@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  outputFileTracingIncludes: { "/*": ["./assets/fonts/*.ttf"] },
   images: {
     remotePatterns: [
       {

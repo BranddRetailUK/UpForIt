@@ -1,0 +1,18 @@
+import {afterEach,it,expect,vi} from 'vitest';
+import {generateKeyPairSync,sign} from 'node:crypto';
+import {parseTicketCheckout} from './ticket-checkout-input';
+import {validatePaidSession} from './ticket-payments';
+import {verifyEmailEventSignature} from './ticket-email-events';
+import {createTicketQrToken,verifyTicketQrToken} from './security';
+import {assertSameOrigin} from './request';
+import {NextRequest} from 'next/server';
+const id='f15e9ac1-6873-4b57-b6d4-5e9cf8e09216';
+afterEach(()=>vi.unstubAllEnvs());
+it.each([null,{}, {items:[null]}, {idempotencyKey:'short',items:[]}, {idempotencyKey:'a'.repeat(20),items:[{ticketTypeId:id,quantity:1.5}]}, {idempotencyKey:'a'.repeat(20),items:[{ticketTypeId:id,quantity:1},{ticketTypeId:id.toUpperCase(),quantity:1}]}])('rejects malformed selections %j',value=>expect(()=>parseTicketCheckout(value)).toThrow());
+const order={id,total_minor:3000,currency:'gbp',stripe_checkout_session_id:'cs_expected',stripe_payment_intent_id:null};
+const session={id:'cs_expected',mode:'payment',payment_status:'paid',payment_intent:'pi_expected',amount_total:3000,currency:'gbp',metadata:{ticketOrderId:id},client_reference_id:id};
+it('accepts exact paid session',()=>expect(validatePaidSession(order,session as never)).toBe('pi_expected'));
+it.each([{id:'cs_wrong'},{amount_total:4000},{currency:'usd'},{payment_status:'unpaid'},{metadata:{ticketOrderId:'wrong'}},{client_reference_id:'wrong'},{mode:'subscription'},{payment_intent:null}])('rejects payment mismatch %j',change=>expect(()=>validatePaidSession(order,{...session,...change} as never)).toThrow());
+it('supports key rotation and strict QR format',()=>{vi.stubEnv('TICKET_QR_SIGNING_SECRET','old-key-with-more-than-32-characters');const token=createTicketQrToken(id);vi.stubEnv('TICKET_QR_SIGNING_SECRET','new-key-with-more-than-32-characters');vi.stubEnv('TICKET_QR_PREVIOUS_SIGNING_SECRETS','old-key-with-more-than-32-characters');expect(verifyTicketQrToken(token)).toBe(id);expect(verifyTicketQrToken(token+'.extra')).toBeNull();expect(verifyTicketQrToken(token+'=')).toBeNull();});
+it('verifies raw email event signatures and rejects tampering/replay',()=>{const{publicKey,privateKey}=generateKeyPairSync('ec',{namedCurve:'prime256v1'});const timestamp=String(Math.floor(Date.now()/1000)),body='[]';const signature=sign('sha256',Buffer.from(timestamp+body),privateKey).toString('base64');const key=publicKey.export({type:'spki',format:'der'}).toString('base64');expect(verifyEmailEventSignature(body,timestamp,signature,key)).toBe(true);expect(verifyEmailEventSignature(body+' ',timestamp,signature,key)).toBe(false);expect(verifyEmailEventSignature(body,timestamp,signature,key,Date.now()+600000)).toBe(false);});
+it('requires exact origin',()=>{vi.stubEnv('NODE_ENV','development');for(const origin of [null,'https://localhost:3000','http://localhost:3001'])expect(()=>assertSameOrigin(new NextRequest('http://localhost:3000/api/test',{headers:origin?{origin}:{}}))).toThrow();expect(()=>assertSameOrigin(new NextRequest('http://localhost:3000/api/test',{headers:{origin:'http://localhost:3000'}}))).not.toThrow();});

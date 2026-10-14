@@ -1,0 +1,104 @@
+UPFORIT NYE ticketing remediation — 14 October 2026
+
+Release state: ticket UI visible; checkout CLOSED. This is a preparation release,
+not permission to launch sales. lib/ticket-launch.ts retains a source-controlled
+false production approval in addition to the public, infrastructure and event gates.
+
+Confirmed rules
+£10 GBP; each fourth admission free within one order; maximum 10 admissions/order;
+unlimited capacity; 20% merchandise entitlement retained. Event ends 02:00 UK
+1 January 2027. Configured sales cutoff is doors, 17:00 UK 31 December 2026.
+Partial refunds hold the order until an admin reviews the retained admissions.
+
+Implemented
+- Removed the old automatic startup seed. Explicit NYE provisioning creates a
+  draft, closed event and a single £10 unlimited tier without rewriting existing data.
+- Ended, inactive, unpublished, closed and incorrectly configured NYE tiers fail
+  checkout. No silent tier reactivation. Pending Stripe sessions reserve finite stock.
+- Strict checkout input, same-origin protection, rate limits, user-level locking,
+  persistent Stripe request payload/idempotency key and repeatable buyer retries.
+  Account shows pending orders with resume/cancel actions. Uncertain results never
+  release inventory. Old uncertain sessions require Stripe reconciliation.
+- Correlated paid amount/currency/session/order/payment intent before fulfilment.
+  Fulfilment marker and per-item admission uniqueness prevent duplicate tickets.
+  Refund/dispute events persist before payment completion and are applied later.
+  Full refunds void admissions; disputes and partial refunds hold them.
+- Admin admission review checks retained money against the group offer, counts
+  already checked-in tickets, permanently voids unselected unused tickets, and
+  refuses unresolved disputes or unreconciled legacy refunds.
+- QR/PDF endpoints deny held/void admissions. Strict QR token parsing, previous-key
+  overlap, event-scoped scanning, server throttling, browser in-flight guard and
+  transaction locks protect entry. Concurrent scan test admits exactly once.
+- Resend uses ownership/admin authorization, order lock, common queue/cooldown
+  rules and audit. Separate admin already had transactions: original finding 13
+  overstated that part; parity and queue protections were still needed.
+- Worker checks current admissions before sending and serializes with refunds.
+  Ambiguous provider outcomes become 'unknown', not automatic repeat emails.
+  Periodic recovery and heartbeat added; email, Meta and merch queues run separately.
+  Forced recipient is rejected in production. Provider acceptance is distinguished
+  from delivery, bounce and the latest resend's result. Signed SendGrid event endpoint
+  added at /api/tickets/email-events with replay limit and event deduplication.
+- Expiry maintenance closes known pending sessions after cutoff/closure. Payments
+  completed after cutoff are held for review, including the short Stripe expiry
+  minimum window. They do not produce immediately usable tickets.
+- PDFs embed licensed Noto Sans, fit long fields and give an explicit account fallback
+  for unsupported glyphs. Single-ticket emails retain inline QR; groups get one
+  multipage PDF, one independent QR per admission.
+- Confirmation no longer claims payment before server confirmation or removes the
+  return session ID. Bounded waiting message, verification resend and saved selection.
+- Native admin offers event filtering, order/email search, pagination, CSV export,
+  refund-adjusted receipts and free admission counts. Separate admin exposes net
+  values/latest email state and links to the full reporting/review tools; its overview
+  intentionally remains a recent-500 list, now explicitly linked to all orders.
+- Simulator now shows the group-discount total. Original audit finding 15 overstated
+  a wrong visible estimate: there was no total estimate in that component.
+- Verification/reset/ticket and campaign email styling updated. New industrial
+  speaker ticket banner embedded as CID attachment. Transactional buttons use
+  black/white in light mode and white/black in dark mode (including Outlook selectors).
+
+Validation
+- All migrations 001–011 applied to disposable localhost PostgreSQL on port 55439.
+- 155 frontend tests; 11 admin tests; TypeScript; admin syntax; production Next build.
+- Real database: simultaneous fulfilment, duplicate completion after partial refund,
+  refund before completion, full refund, admission-price review, concurrent resend,
+  dispute won/still-held policy, wrong-event scan, simultaneous scan (200/409),
+  refunded scan rejection, unlimited admission selection and inactive tier rejection.
+- Local normal NYE page: selector visible, 4 admissions = £30 with 1 free, buy disabled.
+- Email rendered desktop/mobile; dark-mode account button measured white/black.
+- Real worker sent test PDF emails through SendGrid. Initial requested recipient was
+  info@upforitevents.co.uk; user corrected to scott@brandd.co.uk after first send began.
+  User screenshot confirmed the initial inbox/PDF. Refreshed banner test and final
+  monochrome-button test sent to Scott; final job status sent, provider ID present,
+  worker exited successfully. Provider acceptance is not independent inbox confirmation.
+- A real worker test caught and fixed a self-blocked order timestamp update: it now
+  uses the connection holding the order lock.
+
+Launch checks still required (do not open flags until complete)
+1. Apply migration/provisioning through release process and inspect production data.
+   Existing NYE rows deliberately are not overwritten by seed. Reconcile historical
+   partial-refund amounts, duplicate admissions, old pending sessions and dead jobs.
+2. End-to-end hosted Stripe TEST checkout (including 3DS/decline/cancel/lost response),
+   signed Stripe callback/replay, actual refund/dispute events and merch redemption.
+   Database simulations do not replace this external-service evidence. No real payment
+   was taken and no production orders were mutated during this work.
+3. Configure the SendGrid transactional event webhook and public verification key;
+   verify delivery and bounce callbacks in deployed staging. Existing marketing webhook
+   routing must continue to receive campaign events (use appropriate provider routing).
+4. Validate production worker credentials, encryption/QR-key parity, sender/domain
+   authentication, heartbeat, expiry maintenance and absence of EMAIL_FORCE_RECIPIENT.
+5. Confirm final Scott inbox appearance and PDF scanning on actual door phones.
+   Rehearse delegated scanner activation, expiry, device revocation and poor connectivity.
+6. Run scripts/ticket-readiness.ts in each intended environment. It is read-only and
+   reports the intentionally closed approval lock. Keep it closed until launch approval.
+
+Door operations
+Keep a spare charged scanner and reliable hotspot. QR admission requires the server;
+never accept an offline device's apparent success. If connectivity fails, pause entry
+and use one authorised supervisor with an audited manual process; do not create separate
+unsynchronised admission lists. A duplicate/void/held/wrong-event result needs admin review.
+Never publish wallet links or QR payloads. Preserve old QR verification keys until events end.
+
+Email operations
+'sent' means provider accepted, not delivered. Investigate unknown/bounced/exhausted jobs
+in provider activity before an explicit resend. Unknown jobs are not auto-retried because
+the first send may have succeeded. Regenerate current valid tickets on each approved resend.

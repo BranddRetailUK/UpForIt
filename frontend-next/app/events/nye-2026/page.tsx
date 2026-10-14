@@ -26,7 +26,8 @@ export const metadata: Metadata = {
 
 export default async function NyeEventPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const preview = process.env.NODE_ENV === "development" && (await searchParams).preview === "tickets";
-  const showTickets = preview || (publicTicketSalesOpen() && process.env.TICKETING_ENABLED === "true");
+  const salesOpen = publicTicketSalesOpen() && process.env.TICKETING_ENABLED === "true";
+  const showTickets = true;
   return (
     <div className="nye-event">
       <NyeBannerPreload />
@@ -54,7 +55,7 @@ export default async function NyeEventPage({ searchParams }: { searchParams: Pro
         </div>
       </section>
       <div className="nye-event__strip" aria-hidden="true"><span>31.12.26</span><span>BLETCHLEY</span><span>UPFORIT NYE</span><span>31.12.26</span></div>
-      {showTickets ? <section className="section-wrap nye-event__tickets" aria-label="NYE tickets"><div className="nye-ticket-intro"><h2>NYE 2026<br /><em>TICKETS</em></h2><p className="nye-ticket-intro__venue">McCarthys Sports Bar</p><p className="nye-ticket-intro__location">Bletchley</p><p className="nye-ticket-intro__doors">Doors open 5pm</p></div><NyeTickets preview={preview} /></section> : null}
+      {showTickets ? <section className="section-wrap nye-event__tickets" aria-label="NYE tickets"><div className="nye-ticket-intro"><h2>NYE 2026<br /><em>TICKETS</em></h2><p className="nye-ticket-intro__venue">McCarthys Sports Bar</p><p className="nye-ticket-intro__location">Bletchley</p><p className="nye-ticket-intro__doors">Doors open 5pm</p></div><NyeTickets preview={preview || !salesOpen} /></section> : null}
       <EventUpdatesBanner id="nye-updates" />
     </div>
   );

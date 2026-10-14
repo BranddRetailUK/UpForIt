@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "start:railway": "npm run db:migrate && npm run db:seed:ticketing && npm start",
+    "start:railway": "npm run db:migrate && npm start",
     "lint": "tsc --noEmit",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed:ticketing": "tsx scripts/seed-ticketing.ts",
@@ -16,6 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@sendgrid/mail": "^8.1.6",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",

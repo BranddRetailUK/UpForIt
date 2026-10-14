@@ -1,3 +1,6 @@
+import PendingCheckout from "../../../../components/PendingCheckout";
+import AdmissionReview from "../../../../components/AdmissionReview";
+import AdminResendButton from "../../../../components/AdminResendButton";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "../../../../lib/auth";
@@ -7,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ticket order", robots: { index: false } };
 
 type OrderRow = {
-  id: string; order_number: string; status: string;
+  id: string; order_number: string; status: string; admissions_hold: boolean; total_minor:number; refunded_minor:number;
   event_title: string; venue_name: string; starts_at: Date; timezone: string;
 };
 type TicketRow = { id: string; ticket_number: string; ticket_type_name: string; status: string };
@@ -17,7 +20,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
   const user = await getCurrentUser();
   if (!user) redirect("/account/login");
   const orderResult = await getPool().query<OrderRow>(
-    `SELECT o.id, o.order_number, o.status,
+    `SELECT o.id, o.order_number, o.status, o.admissions_hold, o.total_minor, o.refunded_minor,
             e.title AS event_title, e.venue_name, e.starts_at, e.timezone
        FROM ticket_orders o JOIN events e ON e.id = o.event_id
       WHERE o.id = $1 AND (o.user_id = $2 OR $3 = true)`,
@@ -36,7 +39,10 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
         <p className="comic-kicker comic-kicker--yellow account-order__number">{order.order_number}</p>
         <h1>{order.event_title}</h1>
         <p className="account-order__event-details">{new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeStyle: "short", timeZone: order.timezone }).format(new Date(order.starts_at))} · {order.venue_name}</p>
-        {order.status === "paid" ? <a className="pop-button pop-button--yellow account-order__download" href={`/api/tickets/orders/${order.id}/pdf`}>{tickets.rows.length === 1 ? "Download ticket" : `Download all ${tickets.rows.length} tickets (PDF)`}</a> : null}
+        {!order.admissions_hold && ["paid","refund_review"].includes(order.status) ? <a className="pop-button pop-button--yellow account-order__download" href={`/api/tickets/orders/${order.id}/pdf`}>{tickets.rows.length === 1 ? "Download ticket" : `Download ${tickets.rows.filter(t=>t.status!=="void").length} tickets (PDF)`}</a> : null}
+        {user.role==='admin' && order.status==='refund_review' && order.admissions_hold ? <AdmissionReview orderId={order.id} refundedMinor={order.refunded_minor} netMinor={order.total_minor-order.refunded_minor} tickets={tickets.rows}/> : null}
+        {!order.admissions_hold && ['paid','refund_review'].includes(order.status) ? <AdminResendButton orderId={order.id}/> : null}
+        {order.status === "pending" ? <PendingCheckout orderId={order.id}/> : null}
         <div className="ticket-wallet">
           {tickets.rows.map((ticket, index) => (
             <article className="ticket-wallet__ticket" key={ticket.id} aria-label={`Ticket ${index + 1} of ${tickets.rows.length}`}>
@@ -45,7 +51,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
                 <strong>{ticket.ticket_type_name}</strong>
                 <small>{ticket.ticket_number}</small>
               </div>
-              {ticket.status !== "void" ? <img src={`/api/tickets/${ticket.id}/qr`} alt={`QR code for ${ticket.ticket_number}`} width={260} height={260} loading={index > 3 ? "lazy" : "eager"} /> : <strong className="ticket-wallet__void">Void</strong>}
+              {!order.admissions_hold && ticket.status !== "void" ? <img src={`/api/tickets/${ticket.id}/qr`} alt={`QR code for ${ticket.ticket_number}`} width={260} height={260} loading={index > 3 ? "lazy" : "eager"} /> : <strong className="ticket-wallet__void">{order.admissions_hold ? "On hold — contact support" : "Void"}</strong>}
             </article>
           ))}
         </div>

@@ -15,6 +15,7 @@ describe("ticket order fulfilment", () => {
           order_number: null,
           user_id: "user-123",
           status: "pending",
+          merch_discount_enabled: true,
           total_minor: groupOffer ? 3000 : 1500,
           currency: "gbp",
           meta_consent_granted: false,

@@ -1,11 +1,10 @@
-import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getPool } from "../../../../lib/db";
 import { insertEmailJob } from "../../../../lib/email-jobs";
 import { insertMetaConversionJob, shouldQueueTicketPurchase } from "../../../../lib/meta-jobs";
 import { metaSiteUrl } from "../../../../lib/meta";
-import { revokeUnusedMerchDiscountForTicketOrder } from "../../../../lib/merch-discounts";
+import { correlatePaidSession, recordRefund, recordDispute } from "../../../../lib/ticket-payments";
 import { decryptJson } from "../../../../lib/security";
 import { getStripe } from "../../../../lib/stripe";
 import { fulfilPaidOrder } from "../../../../lib/ticket-orders";
@@ -62,15 +61,10 @@ export async function POST(request: NextRequest) {
     ) {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.payment_status === "paid" || event.type === "checkout.session.async_payment_succeeded") {
-        const orderId = session.metadata?.ticketOrderId || session.client_reference_id;
-        if (!orderId) throw new Error("Checkout session is missing ticketOrderId");
-        const fulfilled = await fulfilPaidOrder(
-          client,
-          orderId,
-          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id
-        );
+        const correlation = await correlatePaidSession(client, session, event.created);
+        const fulfilled = correlation ? await fulfilPaidOrder(client, correlation.id, correlation.pi) : null;
         if (fulfilled) {
-          await insertEmailJob(
+          if (!fulfilled.admissionsHold) await insertEmailJob(
             client,
             "ticket_confirmation",
             { to: fulfilled.email, displayName: fulfilled.displayName, orderId: fulfilled.orderId },
@@ -120,34 +114,14 @@ export async function POST(request: NextRequest) {
       if (orderId) {
         await client.query(
           `UPDATE ticket_orders SET status = $2, updated_at = now()
-            WHERE id = $1 AND status = 'pending'`,
-          [orderId, event.type === "checkout.session.expired" ? "expired" : "failed"]
+            WHERE id = $1 AND status = 'pending' AND (stripe_checkout_session_id = $3 OR (stripe_checkout_session_id IS NULL AND id::text=$4 AND total_minor=$5 AND currency=$6))`,
+          [orderId, event.type === "checkout.session.expired" ? "expired" : "failed", session.id, session.client_reference_id, session.amount_total, session.currency]
         );
       }
     } else if (event.type === "charge.refunded") {
-      const charge = event.data.object as Stripe.Charge;
-      const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
-      if (paymentIntentId) {
-        const status = charge.amount_refunded >= charge.amount ? "refunded" : "refund_review";
-        const order = await client.query<{ id: string }>(
-          `UPDATE ticket_orders SET status = $2,
-             refunded_at = CASE WHEN $2 = 'refunded' THEN now() ELSE refunded_at END,
-             stripe_charge_id = $3, updated_at = now()
-           WHERE stripe_payment_intent_id = $1 RETURNING id`,
-          [paymentIntentId, status, charge.id]
-        );
-        if (order.rows[0]) {
-          if (status === "refunded") {
-            await client.query("UPDATE tickets SET status = 'void' WHERE order_id = $1", [order.rows[0].id]);
-            await revokeUnusedMerchDiscountForTicketOrder(client, order.rows[0].id);
-          }
-          await client.query(
-            `INSERT INTO ticket_audit_log (id, order_id, action, details)
-             VALUES ($1, $2, $3, $4::jsonb)`,
-            [randomUUID(), order.rows[0].id, status, JSON.stringify({ chargeId: charge.id, amountRefunded: charge.amount_refunded })]
-          );
-        }
-      }
+      await recordRefund(client, event.data.object as Stripe.Charge);
+    } else if (event.type === "charge.dispute.created" || event.type === "charge.dispute.updated" || event.type === "charge.dispute.closed") {
+      await recordDispute(client, event.data.object as Stripe.Dispute, event.created);
     }
 
     await client.query(

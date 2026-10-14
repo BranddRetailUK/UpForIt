@@ -1,3 +1,6 @@
+import {readFile} from "node:fs/promises";
+import path from "node:path";
+import {expireClosedTicketCheckouts} from "../lib/ticket-maintenance";
 import sgMail from "@sendgrid/mail";
 import QRCode from "qrcode";
 import { getPool } from "../lib/db";
@@ -74,8 +77,10 @@ async function deliverEmail(job: Job) {
   const fromEmail = process.env.SENDGRID_FROM_EMAIL;
   if (!fromEmail) throw new Error("SENDGRID_FROM_EMAIL is not set");
   sgMail.setApiKey(apiKey);
+  sgMail.setTimeout(30000);
 
   const testingRecipient = process.env.EMAIL_FORCE_RECIPIENT?.trim();
+  if (process.env.APP_ENV === "production" && testingRecipient) throw new Error("EMAIL_FORCE_RECIPIENT is forbidden in production");
   const to = testingRecipient || payload.to;
   const prefix = process.env.EMAIL_SUBJECT_PREFIX?.trim() || "";
   const originalRecipient = testingRecipient ? payload.to : undefined;
@@ -84,6 +89,7 @@ async function deliverEmail(job: Job) {
   let text: string;
   let html: string;
   let attachments: SendGridAttachment[] | undefined;
+  let ticketSnapshot = "";
 
   if (job.job_type === "verify_email") {
     subject = "Verify your UPFORIT account";
@@ -98,6 +104,11 @@ async function deliverEmail(job: Job) {
   } else {
     if (!payload.orderId) throw new Error("Ticket confirmation job is missing orderId");
     const ticketRows = await getTicketDocumentRows(payload.orderId);
+    if (!ticketRows.length) {
+      await getPool().query("UPDATE email_jobs SET status='cancelled',locked_at=NULL,last_error='No available admissions' WHERE id=$1",[job.id]);
+      return;
+    }
+    ticketSnapshot = ticketRows.map(row => row.public_id).join(",");
     const pdf = await buildTicketPdf(payload.orderId, ticketRows);
     const singleTicket = ticketRows.length === 1 ? ticketRows[0] : undefined;
     const qrContentId = singleTicket ? `upforit-ticket-${singleTicket.public_id}@upforitevents.co.uk` : undefined;
@@ -119,7 +130,8 @@ async function deliverEmail(job: Job) {
       siteUrl,
       originalRecipient,
       singleTicketQrCid: qrContentId,
-      singleTicketNumber: singleTicket?.ticket_number
+      singleTicketNumber: singleTicket?.ticket_number,
+      bannerCid: "upforit-ticket-banner"
     });
     attachments = buildTicketEmailAttachments({
       pdf,
@@ -127,38 +139,64 @@ async function deliverEmail(job: Job) {
       qrImage,
       qrContentId
     });
+    attachments.push({content:(await readFile(path.join(process.cwd(),"public/brand/ticket-email-banner.png"))).toString("base64"),filename:"UPFORIT-ticket-banner.png",type:"image/png",disposition:"inline",content_id:"upforit-ticket-banner"});
   }
 
-  await sgMail.send({
+  // The order lock serializes delivery with refunds/check-in. An in-flight provider
+  // request has an uncertain outcome after a crash and must never be auto-retried.
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    if (job.order_id) {
+      const order = await client.query("SELECT id FROM ticket_orders WHERE id=$1 AND status IN ('paid','refund_review') AND admissions_hold=false FOR UPDATE", [job.order_id]);
+      if (!order.rowCount) {
+        await client.query("UPDATE email_jobs SET status='cancelled',locked_at=NULL,last_error='Admissions unavailable' WHERE id=$1",[job.id]);
+        await client.query("COMMIT");
+        return;
+      }
+      // A review may have voided a subset while the PDF was being generated.
+      // Cancel that snapshot and let an explicit resend produce a fresh attachment.
+      const rows = await getTicketDocumentRows(job.order_id);
+      if (rows.map(row => row.public_id).join(',') !== ticketSnapshot) {
+        await client.query("UPDATE email_jobs SET status='cancelled',locked_at=NULL,last_error='Admissions changed; resend current tickets' WHERE id=$1",[job.id]);
+        await client.query("COMMIT");
+        return;
+      }
+    }
+    await getPool().query("UPDATE email_jobs SET sending_at=now() WHERE id=$1",[job.id]);
+    const [response] = await sgMail.send({
     to,
     from: { email: fromEmail, name: process.env.SENDGRID_FROM_NAME || "UPFORIT Events" },
     replyTo: process.env.SENDGRID_REPLY_TO_EMAIL || fromEmail,
-    subject: `${prefix}${subject}`,
+    subject: `${prefix}${prefix ? " " : ""}${subject}`,
     text,
     html,
     attachments,
+    customArgs: { ticket_email_job_id: job.id },
     trackingSettings: { clickTracking: { enable: false, enableText: false } }
   });
   await getPool().query(
-    `UPDATE email_jobs SET status = 'sent', sent_at = now(), locked_at = NULL, last_error = NULL, updated_at = now()
+    `UPDATE email_jobs SET status = CASE WHEN status IN ('delivered','bounced') THEN status ELSE 'sent' END, provider_message_id=$2, sent_at = now(), locked_at = NULL, last_error = NULL, updated_at = now()
       WHERE id = $1`,
-    [job.id]
+    [job.id, response.headers["x-message-id"] ?? null]
   );
   if (job.job_type === "ticket_confirmation" && job.order_id) {
-    await getPool().query(
+    await client.query(
       "UPDATE ticket_orders SET confirmation_email_sent_at = now(), updated_at = now() WHERE id = $1",
       [job.order_id]
     );
   }
+    await client.query("COMMIT");
+  } catch(error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
 }
 
 async function failEmail(job: Job, error: unknown) {
   const message = describeEmailDeliveryError(error);
   const delayMinutes = Math.min(60, 2 ** job.attempts);
   await getPool().query(
-    `UPDATE email_jobs SET status = 'failed', locked_at = NULL, last_error = $2,
+    `UPDATE email_jobs SET status = CASE WHEN sending_at IS NULL THEN 'failed' ELSE 'unknown' END, locked_at = NULL, last_error = $2,
        available_at = now() + ($3 * interval '1 minute'), updated_at = now()
-     WHERE id = $1`,
+     WHERE id = $1 AND status = 'processing'`,
     [job.id, message.slice(0, 1000), delayMinutes]
   );
   console.error(`Email job ${job.id} failed: ${message}`);
@@ -283,7 +321,7 @@ async function deliverMeta(job: MetaJob) {
 async function recoverStaleJobs() {
   await getPool().query(
     `UPDATE email_jobs
-        SET status = 'failed', locked_at = NULL, available_at = now(),
+        SET status = CASE WHEN sending_at IS NULL THEN 'failed' ELSE 'unknown' END, locked_at = NULL, available_at = now(),
             last_error = COALESCE(last_error, 'Worker lock expired'), updated_at = now()
       WHERE status = 'processing' AND locked_at < now() - interval '15 minutes'`
   );
@@ -305,9 +343,9 @@ async function recoverStaleJobs() {
   );
 }
 
-async function workOnce() {
+async function workOnce(lane: "email" | "meta" | "merch") {
   let worked = false;
-  const emailJob = await claimEmailJob();
+  const emailJob = lane === "email" ? await claimEmailJob() : null;
   if (emailJob) {
     worked = true;
     try {
@@ -316,7 +354,7 @@ async function workOnce() {
       await failEmail(emailJob, error);
     }
   }
-  const metaJob = await claimMetaJob();
+  const metaJob = lane === "meta" ? await claimMetaJob() : null;
   if (metaJob) {
     worked = true;
     try {
@@ -343,7 +381,7 @@ async function workOnce() {
       console.error(`Meta conversion job ${metaJob.id} ${decision.status}: ${message}`);
     }
   }
-  const merchDiscountJob = await claimMerchDiscountSyncJob();
+  const merchDiscountJob = lane === "merch" ? await claimMerchDiscountSyncJob() : null;
   if (merchDiscountJob) {
     worked = true;
     try {
@@ -356,13 +394,26 @@ async function workOnce() {
 }
 
 async function main() {
-  const once = process.argv.includes("--once");
+  const once=process.argv.includes('--once');
   await recoverStaleJobs();
-  do {
-    const worked = await workOnce();
-    if (once) break;
-    if (!worked) await new Promise((resolve) => setTimeout(resolve, 5000));
-  } while (true);
+  async function lane(kind:'email'|'meta'|'merch'){
+    do {
+      if(kind==='email')await getPool().query("INSERT INTO ticket_worker_health(worker,heartbeat_at) VALUES('email',now()) ON CONFLICT(worker) DO UPDATE SET heartbeat_at=now()");
+      const worked=await workOnce(kind);
+      if(once)break;
+      if(!worked)await new Promise(resolve=>setTimeout(resolve,5000));
+    }while(true);
+  }
+  async function maintenance(){
+    do{
+      await recoverStaleJobs();
+      await expireClosedTicketCheckouts();
+      if(once)break;
+      await new Promise(resolve=>setTimeout(resolve,30000));
+    }while(true);
+  }
+  if(process.argv.includes('--email-only')) await lane('email');
+  else await Promise.all([lane('email'),lane('meta'),lane('merch'),maintenance()]);
   await getPool().end();
 }
 

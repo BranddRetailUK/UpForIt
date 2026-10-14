@@ -72,7 +72,7 @@ export default async function AccountPage() {
          FROM ticket_orders o
          JOIN events e ON e.id = o.event_id
          LEFT JOIN tickets t ON t.order_id = o.id
-        WHERE o.user_id = $1 AND o.status IN ('paid', 'refund_review', 'refunded')
+        WHERE o.user_id = $1 AND o.status IN ('pending', 'paid', 'refund_review', 'refunded')
         GROUP BY o.id, e.id
         ORDER BY o.created_at DESC`,
       [user.id]

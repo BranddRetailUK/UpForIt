@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { grantTicketMerchDiscount } from "./merch-discounts";
-import { advanceTicketTierProgression } from "./ticket-tiers";
+
 
 export type FulfilledOrder = {
   orderId: string;
@@ -10,6 +10,7 @@ export type FulfilledOrder = {
   email: string;
   displayName: string;
   totalMinor: number;
+  admissionsHold: boolean;
   currency: string;
   eventTitle: string;
   eventSlug: string;
@@ -30,6 +31,9 @@ export async function fulfilPaidOrder(
     order_number: string | null;
     user_id: string;
     status: string;
+    fulfilled_at: Date | null;
+    admissions_hold: boolean;
+    merch_discount_enabled: boolean;
     email: string;
     display_name: string;
     total_minor: number;
@@ -40,7 +44,7 @@ export async function fulfilPaidOrder(
     meta_purchase_event_id: string | null;
     meta_context_encrypted: string | null;
   }>(
-    `SELECT o.id, o.order_number, o.user_id, o.status, o.total_minor, o.currency,
+    `SELECT o.id, o.order_number, o.user_id, o.status, o.total_minor, o.currency, o.fulfilled_at, o.admissions_hold, e.merch_discount_enabled,
             o.meta_consent_granted, o.meta_purchase_event_id, o.meta_context_encrypted,
             u.email, u.display_name, e.title AS event_title, e.slug AS event_slug
        FROM ticket_orders o
@@ -51,7 +55,7 @@ export async function fulfilPaidOrder(
   );
   const order = result.rows[0];
   if (!order) throw new Error("Ticket order not found");
-  if (order.status === "paid") return null;
+  if (order.fulfilled_at || order.status === "paid") return null;
   if (order.status === "refunded") return null;
 
   let orderNumber = order.order_number;
@@ -64,9 +68,9 @@ export async function fulfilPaidOrder(
 
   await client.query(
     `UPDATE ticket_orders
-        SET status = 'paid', order_number = COALESCE(order_number, $3),
+        SET status = CASE WHEN status = 'refund_review' THEN status ELSE 'paid' END, order_number = COALESCE(order_number, $3),
             stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id),
-            paid_at = COALESCE(paid_at, now()), updated_at = now()
+            paid_at = COALESCE(paid_at, now()), fulfilled_at = now(), updated_at = now()
       WHERE id = $1`,
     [orderId, paymentIntentId ?? null, orderNumber]
   );
@@ -91,18 +95,16 @@ export async function fulfilPaidOrder(
       );
       await client.query(
         `INSERT INTO tickets (
-           id, public_id, ticket_number, order_id, order_item_id, user_id, event_id, ticket_type_name
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+           id, public_id, ticket_number, order_id, order_item_id, user_id, event_id, ticket_type_name, admission_index
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (order_item_id, admission_index) DO NOTHING`,
         [
           randomUUID(), randomUUID(), number.rows[0].value, orderId, item.id,
-          order.user_id, item.event_id, item.ticket_type_name
+          order.user_id, item.event_id, item.ticket_type_name, index + 1
         ]
       );
     }
   }
-  const eventId = items.rows[0]?.event_id;
-  if (eventId) await advanceTicketTierProgression(client, eventId);
-  await grantTicketMerchDiscount(client, {
+  if (order.merch_discount_enabled && !order.admissions_hold) await grantTicketMerchDiscount(client, {
     userId: order.user_id,
     ticketOrderId: orderId,
     source
@@ -119,6 +121,7 @@ export async function fulfilPaidOrder(
     email: order.email,
     displayName: order.display_name,
     totalMinor: order.total_minor,
+    admissionsHold: order.admissions_hold,
     currency: order.currency,
     eventTitle: order.event_title,
     eventSlug: order.event_slug,

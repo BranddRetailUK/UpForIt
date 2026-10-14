@@ -10,8 +10,15 @@ describe("public ticket sales visibility", () => {
     expect(publicTicketSalesOpen()).toBe(false);
     expect(() => assertTicketingEnabled()).toThrow("TICKETING_DISABLED");
   });
+  it("keeps production locked even when both switches are enabled", () => {
+    vi.stubEnv("APP_ENV", "production");
+    vi.stubEnv("PUBLIC_TICKET_SALES_OPEN", "true");
+    vi.stubEnv("TICKETING_ENABLED", "true");
+    expect(() => assertTicketingEnabled()).toThrow("TICKETING_DISABLED");
+  });
   it("requires both public launch and ticketing switches before purchases", () => {
     vi.stubEnv("PUBLIC_TICKET_SALES_OPEN", "true");
+    vi.stubEnv("APP_ENV", "testing");
     vi.stubEnv("TICKETING_ENABLED", "false");
     expect(() => assertTicketingEnabled()).toThrow("TICKETING_DISABLED");
     vi.stubEnv("TICKETING_ENABLED", "true");

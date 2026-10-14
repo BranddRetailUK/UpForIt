@@ -9,7 +9,7 @@ export default async function NyeTickets({ preview }: { preview: boolean }) {
   const result = await getPool().query<{ event_id: string; id: string; name: string; max_per_order: number }>(
     `SELECT e.id AS event_id, tt.id, tt.name, tt.max_per_order FROM events e
      JOIN ticket_types tt ON tt.event_id = e.id
-     WHERE e.slug = 'nye-2026' AND e.status = 'published' AND e.ends_at > now()
+     WHERE e.slug = 'nye-2026' AND e.status = 'published' AND e.sales_open = true AND e.ends_at > now()
        AND tt.archived_at IS NULL AND tt.is_active = true AND tt.price_minor = 1000
        AND tt.currency = 'gbp' AND tt.capacity IS NULL
        AND (tt.sales_start_at IS NULL OR tt.sales_start_at <= now())
