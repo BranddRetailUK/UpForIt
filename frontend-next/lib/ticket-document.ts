@@ -1,7 +1,7 @@
 import fontkit from "@pdf-lib/fontkit";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PDFDocument, type PDFFont, rgb } from "pdf-lib";
+import { PDFDocument, type PDFFont, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { getPool } from "./db";
 import { createTicketQrToken } from "./security";
@@ -40,7 +40,8 @@ export async function buildTicketPdf(orderId: string, ticketRows?: TicketDocumen
   document.setTitle(`${tickets[0].event_title} tickets — ${tickets[0].order_number}`);
   document.registerFontkit(fontkit);
   const regular = await document.embedFont(await readFile(path.join(process.cwd(), 'assets/fonts/NotoSans-Regular.ttf')), {subset:true});
-  const bold = regular;
+  const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  const banner = await document.embedPng(await readFile(path.join(process.cwd(), "public/brand/ticket-email-banner.png")));
   const supported = new Set(regular.getCharacterSet());
   const safe = (text: string) => [...text].every(char => supported.has(char.codePointAt(0)!)) ? text.replace(/[\r\n\t]/g,' ') : 'See account for full details';
   const fitted = (text: string, font: PDFFont, maximum: number) => {
@@ -52,27 +53,32 @@ export async function buildTicketPdf(orderId: string, ticketRows?: TicketDocumen
   for (const ticket of tickets) {
     const page = document.addPage([595.28, 841.89]);
     const { width, height } = page.getSize();
-    page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0.94, 1, 0) });
-    page.drawRectangle({ x: 34, y: 34, width: width - 68, height: height - 68, color: rgb(1, 1, 1), borderColor: rgb(0.05, 0.05, 0.05), borderWidth: 4 });
-    page.drawText("UPFORIT", { x: 65, y: 748, size: 40, font: bold, color: rgb(0.04, 0.04, 0.04) });
-    page.drawText(fitted(ticket.event_title, bold, 24).text, { x:65, y:700, size:fitted(ticket.event_title, bold, 24).size, font:bold });
-    const eventDate = new Intl.DateTimeFormat("en-GB", {
-      dateStyle: "full", timeStyle: "short", timeZone: ticket.timezone
-    }).format(new Date(ticket.starts_at));
-    page.drawText(fitted(eventDate, regular, 13).text, { x:65, y:666, size:fitted(eventDate, regular, 13).size, font:regular });
-    page.drawText(fitted(ticket.venue_name, regular, 13).text, { x:65, y:644, size:fitted(ticket.venue_name, regular, 13).size, font:regular });
-    page.drawText(fitted(ticket.ticket_type_name, bold, 21).text, { x:65, y:598, size:fitted(ticket.ticket_type_name, bold, 21).size, font:bold });
-    page.drawText(fitted(`Ticket holder: ${ticket.display_name}`, regular, 12).text, { x:65, y:567, size:fitted(`Ticket holder: ${ticket.display_name}`, regular, 12).size, font:regular });
-    page.drawText(`Ticket: ${ticket.ticket_number}`, { x: 65, y: 545, size: 12, font: regular });
-    page.drawText(`Order: ${ticket.order_number}`, { x: 65, y: 523, size: 12, font: regular });
-
+    const ink=rgb(.04,.04,.04), yellow=rgb(.95,1,0), white=rgb(1,1,1);
+    page.drawRectangle({ x:0,y:0,width,height,color:white });
+    page.drawImage(banner,{x:0,y:height-width/3,width,height:width/3});
+    page.drawRectangle({x:0,y:582,width,height:62,color:yellow});
+    const title=fitted(ticket.event_title.toUpperCase(),regular,30);
+    page.drawText(title.text,{x:48,y:604,size:title.size,font:regular,color:ink});
+    const eventDate=new Intl.DateTimeFormat("en-GB",{dateStyle:"full",timeStyle:"short",timeZone:ticket.timezone}).format(new Date(ticket.starts_at));
+    for(const [text,y,size] of [[eventDate,554,12],[ticket.venue_name,531,17],[ticket.ticket_type_name,497,18]] as const){
+      const line=fitted(text,regular,size);page.drawText(line.text,{x:48,y,size:line.size,font:regular,color:ink});
+    }
+    page.drawLine({start:{x:48,y:480},end:{x:547,y:480},thickness:2,color:ink});
+    const holder=fitted(`Ticket holder: ${ticket.display_name}`,regular,12);
+    page.drawText(holder.text,{x:48,y:458,size:holder.size,font:regular,color:ink});
+    page.drawText(`TICKET ${ticket.ticket_number}`,{x:48,y:434,size:13,font:bold,color:ink});
+    page.drawText(`ORDER ${ticket.order_number}`,{x:48,y:414,size:10,font:regular,color:ink});
     const qrBuffer = await QRCode.toBuffer(createTicketQrToken(ticket.public_id), {
       type: "png", width: 700, margin: 2, errorCorrectionLevel: "M"
     });
     const qr = await document.embedPng(qrBuffer);
-    page.drawImage(qr, { x: 157, y: 205, width: 280, height: 280 });
-    page.drawText("Present this QR code at the entrance", { x: 178, y: 176, size: 12, font: bold });
-    page.drawText("Each QR code admits one person and can only be checked in once.", { x: 119, y: 146, size: 10, font: regular });
+    page.drawImage(qr, { x: 167.64, y: 130, width: 260, height: 260 });
+    page.drawRectangle({x:0,y:0,width,height:105,color:ink});
+    page.drawRectangle({x:0,y:100,width,height:5,color:yellow});
+    page.drawText("ONE TICKET. ONE PERSON.",{x:48,y:68,size:22,font:bold,color:yellow});
+    page.drawText("Show this QR code at the entrance. Each ticket scans once.",{x:48,y:43,size:11,font:regular,color:white});
+    page.drawText(`upforitevents.co.uk  /  ${tickets.indexOf(ticket)+1} OF ${tickets.length}`,{x:48,y:22,size:10,font:bold,color:white});
+
   }
   return document.save();
 }

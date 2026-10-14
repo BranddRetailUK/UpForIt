@@ -42,11 +42,8 @@ export default async function NyeEventPage({ searchParams }: { searchParams: Pro
             </h1>
             <Image className="nye-event__artist-logo" src="/brand/nye-2026/blackley-logo.png" alt="Blackley" width={2835} height={587} sizes="(max-width: 800px) 70vw, 360px" />
             <NyeCountdown />
-            <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
             <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
-            <div className="industrial-actions nye-hero__actions">
-              <a className="industrial-button" href={showTickets ? "#tickets" : "#nye-updates"}>{showTickets ? "Get tickets — £10" : "Get event updates"}</a>
-            </div>
+
           </div>
 
         </div>
