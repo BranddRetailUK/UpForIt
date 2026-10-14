@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ticket scanner", robots: { index: false, follow: false } };
 
 export default async function ScannerPage() {
+  const isTesting = process.env.APP_ENV === "testing";
   const user = await getCurrentUser();
   const accountAccess = user?.role === "admin" ? user : null;
   const cookieStore = await cookies();
@@ -38,7 +39,8 @@ export default async function ScannerPage() {
       <header className="admin-header">
         <div>
 
-          <h1>Ticket scanner</h1>
+          <h1>{isTesting ? "Testing scanner" : "Ticket scanner"}</h1>
+          <p>{isTesting ? "Use test tickets only. These tickets are not valid for entry at the event." : "Use live event tickets. Test email tickets must be scanned in the separate Testing scanner."}</p>
           <p>{scannerSession ? `${scannerSession.device_label} · ${scannerSession.event_title}` : `Signed in as ${accountAccess?.email}`}</p>
         </div>
         <nav>{accountAccess?.role === "admin" ? <Link href="/admin">Back to admin</Link> : scannerSession ? <ScannerEndAccessButton /> : <Link href="/account">My account</Link>}</nav>

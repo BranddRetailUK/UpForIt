@@ -102,3 +102,42 @@ Email operations
 'sent' means provider accepted, not delivered. Investigate unknown/bounced/exhausted jobs
 in provider activity before an explicit resend. Unknown jobs are not auto-retried because
 the first send may have succeeded. Regenerate current valid tickets on each approved resend.
+
+Hosted verification update — 14 October 2026, 14:44 BST
+- Banner and branded ticket PDF commit 8beb90a deployed successfully to production
+  frontend (fe557820-7fa8-4021-9167-d653adc78c29) and email worker
+  (0b14071a-5fac-472e-b37e-8fddc2e4e4ad).
+- Exact user-supplied UPFORIT-tickets.pdf decoded and submitted to hosted Testing
+  scanner: HTTP 200, ok=true, validationOnly=true; ticket remained valid/unused.
+  Scott confirmed the expected result on his phone via Testing scanner activation.
+  Root cause of live scanner rejection: test-environment ticket presented to live
+  scanner. Environment signing keys remain separate; production checks were not relaxed.
+- Scanner now explicitly labels Testing and explains which tickets to use. Added
+  regression coverage for cross-environment rejection and signing-key whitespace.
+  Current frontend suite: 157 tests passed; TypeScript passed.
+- Redesigned PDF worker deployed to Testing (d6aa6c92-7d4a-409a-a9d2-66ba1683aa20).
+  Existing four-ticket sandbox order resent only to scott@brandd.co.uk; provider
+  accepted at 13:43:09 UTC, one attempt. Inbox receipt of this latest redesign is
+  not yet confirmed. Earlier monochrome email button was approved by Scott.
+- Hosted Stripe sandbox: actual card decline, 3DS challenge, successful £30 payment
+  for four admissions, one fulfilled order, four tickets, email accepted. Repeating
+  checkout with the same idempotency key returned the same session. An obsolete £40
+  test session was expired after detecting an old Testing deployment. Buyer return
+  page required sign-in because the checkout used a temporary API test session;
+  full signed-in browser return remains to verify.
+- Both Stripe ticket webhook subscriptions now include dispute created/updated/closed.
+  Real provider refund/dispute lifecycle, callback replay and merchandise redemption
+  remain outstanding; database tests alone are not external-service evidence.
+- Existing signed UPFORIT SendGrid admin webhook now correlates ticket email events
+  while retaining campaign routing. ADMIN deployment d058b17e-361f-4282-a4dd-25f6296be73f
+  succeeded. Actual delivered/bounced callback persistence remains to verify.
+- Production frontend/worker QR and email encryption key fingerprints match;
+  production has no forced test recipient. SendGrid domain authentication is valid.
+- Production NYE readback: draft, sales_open=false, £10 GBP, capacity NULL, max 10,
+  merchandise discount enabled, ends 2027-01-01 02:00 UTC, sales cutoff 2026-12-31
+  17:00 UTC. Production and Testing email worker heartbeats healthy.
+- Temporary Testing checkout has been closed: event sales_open=false and frontend
+  PUBLIC_TICKET_SALES_OPEN=false. Production source launch lock remains false.
+- Testing source redeploys have used an older pinned revision; manual current-source
+  deploys were used. Correct environment-specific source tracking before future
+  automatic Testing releases. No production source configuration was changed.

@@ -20,4 +20,18 @@ describe("ticket and email security helpers", () => {
     expect(encrypted).not.toContain(payload.to);
     expect(decryptJson(encrypted)).toEqual(payload);
   });
+
+  it("verifies exact signing keys with surrounding whitespace and retains existing trimmed-key tickets", () => {
+    const publicId = "4e37f654-31f8-4c86-a59e-bf4e72c7f0a1";
+    const previous = createTicketQrToken(publicId);
+    process.env.TICKET_QR_SIGNING_SECRET = ` ${process.env.TICKET_QR_SIGNING_SECRET}\n`;
+    expect(verifyTicketQrToken(createTicketQrToken(publicId))).toBe(publicId);
+    expect(verifyTicketQrToken(previous)).toBe(publicId);
+  });
+
+  it("rejects a ticket issued using another environment's signing key", () => {
+    const token = createTicketQrToken("4e37f654-31f8-4c86-a59e-bf4e72c7f0a1");
+    process.env.TICKET_QR_SIGNING_SECRET = "different-environment-secret-with-more-than-32-characters";
+    expect(verifyTicketQrToken(token)).toBeNull();
+  });
 });

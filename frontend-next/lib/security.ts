@@ -52,7 +52,11 @@ export function decryptJson<T>(value: string): T {
 
 // Existing v1 codes remain valid through a bounded verification-key overlap.
 function qrKeys() {
-  return [process.env.TICKET_QR_SIGNING_SECRET, ...(process.env.TICKET_QR_PREVIOUS_SIGNING_SECRETS || "").split(",")].filter((key): key is string => Boolean(key?.trim())).map(key => key.trim());
+  // Signing uses the exact configured value. Preserve it during verification,
+  // while retaining trimmed keys for previously issued codes and key rotation.
+  const keys = [process.env.TICKET_QR_SIGNING_SECRET, ...(process.env.TICKET_QR_PREVIOUS_SIGNING_SECRETS || "").split(",")]
+    .filter((key): key is string => Boolean(key?.trim()));
+  return [...new Set(keys.flatMap(key => [key, key.trim()]))];
 }
 export function createTicketQrToken(publicId: string) {
   const secret = process.env.TICKET_QR_SIGNING_SECRET;
