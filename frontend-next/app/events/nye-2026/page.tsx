@@ -1,11 +1,15 @@
+import NyeTickets from "../../../components/NyeTickets";
+import { publicTicketSalesOpen } from "../../../lib/event-visibility";
 import type { Metadata } from "next";
 import CloudinaryImage from "../../../components/CloudinaryImage";
-import SignupForm from "../../../components/SignupForm";
+import EventUpdatesBanner from "../../../components/EventUpdatesBanner";
 import NyeCountdown from "../../../components/NyeCountdown";
 import NyeBannerPreload from "../../../components/NyeBannerPreload";
 import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../../../lib/cloudinary";
 
-const description = "See out 2026 with UPFORIT at McCarthys Sports Bar, Bletchley. 31 December, doors open 5pm. Lineup to be revealed.";
+export const dynamic = "force-dynamic";
+
+const description = "UPFORIT NYE 2026 at McCarthys Sports Bar, Bletchley. 31 December, doors open 5pm. Lineup to be revealed.";
 
 export const metadata: Metadata = {
   title: "NYE 2026 — 31 December",
@@ -20,10 +24,13 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "UPFORIT presents NYE 2026", description, images: [cloudinaryUrl(CLOUDINARY_ASSETS.nye2026Teaser, { width: 1500 })] }
 };
 
-export default function NyeEventPage() {
+export default async function NyeEventPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
+  const preview = process.env.NODE_ENV === "development" && (await searchParams).preview === "tickets";
+  const showTickets = preview || (publicTicketSalesOpen() && process.env.TICKETING_ENABLED === "true");
   return (
     <div className="nye-event">
       <NyeBannerPreload />
+      {preview ? <div className="nye-preview-note">LOCAL PREVIEW · Ticket sales are not live</div> : null}
       <section className="nye-hero nye-event__hero" aria-labelledby="nye-title">
         <div className="nye-hero__speakers" aria-hidden="true" />
         <div className="nye-hero__paint" aria-hidden="true" />
@@ -38,7 +45,7 @@ export default function NyeEventPage() {
             <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
             <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
             <div className="industrial-actions nye-hero__actions">
-              <a className="industrial-button" href="#nye-updates">Get event updates</a>
+              <a className="industrial-button" href={showTickets ? "#tickets" : "#nye-updates"}>{showTickets ? "Get tickets — £10" : "Get event updates"}</a>
             </div>
           </div>
           <figure className="nye-event__teaser">
@@ -47,14 +54,8 @@ export default function NyeEventPage() {
         </div>
       </section>
       <div className="nye-event__strip" aria-hidden="true"><span>31.12.26</span><span>BLETCHLEY</span><span>UPFORIT NYE</span><span>31.12.26</span></div>
-      <section className="bass-newsletter section-wrap nye-event__updates" id="nye-updates" aria-labelledby="nye-updates-title">
-        <div>
-          <h2 id="nye-updates-title">STAY IN<br /><em>THE LOOP.</em></h2>
-        </div>
-        <div className="bass-newsletter__form">
-          <SignupForm />
-        </div>
-      </section>
+      {showTickets ? <section className="section-wrap nye-event__tickets" aria-label="NYE tickets"><div className="nye-ticket-intro"><h2>NYE 2026<br /><em>TICKETS</em></h2><p className="nye-ticket-intro__venue">McCarthys Sports Bar</p><p className="nye-ticket-intro__location">Bletchley</p><p className="nye-ticket-intro__doors">Doors open 5pm</p></div><NyeTickets preview={preview} /></section> : null}
+      <EventUpdatesBanner id="nye-updates" />
     </div>
   );
 }

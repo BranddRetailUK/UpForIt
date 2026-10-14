@@ -1,0 +1,170 @@
+UPFORIT — NYE ticketing, admin, email and QR audit
+14 October 2026
+
+Verdict: local preview ready for review; live ticket sales are NOT ready to enable.
+
+Scope and evidence
+Reviewed the checked-out Next.js storefront, separate admin-service, migrations, startup seed, authentication, checkout, Stripe webhook, order fulfilment, account/download endpoints, email worker/templates, QR signing and check-in/scanner access. Ran local automated tests and exercised the ticket selector in the in-app browser. This is a source and local-execution audit, not certification of the deployed database, Stripe dashboard, SendGrid domain setup or event-day phone hardware. No production database was changed, no customer email was sent, and no payment was taken.
+
+Approved event rules
+- NYE 2026, 31 December, McCarthys Sports Bar, Bletchley; doors 17:00 UK time.
+- One general-admission price: £10. No early-bird or release progression for NYE.
+- Unlimited event capacity (capacity NULL), with no stock or scarcity messages.
+- Total selected quantity includes free places. Each complete set of four in one order costs £30. Eight cost £60. Three cost £30 and do not silently become four admissions.
+- Existing maximum of 10 admissions per order retained; this is not an event capacity.
+- End time is still needed before event/scanner configuration can be completed.
+
+Changes prepared locally
+- Existing NYE artwork/page now includes the shared ticket selector behind the ticket-sales flags, and a development-only preview at /events/nye-2026?preview=tickets.
+- Preview uses no ticket database and cannot start payment. It does not emit ticket ViewContent tracking.
+- Shared pricing is used by the selector, server checkout and admin simulated-purchase endpoint. Client-supplied totals are never trusted.
+- £10 is enforced for NYE. Paid and free admissions are separate order/Stripe lines; three paid plus one £0 line still produces four tickets. Item arithmetic remains quantity × unit price.
+- Correct event-specific sign-in return URL; removed the Summer Roundup fallback from shared selector props and generic event artwork.
+- NYE real-data loader requires exactly one active £10 GBP unlimited tier, published event, valid sales window and future end time. It fails closed when configuration is absent/ambiguous.
+- Ticket selector, merchandise-perk panel and transactional emails no longer use the old comic dots, tilted labels, blue/pink palette or round logo. PDFs use black and acid yellow. Historical event artwork remains historical content.
+- Marketing filler removed from the NYE ticket section; event details, price and offer remain.
+
+PRIORITY 1 — resolve before accepting live NYE payments
+
+1. Startup still seeds the previous event, and checkout allows ended events.
+Evidence: frontend-next/package.json start:railway; scripts/seed-ticketing.ts; lib/ticket-tiers.ts.
+Every storefront start runs a seed that upserts Summer Roundup as published, resets its £5 price, capacity and sales windows, and advances its tier. No NYE database setup exists in that seed. The checkout query checks published status and ticket sales windows but not event end time. Opening global flags can therefore make a known old ticket ID purchasable through the API after its event has ended.
+Action: replace automatic mutating seed with controlled event provisioning; set up NYE with one £10 GBP tier, capacity NULL, approved end time and explicit sales cutoff. Add server-side event-date eligibility. Do not merely switch global flags on.
+
+2. Partial refunds break fulfilment idempotency and can issue duplicate admissions.
+Evidence: lib/ticket-orders.ts fulfilPaidOrder and app/api/stripe/tickets-webhook/route.ts.
+Fulfilment returns early only for paid/refunded orders. A partial refund changes status to refund_review. A later distinct checkout-success event can then set it back to paid and insert another complete set of tickets. Receipt deduplication only protects against the same Stripe event ID. There is no uniqueness constraint for each admission ordinal within an order item.
+Action: make issuance independently idempotent, preserve refund states and test success/refund events in all orders. A status label alone must not control whether tickets have already been issued.
+
+3. Webhook trusts order metadata without checking the financial snapshot.
+Evidence: app/api/stripe/tickets-webhook/route.ts.
+Signature and live/test mode are verified, but the successful session is not compared with stored checkout session ID, amount_total, currency or expected payment intent. An incorrect but validly signed session association can fulfil the wrong stored total/order. A refund arriving before payment success is linked may find no payment-intent match, then be recorded as processed permanently.
+Action: correlate session/payment intent, validate paid amount/currency and reconcile out-of-order refunds. Test delayed payment success after failure/expiration and refunds before completion.
+
+4. Checkout creation has uncertain-outcome and retry gaps.
+Evidence: app/api/tickets/checkout/route.ts; components/TicketSelector.tsx.
+The order commits before Stripe session creation. If Stripe succeeds and its DB update fails, the catch marks the order failed although the session may remain payable. Reusing an idempotency key for a paid/failed order falls through to another insert and hits the unique key. Concurrent same-key requests can race. The UI creates a fresh key on each retry, allowing multiple open sessions/orders for one intended purchase.
+Action: persist a stable client request key, use an explicit creation state and recover the same session with Stripe idempotency. Return terminal/retry states rather than inserting again. Test lost responses and simultaneous requests.
+
+5. Partial/group refunds have no admission-level policy.
+Evidence: webhook charge.refunded branch; PDF endpoint; check-in endpoint; admin displays.
+Full refunds void all tickets. Partial refunds mark the whole order refund_review but leave every ticket valid; the PDF endpoint then refuses downloads because it requires paid status, while the wallet/check-in still accepts non-void tickets. Revenue totals exclude the entire partly refunded order. A free ticket is a £0 line, so refunding a £10 paid place must not accidentally retain all four admissions without an explicit policy. Chargebacks/disputes are not handled.
+Action: define which admission is voided and how bundle discounts are recalculated. Record refund amounts and ticket-level decisions; reconcile chargebacks. Until implemented, partial refunds need a documented manual procedure.
+
+6. Production delivery configuration is not verified by this local audit.
+Evidence: scripts/email-worker.ts; deployment scripts; .env.example.
+Ticket emails require a separately running worker, shared encryption and QR keys, valid SendGrid sender settings and correct public URL. EMAIL_FORCE_RECIPIENT overrides the buyer address without a production guard; a leftover testing value redirects all ticket emails to one inbox.
+Action: validate production worker health and configuration, prohibit forced recipients in production, verify sender/domain authentication and alert on queue age/dead jobs. Use an explicitly approved test recipient for a staging delivery rehearsal.
+
+PRIORITY 2 — email and QR reliability
+
+7. Sent does not mean delivered; bounce reporting is missing for tickets.
+Evidence: scripts/email-worker.ts; lib/ticket-email-status.ts; admin-service/campaigns.mjs ingestEvents.
+The worker marks sent immediately after SendGrid API acceptance. It does not store provider message ID or ticket/job custom arguments. The separate marketing webhook only ingests campaign/recipient identifiers, so it does not update ticket delivery/bounce status. Also an old confirmation_email_sent_at masks a later failed resend in the storefront admin.
+Action: label accepted vs delivered accurately, correlate transactional provider events, expose failed/bounced resend status and provide operational alerts. Marketing event tracking does not solve this for ticket mail.
+
+8. Queued confirmation can send refunded/void tickets.
+Evidence: scripts/email-worker.ts deliverEmail; lib/ticket-document.ts getTicketDocumentRows.
+At delivery time the worker loads all issued tickets without checking order/payment status or ticket validity. Refund after enqueue but before send still creates an email saying tickets are ready. Download endpoint has a paid guard, but the worker does not.
+Action: recheck order/ticket eligibility when claiming/delivering, cancel obsolete jobs and avoid emailing void QR codes as valid admissions.
+
+9. Worker crash/retry semantics can duplicate mail or leave work stuck.
+Evidence: scripts/email-worker.ts.
+SKIP LOCKED correctly separates normal claims. There are five attempts, with exponential scheduling (2, 4, 8, 16 minutes before subsequent attempts). However, a crash after SendGrid acceptance but before DB acknowledgement can resend the same message. Stale processing recovery runs only on startup, not periodically. A second continuously running worker does not recover abandoned jobs until restart. Email, Meta and merch sync tasks run serially, so slow unrelated requests delay ticket mail.
+Action: add periodic lease recovery, provider correlation/uncertain-delivery state, timeouts and queue monitoring; isolate ticket delivery from slow nonessential jobs. Do not claim exactly-once email delivery.
+
+10. PDF text can prevent all ticket delivery for a buyer.
+Evidence: lib/ticket-document.ts uses StandardFonts.Helvetica/HelveticaBold and fixed positions.
+Those fonts cannot encode all Unicode names; an emoji or unsupported script can throw while generating the PDF, causing all five email attempts to fail identically. Long buyer/event/venue text can overflow. The free-line label was fitted locally to avoid introducing a new overflow, but general international-name support is outstanding.
+Action: embed a suitable Unicode font, wrap/fit all dynamic fields, test long and non-Latin names and inspect printed/mobile PDFs. PDF failures should remain visible and recoverable in admin.
+
+11. Admin door access is not event-scoped, and manual codes are guessable.
+Evidence: lib/scanner-auth.ts; app/api/admin/check-in/route.ts.
+Delegated scanner sessions are scoped to an event and expire after end+2h; admin sessions return eventId NULL and can check in any non-void historic or future ticket. Sequential UFI-T numbers are deliberately accepted without QR signatures; this is an authenticated manual fallback, not a public authentication bypass, but there is no endpoint rate limit or explicit selected-event check for admins.
+Action: require/select the current event for all door operations, add request throttling and show event/date clearly before admitting manual entries.
+
+12. QR cryptography is sound in principle but needs lifecycle hardening.
+Evidence: lib/security.ts; lib/scanner-access.ts; scanner activation and check-in routes.
+QR payload contains a random public UUID and HMAC-SHA256 signature; comparison is constant time. Ticket rows are locked during check-in, preventing two successful concurrent admissions. Void and already-checked-in tickets are rejected. Tokens contain no personal information.
+Gaps: a single signing key is used with no key version/rotation overlap; changing it invalidates previously downloaded codes. Parser accepts extra trailing dot-separated segments. QR image endpoint still generates codes for void tickets (scanner rejects them). There is no offline check-in; loss of signal prevents admission confirmation. Camera callbacks can submit repeated requests before React state updates; DB locking prevents double entry but can produce confusing feedback.
+Action: strict token parsing, key-rotation strategy, void-QR suppression, synchronous scan-in-flight guard and an event-day connectivity/fallback procedure. Test two actual phones scanning the same code concurrently.
+
+13. Resend controls differ between the two admin systems.
+Evidence: app/api/admin/orders/[orderId]/resend/route.ts; admin-service/data.mjs /api/resend.
+The storefront endpoint permits unlimited queued resends by an admin. Separate admin has a two-minute recent-job check, but enqueue/check are not enclosed in an explicit transaction in mutate, so concurrent requests can still race. Buyer has no equivalent self-service resend.
+Action: centralize enqueue policy with a DB-backed cooldown/deduplication and accurate latest-attempt status. Retain account/PDF download as the immediate fallback.
+
+PRIORITY 2 — operational/admin/customer edge cases
+
+14. Admin totals mix events and do not account for refunds correctly.
+Evidence: app/admin/page.tsx; admin-service/data.mjs.
+Metrics are all-time/all-event. Storefront ticket rows omit event identity and use the first active sort order across all events to infer tier state. Both systems sum only paid orders for revenue, excluding all partial-refund revenue. Storefront lists 100 orders; separate admin lists 500, without ticket-order pagination/search/export completeness.
+Action: event filter and per-event summaries, net/refunded amounts, paid/free admission breakdown, pagination and operational exports. Free admissions must count at the door but not as £10 revenue.
+
+15. Simulation backend prices the offer, but its existing UI estimate is still undiscounted.
+Evidence: components/AdminSimulatedPurchase.tsx; simulated-purchase endpoint.
+The endpoint now uses the shared pricing helper; the old admin UI computes unit-price × quantity and lacks event slug context. This can display £40 before creating a £30 four-admission simulation. Simulations are correctly gated to APP_ENV=testing and admin access.
+Action: pass event context into the simulator UI and share the offer calculation there before using it for NYE rehearsals.
+
+16. Confirmation and authentication recovery are incomplete.
+Evidence: components/TicketConfirmation.tsx; components/TicketSelector.tsx; account routes.
+Pending confirmation says “Payment received” before the DB has confirmed payment. Polling stops after roughly 30 seconds but the page retains an indefinite issuing message. It removes session_id from the URL, so refresh loses recovery context. Quantity is not preserved across login; a group buyer returns to one ticket. Signed-in unverified users are rejected at checkout without a direct verification-resend action in the selector.
+Action: distinguish awaiting payment vs issuing, offer recoverable account/status navigation and preserve the selected quantity safely across authentication.
+
+17. Validation, CSRF defence and checkout abuse controls need tightening.
+Evidence: app/api/tickets/checkout/route.ts; lib/request.ts.
+Invalid items are filtered instead of rejecting the full request; null items throw, malformed UUIDs reach PostgreSQL, and raw errors can be returned as 500s. Checkout lacks a per-user/IP rate limit or pending-order cap. assertSameOrigin silently permits missing Origin/Host and compares host without scheme; the admin-service has a stricter implementation.
+Action: strict bounded payload/UUID validation, consistent safe error messages, same-origin/fetch-metadata policy and checkout throttling. Existing cookie and authentication checks reduce exposure but do not replace these controls.
+
+18. Manual pause is overridden by tier progression.
+Evidence: lib/ticket-tier-policy.ts; lib/ticket-tiers.ts.
+When no tier is active, chooseActiveTicketTier selects the first tier; checkout calls progression before checking active status. Setting is_active=false alone is not a reliable pause. This is unnecessary for single-price unlimited NYE.
+Action: explicit event sales state and bypass automatic tier progression for NYE; retain global flags as an emergency stop.
+
+19. Legacy merchandise benefits still happen automatically.
+Evidence: lib/ticket-orders.ts grantTicketMerchDiscount; account UI and email worker.
+Every paid ticket order grants the existing 20% merch entitlement, including NYE. The new ticket selector focuses on the requested group offer, but hiding an old banner does not remove the backend benefit. Clarify whether it remains part of NYE; update terms and downstream confirmation surfaces consistently.
+
+20. Capacity race is historical, not a NYE blocker under the approved unlimited rule.
+Evidence: lib/ticket-tiers.ts.
+For any finite-capacity tier, open Stripe sessions do not reserve stock, and fulfilment does not revalidate capacity, so concurrent successful sessions can oversell. NYE uses capacity NULL, which intentionally bypasses this logic. Do not reintroduce an artificial capacity or scarcity display for NYE. Fix separately before running a genuinely capacity-limited event.
+
+What is already working in the source
+- Server controls price; NYE £10 offer now has integer-pence calculations and explicit free admissions.
+- Authentication/verified email required for checkout; disabled accounts excluded.
+- Stripe signature, mode checking and same-event receipt deduplication exist.
+- Paid fulfilment, ticket creation, audit entry and confirmation queue are in one webhook DB transaction.
+- Each admission, including a £0 free admission, receives its own UUID and ticket number.
+- Account/PDF access is restricted to owner/admin; QR tokens are signed rather than just predictable ticket numbers.
+- Full refund voids tickets; concurrent duplicate scans serialize on a row lock.
+- Encrypted email-job payloads, bounded retries, inline single-ticket QR and multipage group PDFs are present.
+
+Customer delivery path
+1. Customer signs in/registers and verifies their email.
+2. Selects total admissions. Four = three paid lines' quantity plus one free admission; total £30.
+3. Server creates stored order/items and Stripe Checkout.
+4. Signed payment webhook issues all admissions and queues confirmation transactionally.
+5. Separate worker makes one PDF page per admission. Single-admission orders also get an inline QR in the email; group orders get all QR codes in the attached PDF, not one shared group code.
+6. SendGrid accepts the email; current admin labels it sent. Delivery to inbox is not yet tracked.
+7. Customer can view individual QR codes and download the PDF from their account independently of mail delivery.
+8. Door scanner verifies the signature, locks the ticket and marks that admission checked in once.
+
+Required staging rehearsal before launch
+Use isolated database, Stripe TEST mode and an explicitly approved test mailbox. Do not run the current seed against production to perform these tests.
+- Quantities 1–10: totals £10/20/30/30/40/50/60/60/70/80; free counts 0/0/0/1/1/1/1/2/2/2.
+- 0/negative/fractional/11/duplicate-tier/malformed requests rejected appropriately; other events receive no NYE discount.
+- Actual £30 test checkout issues exactly four uniquely scannable admissions; replay and reordered webhooks issue no extras.
+- Cancel, failed payment, abandoned checkout, browser retry, lost response, delayed webhook, disabled sales and event-ended cases.
+- Full refund, partial refund, refund-before-success, duplicate refund and dispute reconciliation.
+- Email receipt in Gmail/Outlook/Apple Mail, attachment opening, four PDF pages, dark-mode legibility, long/non-Latin names, bounce and provider outage recovery.
+- Two real phones: valid scan, duplicate simultaneous scan, tampered QR, void/refunded ticket, wrong event, expired/revoked scanner session, denied camera and lost network.
+- Confirm production keys/URL/mode, worker, sender authentication, no forced recipient, timezone, end time and admin event metrics before enabling sales.
+
+No deployment or live sales activation has been performed.
+
+Local validation results
+- Frontend: 27 test files, 136 tests passed, including 1–10 ticket totals, repeat bundles, free-admission fulfilment, four-page PDF creation and real PNG QR decoding with the scanner library.
+- Admin-service: 11 tests passed and JavaScript syntax checks passed.
+- TypeScript and optimized Next.js production build passed.
+- Browser: checked four admissions/£30 and eight admissions/£60; mobile 390 × 844 view centred, including quantity controls, offer, totals, terms and signup form. Local screenshot: audits/nye-mobile-preview.jpg.
+- These tests are not live Stripe/SendGrid delivery or real-device concurrency tests; the staging rehearsal above remains outstanding.

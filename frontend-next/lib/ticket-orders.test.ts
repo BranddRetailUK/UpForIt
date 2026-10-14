@@ -5,7 +5,7 @@ vi.mock("./ticket-tiers", () => ({ advanceTicketTierProgression: vi.fn().mockRes
 import { fulfilPaidOrder } from "./ticket-orders";
 
 describe("ticket order fulfilment", () => {
-  it("issues one independently numbered ticket for every quantity purchased", async () => {
+  it.each([false, true])("issues one independently numbered ticket per admission (group offer: %s)", async (groupOffer) => {
     let orderSequence = 1000;
     let ticketSequence = 10000;
     const query = vi.fn(async (sql: string, _values?: unknown[]) => {
@@ -15,15 +15,15 @@ describe("ticket order fulfilment", () => {
           order_number: null,
           user_id: "user-123",
           status: "pending",
-          total_minor: 1500,
+          total_minor: groupOffer ? 3000 : 1500,
           currency: "gbp",
           meta_consent_granted: false,
           meta_purchase_event_id: null,
           meta_context_encrypted: null,
           email: "buyer@example.com",
           display_name: "Test Buyer",
-          event_title: "The Summer Roundup",
-          event_slug: "summer-roundup-2026"
+          event_title: groupOffer ? "NYE 2026" : "The Summer Roundup",
+          event_slug: groupOffer ? "nye-2026" : "summer-roundup-2026"
         }] };
       }
       if (sql.includes("SELECT i.id, i.quantity")) {
@@ -32,9 +32,9 @@ describe("ticket order fulfilment", () => {
           quantity: 3,
           ticket_type_name: "General Release",
           ticket_type_id: "tier-123",
-          unit_price_minor: 500,
+          unit_price_minor: groupOffer ? 1000 : 500,
           event_id: "event-123"
-        }] };
+        }, ...(groupOffer ? [{ id: "free-item", quantity: 1, ticket_type_name: "General admission — group offer (free)", ticket_type_id: "tier-123", unit_price_minor: 0, event_id: "event-123" }] : [])] };
       }
       if (sql.includes("ticket_order_number_seq")) {
         orderSequence += 1;
@@ -51,15 +51,15 @@ describe("ticket order fulfilment", () => {
     const ticketInserts = query.mock.calls.filter(([sql]) => String(sql).includes("INSERT INTO tickets"));
     const discountInserts = query.mock.calls.filter(([sql]) => String(sql).includes("INSERT INTO merch_discount_entitlements"));
 
-    expect(ticketInserts).toHaveLength(3);
+    expect(ticketInserts).toHaveLength(groupOffer ? 4 : 3);
     expect(discountInserts).toHaveLength(1);
     expect(query.mock.calls.filter(([sql]) => String(sql).includes("ticket_order_number_seq"))).toHaveLength(1);
-    expect(new Set(ticketInserts.map(([, values]) => (values as unknown[])[2])).size).toBe(3);
+    expect(new Set(ticketInserts.map(([, values]) => (values as unknown[])[2])).size).toBe(groupOffer ? 4 : 3);
     expect(fulfilled).toMatchObject({
       orderId: "order-123",
       orderNumber: "UFI-1001",
-      totalMinor: 1500,
-      contents: [{ id: "tier-123", quantity: 3, itemPriceMinor: 500 }]
+      totalMinor: groupOffer ? 3000 : 1500,
+      contents: [{ id: "tier-123", quantity: 3, itemPriceMinor: groupOffer ? 1000 : 500 }, ...(groupOffer ? [{ id: "tier-123", quantity: 1, itemPriceMinor: 0 }] : [])]
     });
   });
 });

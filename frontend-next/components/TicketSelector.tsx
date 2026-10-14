@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ticketPrice, ticketPriceLines } from "../lib/ticket-pricing";
 import { useEffect, useRef, useState } from "react";
 import { useMetaTracking } from "./MetaTrackingProvider";
 import TicketMerchPromoBanner from "./TicketMerchPromoBanner";
@@ -19,12 +20,16 @@ export default function TicketSelector({
   eventId,
   eventTitle,
   tiers,
-  signedIn
+  signedIn,
+  eventSlug,
+  preview = false
 }: {
   eventId: string;
   eventTitle: string;
   tiers: Tier[];
   signedIn: boolean;
+  eventSlug: string;
+  preview?: boolean;
 }) {
   const { consent, createEventId, getBrowserContext, track } = useMetaTracking();
   const viewContentTracked = useRef("");
@@ -34,10 +39,13 @@ export default function TicketSelector({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const activeTiers = tiers.filter((tier) => tier.active);
-  const total = tiers.reduce((sum, tier) => sum + (quantities[tier.id] ?? 0) * tier.priceMinor, 0);
+  const prices = activeTiers.map(tier => ticketPrice(eventSlug, tier.priceMinor, quantities[tier.id] ?? 0));
+  const total = prices.reduce((sum, price) => sum + price.totalMinor, 0);
+  const freeQuantity = prices.reduce((sum, price) => sum + price.freeQuantity, 0);
+  const admissionCount = prices.reduce((sum, price) => sum + price.quantity, 0);
 
   useEffect(() => {
-    if (consent !== "granted" || viewContentTracked.current === eventId) return;
+    if (preview || consent !== "granted" || viewContentTracked.current === eventId) return;
     track("ViewContent", {
       content_ids: tiers.map((tier) => tier.id),
       content_name: eventTitle,
@@ -45,9 +53,10 @@ export default function TicketSelector({
       content_type: "product"
     });
     viewContentTracked.current = eventId;
-  }, [consent, eventId, eventTitle, tiers, track]);
+  }, [consent, eventId, eventTitle, tiers, track, preview]);
 
   async function checkout() {
+    if (preview) return;
     setBusy(true);
     setError("");
     try {
@@ -71,11 +80,11 @@ export default function TicketSelector({
         content_name: eventTitle,
         content_category: "event tickets",
         content_type: "product",
-        contents: selected.map(({ tier, quantity }) => ({
+        contents: selected.flatMap(({ tier, quantity }) => ticketPriceLines(eventSlug, tier.name, tier.priceMinor, quantity).map(line => ({
           id: tier.id,
-          quantity,
-          item_price: tier.priceMinor / 100
-        })),
+          quantity: line.quantity,
+          item_price: line.unitPriceMinor / 100
+        }))),
         num_items: selected.reduce((sum, item) => sum + item.quantity, 0),
         value: total / 100,
         currency: "GBP"
@@ -88,9 +97,9 @@ export default function TicketSelector({
   }
 
   return (
-    <section className="ticket-selector" id="tickets">
-      <h2>Tickets</h2>
-      <TicketMerchPromoBanner compact />
+    <section className="ticket-selector" id="tickets" aria-label="Select tickets">
+      {eventSlug !== "nye-2026" ? <h2>Tickets</h2> : null}
+      {eventSlug === "nye-2026" ? <div className="nye-ticket-offer"><strong>BUY 3. GET THE 4TH FREE.</strong><p>Select 4 tickets and pay £30. Every fourth ticket is free, automatically.</p></div> : <TicketMerchPromoBanner compact />}
       <div className="ticket-tier-list">
         {tiers.map((tier) => {
           const maximum = Math.min(tier.maxPerOrder, tier.remaining ?? tier.maxPerOrder);
@@ -137,17 +146,19 @@ export default function TicketSelector({
           );
         })}
       </div>
+      {eventSlug === "nye-2026" ? <div className="nye-ticket-summary" aria-live="polite"><span>{admissionCount} {admissionCount === 1 ? "admission" : "admissions"}{freeQuantity > 0 ? ` · ${freeQuantity} free` : ""}</span><strong>{freeQuantity > 0 ? `You save £${(freeQuantity * 10).toFixed(2)}` : "£10 per ticket"}</strong></div> : null}
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
       <div className="ticket-selector__action">
-        {signedIn ? (
+        {preview ? <button className="pop-button pop-button--yellow" type="button" disabled>Checkout opens when tickets go live</button> : signedIn ? (
           <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
             {busy ? "Opening checkout…" : "Buy tickets"}
           </button>
         ) : (
-          <Link className="pop-button pop-button--yellow" href="/account/login?next=%2Fevents%2Fsummer-roundup-2026%23tickets">Sign in to buy tickets</Link>
+          <Link className="pop-button pop-button--yellow" href={`/account/login?next=${encodeURIComponent(`/events/${eventSlug}#tickets`)}`}>Sign in to buy tickets</Link>
         )}
       </div>
+      {eventSlug === "nye-2026" ? <p className="nye-ticket-terms">Choose the total number of people coming, including free places. Offer applies within one order. Each admission gets its own QR ticket. Maximum {Math.max(...tiers.map(tier => tier.maxPerOrder), 0)} admissions per order.</p> : null}
       <p className="ticket-selector__support">
         Having trouble? Contact <a href="mailto:info@upforitevents.co.uk">info@upforitevents.co.uk</a> for help.
       </p>

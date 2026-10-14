@@ -8,6 +8,8 @@ import { assertTicketingEnabled } from "../../../../lib/stripe";
 import { fulfilPaidOrder } from "../../../../lib/ticket-orders";
 import { lockTicketTiersForCheckout } from "../../../../lib/ticket-tiers";
 
+import { ticketPrice, ticketPriceLines } from "../../../../lib/ticket-pricing";
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function POST(request: NextRequest) {
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
       const selection = { ticketTypeId, quantity };
       const locked = await lockTicketTiersForCheckout(client, [selection]);
       const tier = locked.tiers[0];
-      const totalMinor = tier.price_minor * quantity;
+      const totalMinor = ticketPrice(tier.event_slug, tier.price_minor, quantity).totalMinor;
       const orderId = randomUUID();
       await client.query(
         `INSERT INTO ticket_orders (
@@ -61,12 +63,14 @@ export async function POST(request: NextRequest) {
          ) VALUES ($1, $2, $3, 'pending', 'gbp', $4, $4, $5, $6, now() + interval '5 minutes')`,
         [orderId, admin.id, tier.event_id, totalMinor, idempotencyKey, requestHash]
       );
-      await client.query(
-        `INSERT INTO ticket_order_items (
-           id, order_id, ticket_type_id, ticket_type_name, unit_price_minor, quantity, line_total_minor
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [randomUUID(), orderId, tier.id, tier.name, tier.price_minor, quantity, totalMinor]
-      );
+      for (const line of ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, quantity)) {
+        await client.query(
+          `INSERT INTO ticket_order_items (
+             id, order_id, ticket_type_id, ticket_type_name, unit_price_minor, quantity, line_total_minor
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [randomUUID(), orderId, tier.id, line.name, line.unitPriceMinor, line.quantity, line.unitPriceMinor * line.quantity]
+        );
+      }
 
       const fulfilled = await fulfilPaidOrder(client, orderId, null, "admin_simulation");
       if (!fulfilled) throw new Error("The simulated ticket order could not be fulfilled.");

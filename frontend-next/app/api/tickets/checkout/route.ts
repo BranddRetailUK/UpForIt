@@ -9,6 +9,8 @@ import { encryptJson } from "../../../../lib/security";
 import { assertTicketingEnabled, getStripe } from "../../../../lib/stripe";
 import { lockTicketTiersForCheckout, type TicketCheckoutTier } from "../../../../lib/ticket-tiers";
 
+import { ticketPrice, ticketPriceLines } from "../../../../lib/ticket-pricing";
+
 type CheckoutItem = { ticketTypeId: string; quantity: number };
 
 export async function POST(request: NextRequest) {
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
       const locked = await lockTicketTiersForCheckout(client, normalizedItems);
       checkoutRows = locked.tiers;
       totalMinor = normalizedItems.reduce(
-        (sum, item, index) => sum + checkoutRows[index].price_minor * item.quantity,
+        (sum, item, index) => sum + ticketPrice(checkoutRows[index].event_slug, checkoutRows[index].price_minor, item.quantity).totalMinor,
         0
       );
 
@@ -90,12 +92,14 @@ export async function POST(request: NextRequest) {
       for (let index = 0; index < normalizedItems.length; index += 1) {
         const item = normalizedItems[index];
         const tier = checkoutRows[index];
-        await client.query(
-          `INSERT INTO ticket_order_items (
-             id, order_id, ticket_type_id, ticket_type_name, unit_price_minor, quantity, line_total_minor
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [randomUUID(), orderId, tier.id, tier.name, tier.price_minor, item.quantity, tier.price_minor * item.quantity]
-        );
+        for (const line of ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, item.quantity)) {
+          await client.query(
+            `INSERT INTO ticket_order_items (
+               id, order_id, ticket_type_id, ticket_type_name, unit_price_minor, quantity, line_total_minor
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [randomUUID(), orderId, tier.id, line.name, line.unitPriceMinor, line.quantity, line.unitPriceMinor * line.quantity]
+          );
+        }
       }
       await client.query("COMMIT");
     } catch (error) {
@@ -116,14 +120,17 @@ export async function POST(request: NextRequest) {
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
         metadata: { ticketOrderId: orderId },
         payment_intent_data: { metadata: { ticketOrderId: orderId } },
-        line_items: normalizedItems.map((item, index) => ({
-          quantity: item.quantity,
-          price_data: {
-            currency: checkoutRows[index].currency,
-            unit_amount: checkoutRows[index].price_minor,
-            product_data: { name: `${checkoutRows[index].event_title} — ${checkoutRows[index].name}` }
-          }
-        })),
+        line_items: normalizedItems.flatMap((item, index) => {
+          const tier = checkoutRows[index];
+          return ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, item.quantity).map(line => ({
+            quantity: line.quantity,
+            price_data: {
+              currency: tier.currency,
+              unit_amount: line.unitPriceMinor,
+              product_data: { name: `${tier.event_title} — ${line.name}` }
+            }
+          }));
+        }),
         success_url: `${siteUrl}/tickets/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/events/${checkoutRows[0].event_slug}?checkout=cancelled`
       },
@@ -145,11 +152,14 @@ export async function POST(request: NextRequest) {
             currency: checkoutRows[0].currency,
             contentName: checkoutRows[0].event_title,
             contentCategory: "event tickets",
-            contents: normalizedItems.map((item, index) => ({
-              id: checkoutRows[index].id,
-              quantity: item.quantity,
-              itemPriceMinor: checkoutRows[index].price_minor
-            })),
+            contents: normalizedItems.flatMap((item, index) => {
+              const tier = checkoutRows[index];
+              return ticketPriceLines(tier.event_slug, tier.name, tier.price_minor, item.quantity).map(line => ({
+                id: tier.id,
+                quantity: line.quantity,
+                itemPriceMinor: line.unitPriceMinor
+              }));
+            }),
             userData: {
               email: user.email,
               externalId: user.id,

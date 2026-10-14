@@ -10,7 +10,7 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const PRIMARY_NAV_ITEMS = NAV_ITEMS.filter(
-  (item) => item.href !== "/contact"
+  (item) => item.href !== "/contact" && item.href !== "/music/competition"
 );
 
 export const SOCIAL_LINKS = [

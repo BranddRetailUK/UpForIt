@@ -51,7 +51,7 @@ function safeEmailUrl(value: string) {
 function callToAction({ label, url }: EmailCallToAction) {
   return `<table class="ufi-cta" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:26px 0 22px">
     <tr>
-      <td bgcolor="#d90062" style="border:3px solid #050505;background-color:#d90062;background-image:linear-gradient(#d90062,#d90062)">
+      <td bgcolor="#111111" style="border:3px solid #050505;background-color:#111111;background-image:linear-gradient(#111111,#111111)">
         <a href="${safeEmailUrl(url)}" style="display:inline-block;padding:14px 22px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:900;line-height:20px;text-decoration:none;text-transform:uppercase">${escapeHtml(label)}</a>
       </td>
     </tr>
@@ -60,12 +60,12 @@ function callToAction({ label, url }: EmailCallToAction) {
 
 function directLink(url: string) {
   const href = safeEmailUrl(url);
-  return `<p style="margin:0;color:#4a4a4a!important;-webkit-text-fill-color:#4a4a4a!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">Button not working? Copy and paste this secure link:<br><a href="${href}" style="color:#0065d9!important;-webkit-text-fill-color:#0065d9!important;text-decoration:underline;word-break:break-all">${href}</a></p>`;
+  return `<p style="margin:0;color:#4a4a4a!important;-webkit-text-fill-color:#4a4a4a!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">Button not working? Copy and paste this secure link:<br><a href="${href}" style="color:#333333!important;-webkit-text-fill-color:#333333!important;text-decoration:underline;word-break:break-all">${href}</a></p>`;
 }
 
 function inlineTicketQrCode(contentId: string, ticketNumber?: string) {
   const label = ticketNumber ? `Entry QR code for ticket ${ticketNumber}` : "Entry QR code";
-  return `<table class="ufi-ticket-qr" role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffdf00" style="width:100%;border-collapse:collapse;margin:24px 0;background-color:#ffdf00;background-image:linear-gradient(#ffdf00,#ffdf00)">
+  return `<table class="ufi-ticket-qr" role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#efff00" style="width:100%;border-collapse:collapse;margin:24px 0;background-color:#efff00;background-image:linear-gradient(#efff00,#efff00)">
     <tr>
       <td align="center" style="border:3px solid #050505;padding:20px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;text-align:center">
         <strong style="display:block;margin:0 0 12px;font-size:15px;line-height:20px;text-transform:uppercase">Your entry QR code</strong>
@@ -88,10 +88,10 @@ function emailShell({
   originalRecipient
 }: EmailShellOptions) {
   const homeUrl = safeEmailUrl(siteUrl);
-  const upforitLogoUrl = safeEmailUrl(cloudinaryUrl(CLOUDINARY_ASSETS.roundLogo, { width: 240, format: "png" }));
+  const upforitLogoUrl = safeEmailUrl(cloudinaryUrl(CLOUDINARY_ASSETS.industrialLogo, { width: 240, format: "png" }));
   const testingBanner = originalRecipient
     ? `<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 22px">
-        <tr><td bgcolor="#ffe4f0" style="border:2px solid #d90062;padding:10px 12px;background-color:#ffe4f0;background-image:linear-gradient(#ffe4f0,#ffe4f0);color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:18px">TESTING DELIVERY &mdash; originally addressed to ${escapeHtml(originalRecipient)}</td></tr>
+        <tr><td bgcolor="#f4f5de" style="border:2px solid #111111;padding:10px 12px;background-color:#f4f5de;background-image:linear-gradient(#f4f5de,#f4f5de);color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;line-height:18px">TESTING DELIVERY &mdash; originally addressed to ${escapeHtml(originalRecipient)}</td></tr>
       </table>`
     : "";
 
@@ -134,32 +134,32 @@ function emailShell({
         <td align="center" style="padding:28px 12px">
           <table role="presentation" width="640" border="0" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;border-collapse:collapse">
             <tr>
-              <td align="center" bgcolor="#008ef0" style="padding:18px 20px;background-color:#008ef0;background-image:linear-gradient(#008ef0,#008ef0)">
-                <img src="${upforitLogoUrl}" width="190" height="186" alt="UPFORIT" style="display:block;width:190px;max-width:100%;height:auto;border:0;color:#ffffff;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:28px;font-weight:900">
+              <td align="center" bgcolor="#111111" style="padding:18px 20px;background-color:#111111;background-image:linear-gradient(#111111,#111111)">
+                <img src="${upforitLogoUrl}" width="240" height="80" alt="UPFORIT" style="display:block;width:240px;max-width:100%;height:auto;border:0;color:#ffffff;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:28px;font-weight:900">
               </td>
             </tr>
             <tr>
               <td>
                 <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
-                  <tr><td width="48%" height="8" bgcolor="#ffdf00" style="height:8px;font-size:0;line-height:0">&nbsp;</td><td width="28%" height="8" bgcolor="#d90062" style="height:8px;font-size:0;line-height:0">&nbsp;</td><td width="24%" height="8" bgcolor="#0065d9" style="height:8px;font-size:0;line-height:0">&nbsp;</td></tr>
+                  <tr><td width="48%" height="8" bgcolor="#efff00" style="height:8px;font-size:0;line-height:0">&nbsp;</td><td width="28%" height="8" bgcolor="#111111" style="height:8px;font-size:0;line-height:0">&nbsp;</td><td width="24%" height="8" bgcolor="#333333" style="height:8px;font-size:0;line-height:0">&nbsp;</td></tr>
                 </table>
               </td>
             </tr>
             <tr><td height="18" style="height:18px;font-size:0;line-height:0">&nbsp;</td></tr>
             <tr>
-              <td bgcolor="#d90062" style="padding:0 8px 8px 0;background-color:#d90062;background-image:linear-gradient(#d90062,#d90062)">
+              <td bgcolor="#111111" style="padding:0;background-color:#111111;background-image:linear-gradient(#111111,#111111)">
                 <table class="ufi-force-light" role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:100%;border-collapse:collapse;background-color:#ffffff;background-image:linear-gradient(#ffffff,#ffffff);color:#050505!important;-webkit-text-fill-color:#050505!important">
                   <tr>
-                    <td class="ufi-mobile-centre" style="border:4px solid #050505;padding:34px 30px;color:#050505!important;-webkit-text-fill-color:#050505!important">
+                    <td class="ufi-mobile-centre" style="border:1px solid #333333;padding:34px 30px;color:#050505!important;-webkit-text-fill-color:#050505!important">
                       ${testingBanner}
                       <table class="ufi-kicker" role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px">
-                        <tr><td bgcolor="#ffdf00" style="border:2px solid #050505;padding:6px 10px;background-color:#ffdf00;background-image:linear-gradient(#ffdf00,#ffdf00);color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:900;letter-spacing:.7px;line-height:14px;text-transform:uppercase">${escapeHtml(eyebrow)}</td></tr>
+                        <tr><td bgcolor="#efff00" style="border:2px solid #050505;padding:6px 10px;background-color:#efff00;background-image:linear-gradient(#efff00,#efff00);color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:900;letter-spacing:.7px;line-height:14px;text-transform:uppercase">${escapeHtml(eyebrow)}</td></tr>
                       </table>
                       <h1 style="margin:0 0 24px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial Black,Arial,Helvetica,sans-serif;font-size:34px;font-weight:900;letter-spacing:-1px;line-height:38px;text-transform:uppercase">${escapeHtml(title)}</h1>
                       ${bodyHtml}
-                      <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#dfeef8" style="width:100%;border-collapse:collapse;margin:28px 0 0;background-color:#dfeef8;background-image:linear-gradient(#dfeef8,#dfeef8)">
+                      <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f1f1eb" style="width:100%;border-collapse:collapse;margin:28px 0 0;background-color:#f1f1eb;background-image:linear-gradient(#f1f1eb,#f1f1eb)">
                         <tr>
-                          <td width="8" bgcolor="#0065d9" style="width:8px;background-color:#0065d9;background-image:linear-gradient(#0065d9,#0065d9);font-size:0;line-height:0">&nbsp;</td>
+                          <td width="8" bgcolor="#333333" style="width:8px;background-color:#333333;background-image:linear-gradient(#333333,#333333);font-size:0;line-height:0">&nbsp;</td>
                           <td style="padding:14px 16px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:19px"><strong style="text-transform:uppercase">${escapeHtml(noticeTitle)}</strong><br>${escapeHtml(noticeText)}</td>
                         </tr>
                       </table>
@@ -170,8 +170,8 @@ function emailShell({
             </tr>
             <tr><td height="18" style="height:18px;font-size:0;line-height:0">&nbsp;</td></tr>
             <tr>
-              <td class="ufi-mobile-centre" bgcolor="#050505" style="border:4px solid #050505;padding:20px 24px;background-color:#050505;background-image:linear-gradient(#050505,#050505);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">
-                <strong style="color:#ffdf00!important;-webkit-text-fill-color:#ffdf00!important;font-size:14px;text-transform:uppercase">Good vibes only.</strong><br>Respect the ravers. No bad energy.<br>
+              <td class="ufi-mobile-centre" bgcolor="#050505" style="border:1px solid #333333;padding:20px 24px;background-color:#050505;background-image:linear-gradient(#050505,#050505);color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px">
+                <strong style="color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-size:14px;text-transform:uppercase">Good vibes only.</strong><br>Respect the ravers. No bad energy.<br>
                 <a href="${homeUrl}" style="color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;text-decoration:underline">upforitevents.co.uk</a>
               </td>
             </tr>
@@ -243,9 +243,9 @@ export function ticketConfirmationEmailHtml({
         : "You’re in! Your printable UPFORIT tickets are attached as one PDF, with one ticket and one unique QR code per page."}</p>
       ${singleTicketQrCid ? inlineTicketQrCode(singleTicketQrCid, singleTicketNumber) : ""}
       <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">
-        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#d90062!important;-webkit-text-fill-color:#d90062!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">01</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>Download the attached PDF</strong> and save it to your phone.</td></tr>
-        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#d90062!important;-webkit-text-fill-color:#d90062!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">02</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Keep your QR code private" : "Bring every ticket you purchased"}</strong>${hasSingleTicketQr ? " until you reach the entrance." : " for your group."}</td></tr>
-        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0;color:#d90062!important;-webkit-text-fill-color:#d90062!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">03</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 0;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Show the QR code at entry" : "Show each QR code at entry"}</strong> for quick check-in.</td></tr>
+        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#111111!important;-webkit-text-fill-color:#111111!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">01</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>Download the attached PDF</strong> and save it to your phone.</td></tr>
+        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#111111!important;-webkit-text-fill-color:#111111!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">02</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Keep your QR code private" : "Bring every ticket you purchased"}</strong>${hasSingleTicketQr ? " until you reach the entrance." : " for your group."}</td></tr>
+        <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0;color:#111111!important;-webkit-text-fill-color:#111111!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">03</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 0;color:#050505!important;-webkit-text-fill-color:#050505!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Show the QR code at entry" : "Show each QR code at entry"}</strong> for quick check-in.</td></tr>
       </table>
       ${callToAction({ label: "View my account", url: accountUrl })}`
   });

@@ -19,10 +19,11 @@ describe("transactional email templates", () => {
     expect(html).toContain("You’re on the list");
     expect(html).toContain("Scott &amp; Co");
     expect(html).toContain("role=\"presentation\"");
-    expect(html).toContain("#ffdf00");
-    expect(html).toContain("#d90062");
-    expect(html).toContain("#008ef0");
-    expect(html).toContain("NEW_ROUND_LOGO_amtvr0");
+    expect(html).toContain("#efff00");
+    expect(html).not.toContain("#d90062");
+    expect(html).not.toContain("#008ef0");
+    expect(html).toContain("UPFORIT/industrial-2026/approved-logo");
+    expect(html).not.toContain("NEW_ROUND_LOGO_amtvr0");
     expect(html).not.toContain("SUMMER_ROUND_UP_e2jcsl");
     expect(html).not.toContain("WHITE_LOGO_WEB_filqtw");
     expect(html).not.toContain("b_rgb:");

@@ -41,16 +41,16 @@ export async function buildTicketPdf(orderId: string, ticketRows?: TicketDocumen
   for (const ticket of tickets) {
     const page = document.addPage([595.28, 841.89]);
     const { width, height } = page.getSize();
-    page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(1, 0.94, 0.1) });
+    page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0.94, 1, 0) });
     page.drawRectangle({ x: 34, y: 34, width: width - 68, height: height - 68, color: rgb(1, 1, 1), borderColor: rgb(0.05, 0.05, 0.05), borderWidth: 4 });
     page.drawText("UPFORIT", { x: 65, y: 748, size: 40, font: bold, color: rgb(0.04, 0.04, 0.04) });
-    page.drawText(ticket.event_title, { x: 65, y: 700, size: 24, font: bold, color: rgb(0.95, 0.12, 0.48) });
+    page.drawText(ticket.event_title, { x: 65, y: 700, size: 24, font: bold, color: rgb(0.04, 0.04, 0.04) });
     const eventDate = new Intl.DateTimeFormat("en-GB", {
       dateStyle: "full", timeStyle: "short", timeZone: ticket.timezone
     }).format(new Date(ticket.starts_at));
     page.drawText(eventDate, { x: 65, y: 666, size: 13, font: regular });
     page.drawText(ticket.venue_name, { x: 65, y: 644, size: 13, font: regular });
-    page.drawText(ticket.ticket_type_name, { x: 65, y: 598, size: 21, font: bold });
+    page.drawText(ticket.ticket_type_name, { x: 65, y: 598, size: Math.min(21, 460 / Math.max(bold.widthOfTextAtSize(ticket.ticket_type_name, 1), 1)), font: bold });
     page.drawText(`Ticket holder: ${ticket.display_name}`, { x: 65, y: 567, size: 12, font: regular });
     page.drawText(`Ticket: ${ticket.ticket_number}`, { x: 65, y: 545, size: 12, font: regular });
     page.drawText(`Order: ${ticket.order_number}`, { x: 65, y: 523, size: 12, font: regular });

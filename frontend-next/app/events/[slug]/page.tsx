@@ -4,10 +4,9 @@ import EventsPage from "../page";
 import { publicTicketSalesOpen } from "../../../lib/event-visibility";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import CloudinaryImage from "../../../components/CloudinaryImage";
 import TicketSelector from "../../../components/TicketSelector";
 import { getCurrentUser } from "../../../lib/auth";
-import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../../../lib/cloudinary";
+import { cloudinaryUrl } from "../../../lib/cloudinary";
 import { getPool } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -81,107 +80,13 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const eventTime = formatEventTime(event.starts_at, event.timezone);
   const endTime = formatEventTime(event.ends_at, event.timezone);
   const activeSortOrder = tierResult.rows.find((tier) => tier.is_active)?.sort_order;
-  const eventBackground = cloudinaryUrl(CLOUDINARY_ASSETS.summerRoundupBackground, { width: 1800 });
-
   return (
-    <div className="inner-page section-wrap event-detail-page summer-roundup-page">
-      <article
-        className="summer-roundup-event"
-        style={{ backgroundImage: `linear-gradient(rgba(0, 142, 240, .12), rgba(0, 101, 217, .18)), url("${eventBackground}")` }}
-      >
-        <header className="summer-roundup-hero">
-          <p className="summer-roundup-genres" aria-label="Music genres">
-            <span>UKG</span><i aria-hidden="true" />
-            <span>Drum &amp; Bass</span><i aria-hidden="true" />
-            <span>Electro</span><i aria-hidden="true" />
-            <span>Breaks</span><i aria-hidden="true" />
-            <span>Dance</span><i aria-hidden="true" />
-            <span>Hardcore</span>
-          </p>
-
-          <div className="summer-roundup-hero__art">
-            <CloudinaryImage
-              asset={CLOUDINARY_ASSETS.summerRoundupCloud}
-              alt=""
-              className="summer-roundup-sticker summer-roundup-sticker--cloud"
-              sizes="(max-width: 720px) 90px, 150px"
-              maxWidth={329}
-            />
-            <div className="summer-roundup-hero__lockup">
-              <CloudinaryImage
-                asset={CLOUDINARY_ASSETS.summerRoundupPresents}
-                alt="UPFORIT presents"
-                className="summer-roundup-hero__presents"
-                sizes="(max-width: 720px) 60vw, 420px"
-                maxWidth={840}
-                priority
-              />
-              <h1>
-                <CloudinaryImage
-                  asset={CLOUDINARY_ASSETS.summerRoundupTitle}
-                  alt={event.title}
-                  className="summer-roundup-hero__title"
-                  sizes="(max-width: 720px) 92vw, 760px"
-                  maxWidth={1476}
-                  priority
-                />
-              </h1>
-            </div>
-            <CloudinaryImage
-              asset={CLOUDINARY_ASSETS.summerRoundupLightning}
-              alt=""
-              className="summer-roundup-sticker summer-roundup-sticker--lightning"
-              sizes="(max-width: 720px) 66px, 105px"
-              maxWidth={250}
-            />
-          </div>
-        </header>
-
-        <section className="summer-roundup-lineup" aria-labelledby="summer-roundup-lineup-title">
-          <p className="summer-roundup-lineup__label" aria-hidden="true">The full lineup</p>
-          <h2 className="sr-only" id="summer-roundup-lineup-title">The full lineup</h2>
-          <CloudinaryImage
-            asset={CLOUDINARY_ASSETS.summerRoundupLineup}
-            alt="Road 23, Spektral, Scott Charles, Haribo, Ectomorph, Sinik, Tommo, Savage, Slumberjack, Deechase, Bandy and Jack Panic"
-            className="summer-roundup-lineup__artists"
-            sizes="(max-width: 720px) 88vw, 940px"
-            maxWidth={1200}
-          />
-          <CloudinaryImage
-            asset={CLOUDINARY_ASSETS.summerRoundupMcs}
-            alt="MCs on the day: E Dappa, Danzee, Razor and Treble"
-            className="summer-roundup-lineup__mcs"
-            sizes="(max-width: 720px) 88vw, 940px"
-            maxWidth={1200}
-          />
-          <div className="summer-roundup-powered-by">
-            <CloudinaryImage
-              asset={CLOUDINARY_ASSETS.summerRoundupRevolt}
-              alt="Revolt Sound System"
-              className="summer-roundup-powered-by__logo"
-              sizes="(max-width: 720px) 180px, 260px"
-              maxWidth={520}
-            />
-          </div>
-        </section>
-
-        <dl className="summer-roundup-info" aria-label="Event details">
-          <div className="summer-roundup-info__item summer-roundup-info__item--date">
-            <dt>Date</dt>
-            <dd><time dateTime={new Date(event.starts_at).toISOString()}>{eventDate}</time></dd>
-          </div>
-          <div className="summer-roundup-info__item summer-roundup-info__item--time">
-            <dt>Time</dt>
-            <dd><time dateTime={new Date(event.starts_at).toISOString()}>{eventTime}–{endTime}</time></dd>
-          </div>
-          <div className="summer-roundup-info__item summer-roundup-info__item--venue">
-            <dt>Venue</dt>
-            <dd>{event.venue_name}<small>4 Chandos Place, Bletchley, MK2 2SN</small></dd>
-          </div>
-        </dl>
-
+    <div className="inner-page section-wrap event-detail-page">
+      <article className="event-ticket-detail">
+        <header><h1>{event.title}</h1><p>{eventDate} · {eventTime}–{endTime}</p><p>{event.venue_name}</p></header>
         <TicketSelector
           eventId={event.id}
+          eventSlug={slug}
           eventTitle={event.title}
           signedIn={Boolean(user)}
           tiers={tierResult.rows.map((tier) => {
