@@ -40,7 +40,7 @@ export default async function NyeEventPage({ searchParams }: { searchParams: Pro
             <h1 id="nye-title" className="nye-hero__title">
               <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Title} alt="NYE 2026" sizes="(max-width: 640px) calc(100vw - 36px), (max-width: 696px) calc(100vw - 96px), (max-width: 800px) 600px, (max-width: 1000px) calc((100vw - 128px) / 2.08), (max-width: 1376px) calc((100vw - 156px) / 2.08), 587px" priority />
             </h1>
-            <p className="nye-event__artist">BLACKLEY</p>
+            <Image className="nye-event__artist-logo" src="/brand/nye-2026/blackley-logo.png" alt="Blackley" width={2835} height={587} sizes="(max-width: 800px) 70vw, 360px" />
             <NyeCountdown />
             <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
             <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>

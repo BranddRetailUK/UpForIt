@@ -1,3 +1,4 @@
+import {ingestTicketEmailEvents} from './ticket-email-events.mjs';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
@@ -33,7 +34,7 @@ const server=createServer(async(req,res)=>{
  if(p==='/webhooks/sendgrid'&&req.method==='POST'){
   let size=0,chunks=[];for await(const chunk of req){size+=chunk.length;if(size>2097152)throw httpError(413,'Event batch too large.');chunks.push(chunk);}
   const raw=Buffer.concat(chunks);verifyWebhook(raw,req.headers);let events;try{events=JSON.parse(raw.toString());}catch{throw httpError(400,'Invalid JSON.');}
-  await ingestEvents(db,events);return json(res,200,{ok:true});
+  await ingestEvents(db,events);await ingestTicketEmailEvents(db,events);return json(res,200,{ok:true});
  }
  if(p==='/email/unsubscribe'){
   const token=url.searchParams.get('token');if(!/^[A-Za-z0-9_-]{43}$/.test(token||''))throw httpError(404,'Link not found.');

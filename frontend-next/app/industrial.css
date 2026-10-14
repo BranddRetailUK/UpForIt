@@ -665,16 +665,21 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 /* Approved flyer artwork; event lettering remains independent of the image. */
 .nye-event__hero--blackley { background:#090909; }
 .nye-event__hero--blackley .nye-event__artwork { object-fit:cover; object-position:center; z-index:-1; }
-.nye-event__hero--blackley .nye-event__layout { display:block; min-height:620px; padding-block:44px; }
+.nye-event__hero--blackley .nye-event__layout { display:block; min-height:560px; padding-block:26px; }
 .nye-event__hero--blackley .nye-event__copy { width:48%; }
 .nye-event__hero--blackley .nye-hero__brand { width:100%; max-width:100%; }
 .nye-event__hero--blackley .nye-hero__title { margin-bottom:18px; }
-.nye-event__artist { color:#fff; font-family:var(--font-heavy),Impact,sans-serif; font-style:italic; font-size:clamp(32px,4vw,56px); line-height:1; margin:12px 0; }
-.nye-event__hero--blackley .nye-countdown { margin:20px auto; }
+.nye-event__artist-logo { display:block; width:60%; max-width:360px; height:auto; margin:10px auto; }
+.nye-event__hero--blackley .nye-countdown { margin:14px auto; }
 @media(max-width:800px) {
-  .nye-event__hero--blackley .nye-event__artwork { height:330px!important; object-fit:cover; object-position:78% center; }
-  .nye-event__hero--blackley .nye-event__layout { min-height:0; padding-top:320px; padding-bottom:36px; }
-  .nye-event__hero--blackley .nye-event__copy { width:100%; position:relative; padding-top:20px; background:linear-gradient(transparent,#090909 28px); }
+  .nye-event__hero--blackley .nye-event__artwork { height:100%!important; object-fit:cover; object-position:74% center; filter:brightness(.32); }
+  .nye-event__hero--blackley .nye-event__layout { min-height:0; padding-top:26px; padding-bottom:26px; }
+  .nye-event__hero--blackley .nye-event__copy { width:100%; position:relative; padding-top:0; text-shadow:0 2px 8px #000; }
   .nye-event__hero--blackley .nye-hero__brand { width:100%; max-width:100%; }
   .nye-event__hero--blackley .nye-hero__title { margin-bottom:16px; }
 }
+
+.nye-event__hero--blackley .nye-hero__date { margin-bottom:16px; }
+.nye-event__hero--blackley .nye-hero__actions { margin-top:18px; }
+.nye-event__hero--blackley .nye-hero__date,
+.nye-event__hero--blackley .industrial-button { text-shadow:none; }
