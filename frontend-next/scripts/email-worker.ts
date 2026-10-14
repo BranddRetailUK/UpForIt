@@ -16,7 +16,7 @@ import {
   type SendGridAttachment
 } from "../lib/email-delivery";
 import { sendMetaConversion } from "../lib/meta-conversion";
-import { getMerchCheckoutConfirmation, revokeGoodGameMerchDiscount } from "../lib/merch-api";
+import { getMerchCheckoutConfirmation, revokeGoodGameMerchDiscount, merchSyncEnabled } from "../lib/merch-api";
 import {
   MERCH_DISCOUNT_SYNC_MAX_ATTEMPTS,
   merchDiscountRetryDelayMinutes,
@@ -381,7 +381,7 @@ async function workOnce(lane: "email" | "meta" | "merch") {
       console.error(`Meta conversion job ${metaJob.id} ${decision.status}: ${message}`);
     }
   }
-  const merchDiscountJob = lane === "merch" ? await claimMerchDiscountSyncJob() : null;
+  const merchDiscountJob = lane === "merch" && merchSyncEnabled() ? await claimMerchDiscountSyncJob() : null;
   if (merchDiscountJob) {
     worked = true;
     try {

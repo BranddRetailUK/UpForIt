@@ -2,6 +2,12 @@ import { createHmac } from "node:crypto";
 
 export const MERCH_STORE_KEY = process.env.STANDALONE_STOREFRONT_KEY || "upforit";
 
+// Testing shares a configured store origin until a separate sandbox is available.
+// Pausing checkout must also prevent background jobs from mutating that store.
+export function merchSyncEnabled() {
+  return process.env.APP_ENV !== "testing" || process.env.MERCH_CHECKOUT_ENABLED === "true";
+}
+
 export function merchApiBase() {
   return String(process.env.GOOD_GAME_API_BASE || "").trim().replace(/\/+$/, "");
 }

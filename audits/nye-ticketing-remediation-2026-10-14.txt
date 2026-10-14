@@ -141,3 +141,40 @@ Hosted verification update — 14 October 2026, 14:44 BST
 - Testing source redeploys have used an older pinned revision; manual current-source
   deploys were used. Correct environment-specific source tracking before future
   automatic Testing releases. No production source configuration was changed.
+
+External payment and delivery checks — 14 October 2026, 15:06 BST
+- Real Stripe sandbox partial refund (£10 of £30): callback set refund_review and
+  admissions_hold=true; hosted scanner rejected held QR (404). Hosted admin review
+  rejected retaining four admissions (409), allowed two, and rehearsal then passed.
+- Real remaining £20 refund: callback set refunded_minor=3000, status=refunded,
+  hold=true, all four tickets void; scanner rejected the refunded ticket (404).
+  The previously emailed sandbox tickets are now intentionally invalid.
+- Reposted the exact real refund event with a fresh test signature: hosted endpoint
+  returned duplicate=true; no additional admissions or changes were generated.
+- Two new isolated Testing order fixtures linked to Stripe test-card charges received
+  genuine dispute-created callbacks. Reviews were blocked while disputes were open.
+  Stripe winning_evidence closed one as won; admission hold remained until explicit
+  review. Stripe losing_evidence closed the other as lost; reactivation remained blocked.
+  These used test PaymentIntents and fixture orders, not another browser checkout.
+- SendGrid provider-signed integration tests returned 204 for the existing production
+  admin webhook and Testing ticket webhook. No provider routes were replaced.
+- A clearly labelled no-ticket diagnostic to scott@brandd.co.uk produced a genuine
+  signed delivered callback, persisted on job 6fcc340c-7faa-4b50-a183-6f8c50f22e59 at
+  14:00:08 UTC. Scott supplied an inbox screenshot confirming receipt. No admission
+  or payment was created. Actual external bounce delivery was not induced; bounce
+  correlation and retry are covered by automated tests and provider test batches.
+- Fixed malformed ticket callback entries (null, invalid UUID/timestamp, oversized ID)
+  so they cannot prevent valid events in the same batch from being processed.
+- Good Game has only LIVE environment. Testing merchandise checkout points at it and
+  is disabled. Scott explicitly declined new sandbox hosting; full merchandise
+  redemption remains BLOCKED. Read-only catalog returned 200 (10 products); signed
+  nonexistent-checkout lookup returned expected 404, confirming HMAC acceptance.
+- Fixed Testing background discount sync to pause unless MERCH_CHECKOUT_ENABLED=true;
+  previously the disabled checkout guard did not cover this worker lane. Production
+  revocation/reconciliation stays active even if production checkout is disabled.
+- Validation: 158 frontend tests, TypeScript, 14 admin unit tests passed. Bare node
+  --test also discovered a separate integration script requiring a configured URL;
+  that unconfigured invocation failed. Explicit admin unit-test scope passed.
+- Production ticket launch approval remains false; no sales-opening changes made.
+  Remaining release evidence: merchandise redemption (explicitly blocked), full
+  signed-in buyer return path, real bounce persistence, and final readiness review.

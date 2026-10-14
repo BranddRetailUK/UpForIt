@@ -1,9 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { goodGameUrl, signMerchRequest } from "./merch-api";
+import { goodGameUrl, signMerchRequest, merchSyncEnabled } from "./merch-api";
 
 describe("worker-safe merchandise API client", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it("pauses Testing background sync unless merchandise checkout is explicitly enabled", () => {
+    vi.stubEnv("APP_ENV", "testing");
+    vi.stubEnv("MERCH_CHECKOUT_ENABLED", "false");
+    expect(merchSyncEnabled()).toBe(false);
+    vi.stubEnv("MERCH_CHECKOUT_ENABLED", "");
+    expect(merchSyncEnabled()).toBe(false);
+    vi.stubEnv("MERCH_CHECKOUT_ENABLED", "true");
+    expect(merchSyncEnabled()).toBe(true);
+    vi.stubEnv("APP_ENV", "production");
+    vi.stubEnv("MERCH_CHECKOUT_ENABLED", "false");
+    expect(merchSyncEnabled()).toBe(true);
   });
 
   it("loads outside Next and signs storefront requests", () => {

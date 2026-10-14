@@ -2,8 +2,9 @@
 export async function ingestTicketEmailEvents(db, events) {
  if (!Array.isArray(events)) return;
  for (const event of events) {
+  if (!event || typeof event !== 'object') continue;
   const id=event.sg_event_id, job=event.ticket_email_job_id;
-  if(typeof id!=='string'||typeof job!=='string'||!/^[0-9a-f-]{36}$/i.test(job)||typeof event.timestamp!=='number'||!['delivered','bounce','dropped','processed','deferred'].includes(event.event))continue;
+  if(typeof id!=='string'||!id.length||id.length>200||typeof job!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(job)||!Number.isFinite(event.timestamp)||event.timestamp<0||event.timestamp>4102444800||!['delivered','bounce','dropped','processed','deferred'].includes(event.event))continue;
   // One statement makes deduplication and status advancement atomic on the pool.
   const status=event.event==='delivered'?'delivered':['bounce','dropped'].includes(event.event)?'bounced':event.event==='processed'?'sent':null;
   await db.query(`WITH recorded AS (
