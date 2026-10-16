@@ -76,13 +76,13 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
               <span className="bucket-word">BUCKET</span>
             </h1>
             <p className="bucket-tagline">YOUR CHANCE TO PLAY AT NYE<em>2026</em></p>
-            <ul className="bucket-stats" aria-label="Draw details"><li><strong>8</strong> DJs</li><li><strong>15</strong> MINUTES EACH</li><li>LIVE DRAW</li></ul>
+            <ul className="bucket-stats" aria-label="Draw details"><li><strong>8</strong> DJs</li><li><strong>15</strong> MINUTES</li><li><strong>LIVE</strong> DRAW</li></ul>
             <a className="industrial-button bucket-button bucket-hero-button" href={state === "no-ticket" ? "/events/nye-2026" : "#bucket-entry"}>{cta}</a>
           </div>
         </div>
       </section>
 
-      <div className="bucket-event-strip"><div className="section-wrap bucket-wrap"><span>31 DEC 2026</span><i aria-hidden="true">✳</i><span>McCARTHYS, BLETCHLEY</span><i aria-hidden="true">✳</i><span>DOORS OPEN 5PM</span></div></div>
+      <div className="bucket-event-strip"><div className="section-wrap bucket-wrap"><span>31 DEC 2026</span><i aria-hidden="true">•</i><span>McCARTHYS, BLETCHLEY</span><i aria-hidden="true">•</i><span>DOORS OPEN 5PM</span></div></div>
 
       <section className="section-wrap bucket-wrap bucket-entry" id="bucket-entry" aria-labelledby="bucket-entry-title">
         <div className="bucket-entry-copy">
