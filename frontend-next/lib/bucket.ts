@@ -21,6 +21,7 @@ async function entitlement(db: DB, userId: string, eventId: string) {
 }
 export async function bucketStatus(user: AuthUser | null, db: DB = getPool()): Promise<BucketStatus> {
   const event = await eventInfo(db);
+  if (event?.status === 'draft') return { state: 'upcoming' };
   if (!event || event.status !== 'published') return { state: 'closed' };
   if (!user) return { state: event.entry_open ? 'signed-out' : 'closed' };
   if (!user.emailVerified) return { state: event.entry_open ? 'verify-email' : 'closed' };

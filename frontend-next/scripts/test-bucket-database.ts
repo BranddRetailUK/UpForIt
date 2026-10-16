@@ -25,7 +25,8 @@ async function main(){
   await db.query("INSERT INTO ticket_order_items(id,order_id,ticket_type_id,ticket_type_name,unit_price_minor,quantity,line_total_minor) VALUES($1,$2,$3,'Admission',1000,1,1000)",[item,order,tier]);
   await db.query("INSERT INTO tickets(id,public_id,ticket_number,order_id,order_item_id,user_id,event_id,ticket_type_name,admission_index) VALUES($1,$2,$3,$4,$5,$6,$7,'Admission',1)",[ticket,randomUUID(),`TEST-${ticket}`,order,item,id,event]);
  }
- assert.equal((await bucketStatus(null)).state,'signed-out');assert.equal((await bucketStatus(users[0])).state,'eligible');assert.equal((await bucketStatus(users[11])).state,'verify-email');
+ await db.query("UPDATE events SET status='draft' WHERE id=$1",[event]);assert.equal((await bucketStatus(null)).state,'upcoming');await assert.rejects(enterBucket(users[0],'Too early'));
+ await db.query("UPDATE events SET status='published' WHERE id=$1",[event]);assert.equal((await bucketStatus(null)).state,'signed-out');assert.equal((await bucketStatus(users[0])).state,'eligible');assert.equal((await bucketStatus(users[11])).state,'verify-email');
  for(const input of [{djName:' ',consent:true},{djName:'A'.repeat(81),consent:true},{djName:'DJ',consent:false}])assert.throws(()=>validateBucketEntry(input));
  assert.equal(validateBucketEntry({djName:' DJ Test ',consent:true}),'DJ Test');
  assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},99))).status,401);

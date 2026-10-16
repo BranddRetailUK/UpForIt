@@ -1,6 +1,6 @@
 export const BUCKET_SLUG = "nye-2026";
 export const BUCKET_PATH = "/events/nye-2026/blackleys-bucket";
-export type BucketState = "eligible" | "signed-out" | "no-ticket" | "entered" | "verify-email" | "closed" | "ticket-inactive" | "unavailable";
+export type BucketState = "upcoming" | "eligible" | "signed-out" | "no-ticket" | "entered" | "verify-email" | "closed" | "ticket-inactive" | "unavailable";
 export type BucketStatus = { state: BucketState; djName?: string; entryStatus?: "entered" | "called" | "played" | "skipped" };
 export class BucketError extends Error {
   constructor(message: string, public status = 400) { super(message); }

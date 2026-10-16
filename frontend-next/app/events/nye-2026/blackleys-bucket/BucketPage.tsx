@@ -24,7 +24,7 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
   const resultRef = useRef<HTMLDivElement>(null);
   const eligible = state === "eligible";
   const entered = state === "entered";
-  const cta = state === "closed" ? "ENTRIES CLOSED" : state === "unavailable" ? "CHECK ENTRY STATUS" : state === "verify-email" ? "VERIFY YOUR EMAIL" : state === "ticket-inactive" ? "CHECK YOUR TICKET" : state === "signed-out" ? "SIGN IN TO ENTER" : state === "no-ticket" ? "GET A TICKET" : entered ? "YOU’RE ENTERED" : "ENTER THE BUCKET";
+  const cta = state === "upcoming" ? "ENTRIES OPENING SOON" : state === "closed" ? "ENTRIES CLOSED" : state === "unavailable" ? "CHECK ENTRY STATUS" : state === "verify-email" ? "VERIFY YOUR EMAIL" : state === "ticket-inactive" ? "CHECK YOUR TICKET" : state === "signed-out" ? "SIGN IN TO ENTER" : state === "no-ticket" ? "GET A TICKET" : entered ? "YOU’RE ENTERED" : "ENTER THE BUCKET";
 
   function changeState(value: BucketState) {
     setState(value);
@@ -109,10 +109,11 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
             <h3>YOU’RE IN<br /><em>THE BUCKET.</em></h3>
             <p>{djName ? <><strong>{djName}</strong>, be there at 5pm with your USB ready.</> : "Be there at 5pm with your USB ready."}</p>
             <p className="bucket-small">{entryStatus==='called' ? 'Your name has been called — head to the decks.' : entryStatus==='played' ? 'Your DJ slot has been confirmed.' : entryStatus==='skipped' ? 'Your name was called and skipped. You are no longer in the draw.' : 'Your entry is saved. The next move is Blackley’s.'}</p>
-          </div> : ['closed','verify-email','ticket-inactive','unavailable'].includes(state) ? <div className="bucket-gated">
-            <h3>{state==='closed'?'ENTRIES CLOSED.':state==='verify-email'?'VERIFY YOUR EMAIL.':state==='ticket-inactive'?'CHECK YOUR TICKET.':'BACK SOON.'}</h3>
-            <p>{state==='closed'?'Entries close when doors open. Thanks for being part of UPFORIT NYE.':state==='verify-email'?'Verify your account email, then come back to enter the bucket.':state==='ticket-inactive'?'Your entry is saved, but your NYE ticket is not currently valid for the draw. Check your tickets or contact us for help.':'We can’t check ticket eligibility right now. Please refresh this page shortly.'}</p>
-            {state!=='closed'&&state!=='unavailable'&&<Link className="industrial-button bucket-button" href={state==='verify-email'?`/account/login?next=${encodeURIComponent(BUCKET_PATH)}`:'/account'}>{state==='verify-email'?'VERIFY ACCOUNT':'VIEW TICKETS'}</Link>}
+          </div> : ['upcoming','closed','verify-email','ticket-inactive','unavailable'].includes(state) ? <div className="bucket-gated">
+            <h3>{state==='upcoming'?'ENTRIES OPENING SOON.':state==='closed'?'ENTRIES CLOSED.':state==='verify-email'?'VERIFY YOUR EMAIL.':state==='ticket-inactive'?'CHECK YOUR TICKET.':'BACK SOON.'}</h3>
+            <p>{state==='upcoming'?'Entry will open when NYE tickets launch. Check the event page for ticket updates.':state==='closed'?'Entries close when doors open. Thanks for being part of UPFORIT NYE.':state==='verify-email'?'Verify your account email, then come back to enter the bucket.':state==='ticket-inactive'?'Your entry is saved, but your NYE ticket is not currently valid for the draw. Check your tickets or contact us for help.':'We can’t check ticket eligibility right now. Please refresh this page shortly.'}</p>
+            {state==='upcoming'&&<Link className="industrial-button bucket-button" href="/events/nye-2026">VIEW EVENT</Link>}
+            {state!=='upcoming'&&state!=='closed'&&state!=='unavailable'&&<Link className="industrial-button bucket-button" href={state==='verify-email'?`/account/login?next=${encodeURIComponent(BUCKET_PATH)}`:'/account'}>{state==='verify-email'?'VERIFY ACCOUNT':'VIEW TICKETS'}</Link>}
           </div> : <div className="bucket-gated">
             <h3>{state === "signed-out" ? "GOT YOUR TICKET?" : "GET YOUR TICKET."}</h3>
             <p>{state === "signed-out" ? "Sign in to check your ticket and enter the bucket." : "An NYE ticket gets you through the door — and into the draw."}</p>
