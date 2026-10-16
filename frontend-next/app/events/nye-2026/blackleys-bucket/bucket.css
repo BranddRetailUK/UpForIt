@@ -79,7 +79,7 @@
   .bucket-page h1>span{margin-left:0}
   .bucket-hero-copy,.bucket-entry-intro,.bucket-arrival p{margin-inline:auto}
   .bucket-stats,.bucket-arrival,.bucket-eligibility,.bucket-consent{justify-content:center}
-  .bucket-page .bucket-hero-button{margin-inline:auto}
+  .bucket-page .bucket-hero-button{margin-inline:auto;font-size:18px;line-height:1.3}
   .bucket-form-panel input:not([type=checkbox]){text-align:center}
   .bucket-success-check{margin-inline:auto}
   .bucket-rules p,.bucket-field,.bucket-form-panel{text-align:center}
@@ -96,7 +96,7 @@
 .bucket-logo-row .bucket-blackley-logo{width:100%;max-width:560px}
 .bucket-hero-cre8{display:block;width:100%}
 .bucket-hero .bucket-stats{justify-content:center}
-.bucket-page .bucket-hero-button{margin-inline:auto}
+.bucket-page .bucket-hero-button{margin-inline:auto;font-size:18px;line-height:1.3}
 .bucket-hero-shade{background:linear-gradient(0deg,#080808c9,#08080899 50%,#080808b3)}
 .bucket-rules{padding-top:32px}
 @media(max-width:640px){
