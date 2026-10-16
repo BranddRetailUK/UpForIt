@@ -55,3 +55,9 @@ Meta remains a separate last-30-days active-campaign report. Authentication fail
 Cloudflare references: https://developers.cloudflare.com/web-analytics/data-metrics/high-level-metrics/ and https://developers.cloudflare.com/analytics/graphql-api/getting-started/authentication/api-token-auth/.
 
 Meta reporting was reconnected on 2026-10-12 with a validated token for UPFORIT Website, scoped to `ads_read` and `public_profile`, expiring 2026-12-11 at 22:16 UTC. The secret is stored at FRONTEND.META_MARKETING_API_ACCESS_TOKEN; ADMIN references it. Renew through the existing Marketing API use-case Tools screen before expiry. Pixel ID and Conversions API credentials are separate and were not changed.
+
+## Admin ownership and Blackley’s Bucket
+
+All future admin features belong in this dedicated service, not the frontend account-page admin. Production: https://admin-production-7548.up.railway.app/#bucket. Root `AGENTS.md` records this convention for future tasks.
+
+Blackley’s Bucket reads the shared `bucket_entries` and `bucket_audit` tables installed by storefront migration `012_blackleys_bucket.sql`. The public signup API stays in the storefront; admin reads, CSV exports and live-draw mutations run here under the existing verified admin session, same-origin and rate-limit checks. Invalid/refunded/held tickets and disabled accounts are excluded. Draws serialize on the event row, skip absent names and cap confirmed slots at eight. The old storefront `/admin/bucket` redirects here; its admin API has been removed.

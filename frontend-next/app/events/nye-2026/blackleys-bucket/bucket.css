@@ -88,3 +88,21 @@
 
 .bucket-entry h2 .bucket-your-name{font-size:1.1em}
 .bucket-entry h2 .bucket-white-stop{color:#fff}
+
+/* Centred artist banner, with matching label marks flanking the artist. */
+.bucket-hero-copy{max-width:none;text-align:center}
+.bucket-page .bucket-hero h1{align-items:center;margin-top:0}
+.bucket-page h1>.bucket-logo-row{display:grid;grid-template-columns:minmax(80px,160px) minmax(0,560px) minmax(80px,160px);align-items:center;justify-content:center;gap:36px;width:100%;margin:0 0 12px;font-size:0;line-height:0}
+.bucket-logo-row .bucket-blackley-logo{width:100%;max-width:560px}
+.bucket-hero-cre8{display:block;width:100%}
+.bucket-hero .bucket-stats{justify-content:center}
+.bucket-page .bucket-hero-button{margin-inline:auto}
+.bucket-hero-shade{background:linear-gradient(0deg,#080808c9,#08080899 50%,#080808b3)}
+.bucket-rules{padding-top:32px}
+@media(max-width:640px){
+ .bucket-page h1>.bucket-logo-row{display:flex;flex-direction:column;gap:18px;margin-bottom:12px}
+ .bucket-logo-row .bucket-hero-cre8{width:100px}
+ .bucket-logo-row .bucket-cre8-right{display:none}
+ .bucket-logo-row .bucket-blackley-logo{width:100%;max-width:380px}
+ .bucket-page .bucket-hero h1{margin-top:0}
+}

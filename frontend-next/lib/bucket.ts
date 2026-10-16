@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { getPool } from "./db";
 import type { AuthUser } from "./auth";
@@ -54,41 +54,5 @@ export async function enterBucket(user: AuthUser, djName: string) {
     await audit(db,id,user.id,'entered');
     await db.query('COMMIT');
     return {state:'entered',djName,entryStatus:'entered'} satisfies BucketStatus;
-  } catch(e) { await db.query('ROLLBACK'); throw e; } finally { db.release(); }
-}
-export async function adminBucketData(db: DB = getPool()) {
-  const event = await eventInfo(db);
-  if (!event) return {drawOpen:false,entries:[],audit:[]};
-  const entries = await db.query(`SELECT b.id,b.dj_name,b.status,b.created_at,b.called_at,b.resolved_at,u.email,u.display_name,
-    (u.disabled_at IS NULL AND u.email_verified_at IS NOT NULL AND EXISTS(SELECT 1 FROM tickets t JOIN ticket_orders o ON o.id=t.order_id WHERE t.user_id=b.user_id AND t.event_id=b.event_id AND ${validTicket})) AS eligible,
-    EXISTS(SELECT 1 FROM tickets t JOIN ticket_orders o ON o.id=t.order_id WHERE t.user_id=b.user_id AND t.event_id=b.event_id AND ${validTicket} AND t.status='checked_in') AS checked_in
-    FROM bucket_entries b JOIN users u ON u.id=b.user_id WHERE b.event_id=$1 ORDER BY b.created_at,b.id`,[event.id]);
-  const log = await db.query(`SELECT a.action,a.created_at,b.dj_name,u.display_name AS actor FROM bucket_audit a
-    JOIN bucket_entries b ON b.id=a.entry_id JOIN users u ON u.id=a.actor_id WHERE b.event_id=$1 ORDER BY a.created_at DESC LIMIT 100`,[event.id]);
-  return {drawOpen:event.draw_open,entries:entries.rows,audit:log.rows};
-}
-export async function administerBucket(actorId: string, action: string, entryId?: string) {
-  const db = await getPool().connect();
-  try {
-    await db.query('BEGIN');
-    const event = await eventInfo(db,true);
-    if (!event?.draw_open) throw new BucketError('The live draw is available during the event’s first two hours.',409);
-    const entries = (await adminBucketData(db)).entries;
-    if (action === 'draw') {
-      if (entries.some(e=>e.status==='called')) throw new BucketError('Resolve the current called DJ before drawing another name.',409);
-      if (entries.filter(e=>e.status==='played').length>=8) throw new BucketError('All eight DJ slots have been filled.',409);
-      const candidates = entries.filter(e=>e.status==='entered' && e.eligible);
-      if (!candidates.length) throw new BucketError('No eligible names remain in the bucket.',409);
-      const chosen = candidates[randomInt(candidates.length)];
-      await db.query("UPDATE bucket_entries SET status='called',called_at=clock_timestamp() WHERE id=$1",[chosen.id]);
-      await audit(db,chosen.id,actorId,'called');
-    } else if (action==='played' || action==='skipped') {
-      const entry = entries.find(e=>e.id===entryId && e.status==='called');
-      if (!entry) throw new BucketError('Choose the currently called DJ.',409);
-      if (action==='played' && !entry.eligible) throw new BucketError('This DJ no longer has an eligible ticket. Skip this name.',409);
-      await db.query('UPDATE bucket_entries SET status=$2,resolved_at=clock_timestamp() WHERE id=$1',[entry.id,action]);
-      await audit(db,entry.id,actorId,action);
-    } else throw new BucketError('Unknown action.');
-    await db.query('COMMIT');
   } catch(e) { await db.query('ROLLBACK'); throw e; } finally { db.release(); }
 }

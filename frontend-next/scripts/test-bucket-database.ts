@@ -4,10 +4,9 @@ import {randomUUID} from 'node:crypto';
 import {NextRequest} from 'next/server';
 import {getPool} from '../lib/db';
 import {createSession,type AuthUser} from '../lib/auth';
-import {bucketStatus,enterBucket,administerBucket,adminBucketData} from '../lib/bucket';
+import {bucketStatus,enterBucket} from '../lib/bucket';
 import {validateBucketEntry} from '../lib/bucket-shared';
 import {GET,POST} from '../app/api/bucket/route';
-import {GET as adminGet,POST as adminPost} from '../app/api/admin/bucket/route';
 async function main(){
  if(process.env.DATABASE_URL!=='postgresql://bucket_test@127.0.0.1:55441/postgres')throw new Error('Disposable local bucket DB required');
  process.env.AUTH_RATE_LIMIT_SECRET='disposable-bucket-rate-secret';
@@ -32,8 +31,6 @@ async function main(){
  assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},99))).status,401);
  assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},0,true))).status,403);
  assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},11))).status,403);
- assert.equal((await adminGet(req('/api/admin/bucket',undefined,1))).status,403);
- assert.equal((await adminPost(req('/api/admin/bucket',{action:'draw'},1))).status,403);
  for(const status of ['pending','refunded','refund_review']){
   await db.query('UPDATE ticket_orders SET status=$2,admissions_hold=$3 WHERE id=$1',[orders[1],status,status==='refund_review']);
   assert.equal((await bucketStatus(users[1])).state,'no-ticket');await assert.rejects(enterBucket(users[1],'No ticket'));
@@ -46,18 +43,12 @@ async function main(){
  assert.equal((await db.query('SELECT count(*)::int n FROM bucket_entries WHERE user_id=$1',[users[0].id])).rows[0].n,1);
  assert.equal((await db.query('SELECT count(*)::int n FROM bucket_entries WHERE user_id=$1',[users[1].id])).rows[0].n,0);
  const saved=await(await GET(req('/api/bucket'))).json();assert.equal(saved.djName,'DJ Concurrent');assert.equal(saved.state,'entered');assert.equal('email' in saved,false);
- await db.query('UPDATE ticket_orders SET admissions_hold=true WHERE id=$1',[orders[0]]);assert.equal((await bucketStatus(users[0])).state,'ticket-inactive');assert.equal((await adminBucketData()).entries[0].eligible,false);
- await db.query('UPDATE ticket_orders SET admissions_hold=false WHERE id=$1',[orders[0]]);await assert.rejects(administerBucket(users[0].id,'draw'),/first two hours/);
+ await db.query('UPDATE ticket_orders SET admissions_hold=true WHERE id=$1',[orders[0]]);assert.equal((await bucketStatus(users[0])).state,'ticket-inactive');
+ await db.query('UPDATE ticket_orders SET admissions_hold=false WHERE id=$1',[orders[0]]);
  for(let i=1;i<10;i++)await enterBucket(users[i],`DJ ${i}`);
  await db.query('UPDATE users SET disabled_at=now() WHERE id=$1',[users[9].id]);
  await db.query("UPDATE events SET starts_at=now()-interval '1 minute' WHERE id=$1",[event]);assert.equal((await bucketStatus(users[10])).state,'closed');await assert.rejects(enterBucket(users[10],'Too late'));
- const draws=await Promise.allSettled([administerBucket(users[0].id,'draw'),administerBucket(users[0].id,'draw')]);assert.equal(draws.filter(r=>r.status==='fulfilled').length,1);
- const first=(await adminBucketData()).entries.find(e=>e.status==='called')!;await administerBucket(users[0].id,'skipped',first.id);
- for(let i=0;i<8;i++){await administerBucket(users[0].id,'draw');const called=(await adminBucketData()).entries.find(e=>e.status==='called')!;assert.notEqual(called.id,first.id);assert.notEqual(called.dj_name,'DJ 9');await administerBucket(users[0].id,'played',called.id);}
- await assert.rejects(administerBucket(users[0].id,'draw'),/eight/);assert.equal((await adminBucketData()).entries.filter(e=>e.status==='played').length,8);
- const csv=await adminGet(req('/api/admin/bucket?export=csv'));assert.equal(csv.status,200);assert.ok((await csv.text()).includes('DJ Concurrent'));
- await db.query("UPDATE events SET starts_at=now()-interval '3 hours' WHERE id=$1",[event]);await assert.rejects(administerBucket(users[0].id,'draw'),/first two hours/);
- console.log('PASS: validation, auth, CSRF, admin access, ticket states, partial refunds, concurrent submissions, ownership, persistence, revoked eligibility, cutoff, concurrent draws, skipped/disabled exclusions, eight-slot cap and CSV.');
+ console.log('PASS: validation, auth, CSRF, ticket states, partial refunds, concurrent submissions, ownership, persistence, revoked eligibility, cutoff.');
  }finally{
   await db.query('DELETE FROM bucket_audit WHERE entry_id IN (SELECT id FROM bucket_entries WHERE event_id=$1)',[event]);await db.query('DELETE FROM bucket_entries WHERE event_id=$1',[event]);await db.query('DELETE FROM tickets WHERE event_id=$1',[event]);await db.query('DELETE FROM ticket_orders WHERE event_id=$1',[event]);await db.query('DELETE FROM ticket_types WHERE event_id=$1',[event]);await db.query('DELETE FROM events WHERE id=$1',[event]);await db.query('DELETE FROM users WHERE id=ANY($1::uuid[])',[users.map(u=>u.id)]);await db.end();
  }

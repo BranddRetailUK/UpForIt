@@ -1,3 +1,4 @@
+import {adminBucketData,administerBucket} from './bucket.mjs';
 import {ingestTicketEmailEvents} from './ticket-email-events.mjs';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
@@ -61,6 +62,23 @@ const server=createServer(async(req,res)=>{
   const user=await admin(req);
   if(p==='/api/session'&&req.method==='GET')return json(res,200,{user,storefront:process.env.STOREFRONT_URL||'https://www.upforitevents.co.uk'});
   if(p==='/api/logout'&&req.method==='POST'){await db.query('DELETE FROM user_sessions WHERE token_hash=$1',[hash(sessionToken(req))]);res.setHeader('Set-Cookie',sessionCookie('',0,production));return json(res,200,{ok:true});}
+  if(p==='/api/bucket'&&req.method==='GET'){
+   const data=await adminBucketData(db);
+   if(url.searchParams.get('export')==='csv'){
+    const cols=['dj_name','email','status','eligible','checked_in','created_at'];
+    await audit(db,user,'Bucket CSV exported','nye-2026',{count:data.entries.length});
+    res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="blackleys-bucket.csv"'});
+    return res.end([cols.join(','),...data.entries.map(row=>cols.map(k=>csvCell(row[k] instanceof Date?row[k].toISOString():row[k])).join(','))].join('\r\n'));
+   }
+   return json(res,200,data);
+  }
+  if(p==='/api/bucket'&&req.method==='POST'){
+   if(!await rate('bucket:'+user.id,120))throw httpError(429,'Too many draw updates. Please wait.');
+   const b=await body(req);
+   if(!['draw','played','skipped'].includes(b.action)||(b.action!=='draw'&&typeof b.entryId!=='string'))throw httpError(400,'Choose a valid draw action.');
+   await administerBucket(db,user.id,b.action,b.entryId);
+   return json(res,200,await adminBucketData(db));
+  }
   if(p==='/api/dashboard'&&req.method==='GET')return json(res,200,await dashboard(db));
   if(p==='/api/campaigns'&&req.method==='GET')return json(res,200,await campaignList(db));
   if(p==='/api/campaign'&&req.method==='GET')return json(res,200,await campaignDetail(db,url.searchParams.get('id')));
