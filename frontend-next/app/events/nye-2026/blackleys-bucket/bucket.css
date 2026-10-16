@@ -108,3 +108,23 @@
  /* Keep the word visibly narrower than the fluid logo, including at its 380px cap. */
  .bucket-page h1>.bucket-word{font-size:min(14vw,64px)}
 }
+
+/* Balance the slanted artist mark against the upright title and centred CTA. */
+.bucket-hero-inner{min-height:0;padding-block:52px 48px}
+.bucket-page .bucket-hero h1{gap:16px;margin-bottom:18px}
+.bucket-page h1>.bucket-logo-row{grid-template-columns:minmax(70px,124px) minmax(0,560px) minmax(70px,124px);gap:40px;margin-bottom:0}
+.bucket-logo-row .bucket-blackley-logo{transform:translateX(1%)}
+.bucket-page h1>.bucket-word{font-size:clamp(64px,7vw,92px);letter-spacing:-.04em;margin-left:0;transform:translateX(-.025em)}
+.bucket-hero .bucket-tagline{font-size:clamp(18px,1.8vw,24px);line-height:1.4}
+.bucket-hero .bucket-stats{margin:24px 0 0;align-items:baseline}
+.bucket-hero .bucket-stats li:last-child{padding-right:0}
+.bucket-page .bucket-hero-button{width:max-content;min-width:320px;max-width:100%;min-height:58px;margin-top:32px;padding-inline:28px}
+@media(max-width:640px){
+ .bucket-hero-inner{padding-block:30px 36px}
+ .bucket-page .bucket-hero h1{gap:14px;margin-bottom:16px}
+ .bucket-page h1>.bucket-logo-row{gap:18px;margin-bottom:0}
+ .bucket-page h1>.bucket-word{font-size:min(14vw,64px)}
+ .bucket-hero .bucket-tagline{font-size:17px}
+ .bucket-hero .bucket-stats{margin-top:22px}
+ .bucket-page .bucket-hero-button{width:100%;min-width:0;max-width:350px;margin-top:28px;padding-inline:18px}
+}
