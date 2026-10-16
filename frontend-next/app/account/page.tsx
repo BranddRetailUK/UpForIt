@@ -152,6 +152,7 @@ export default async function AccountPage() {
               )}
             </section>
 
+            <section className="account-card"><h2>Blackley’s Bucket</h2><p>Got an NYE ticket? Add your DJ name for a chance to play a 15-minute set.</p><Link className="account-text-link" href="/events/nye-2026/blackleys-bucket">View your entry or sign up</Link></section>
             <section className="account-card" id="merch-orders">
               <div className="account-card__heading">
                 <div><h2>Merch orders</h2></div>

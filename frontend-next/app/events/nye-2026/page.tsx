@@ -1,3 +1,4 @@
+import Link from "next/link";
 import NyeTickets from "../../../components/NyeTickets";
 import { publicTicketSalesOpen } from "../../../lib/event-visibility";
 import type { Metadata } from "next";
@@ -50,6 +51,10 @@ export default async function NyeEventPage({ searchParams }: { searchParams: Pro
       </section>
       <div className="nye-event__strip" aria-hidden="true"><span>31.12.26</span><span>BLETCHLEY</span><span>UPFORIT NYE</span><span>31.12.26</span></div>
       {showTickets ? <section className="section-wrap nye-event__tickets" aria-label="NYE tickets"><div className="nye-ticket-intro"><h2>NYE 2026<br /><em>TICKETS</em></h2><p className="nye-ticket-intro__venue">McCarthys Sports Bar</p><p className="nye-ticket-intro__location">Bletchley</p><p className="nye-ticket-intro__doors">Doors open 5pm</p></div><NyeTickets preview={preview || !salesOpen} /></section> : null}
+      <section className="section-wrap bucket-event-promo" aria-labelledby="bucket-promo-title">
+        <div><h2 id="bucket-promo-title">BLACKLEY’S <em>BUCKET.</em></h2><p>8 DJs. 15 minutes each. Your chance to play at NYE.</p></div>
+        <Link className="industrial-button" href="/events/nye-2026/blackleys-bucket">FIND OUT MORE & ENTER</Link>
+      </section>
       <EventUpdatesBanner id="nye-updates" />
     </div>
   );

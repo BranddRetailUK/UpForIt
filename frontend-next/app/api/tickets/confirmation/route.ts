@@ -14,11 +14,12 @@ export async function GET(request: NextRequest) {
     total_minor: number;
     currency: string;
     event_title: string;
+    event_slug: string;
     meta_consent_granted: boolean;
     meta_purchase_event_id: string | null;
   }>(
     `SELECT o.id, o.order_number, o.status, o.total_minor, o.currency,
-            o.meta_consent_granted, o.meta_purchase_event_id, e.title AS event_title
+            o.meta_consent_granted, o.meta_purchase_event_id, e.title AS event_title, e.slug AS event_slug
        FROM ticket_orders o
        JOIN events e ON e.id = o.event_id
       WHERE o.stripe_checkout_session_id = $1 AND o.user_id = $2`,
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   );
   const order = result.rows[0];
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  const base = { id: order.id, order_number: order.order_number, status: order.status };
+  const base = { id: order.id, order_number: order.order_number, status: order.status, eventSlug: order.event_slug };
   if (order.status !== "paid" || !order.meta_consent_granted || !order.meta_purchase_event_id) {
     return NextResponse.json(base);
   }

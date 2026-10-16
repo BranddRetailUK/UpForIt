@@ -8,6 +8,7 @@ type Status = {
   id: string;
   order_number: string | null;
   status: string;
+  eventSlug?: string;
   meta?: {
     eventId: string;
     valueMinor: number;
@@ -71,6 +72,7 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
   return (
     <div className="ticket-confirmation">
       <p className="form-message form-message--success ticket-confirmation__message">Your tickets are ready. A confirmation email is on its way.</p>
+      {order.eventSlug === "nye-2026" && <p>Fancy a set at NYE? <Link href="/events/nye-2026/blackleys-bucket">Enter Blackley’s Bucket</Link></p>}
       <p className="ticket-confirmation__order">Order <strong>{order.order_number}</strong></p>
       <Link className="pop-button pop-button--yellow ticket-confirmation__action" href={`/account/orders/${order.id}`}>View tickets</Link>
     </div>

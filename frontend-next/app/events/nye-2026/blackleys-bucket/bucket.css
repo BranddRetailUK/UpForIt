@@ -1,0 +1,90 @@
+.bucket-page{--bucket-acid:#efff00;background:#111;color:#f3f2ec;font-family:var(--font-body),Arial,sans-serif}
+.bucket-page *{box-sizing:border-box}.bucket-page :is(h1,h2,h3,p){margin:0}.bucket-wrap{width:min(1180px,calc(100% - 96px));margin-inline:auto}
+.bucket-preview{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 48px;background:#1c1d16;border-bottom:1px solid #34362a;font-size:10px;letter-spacing:.08em;color:#bfc2b1}.bucket-preview>span{display:flex;align-items:center;gap:8px}.bucket-preview i{width:5px;height:5px;border-radius:50%;background:var(--bucket-acid)}.bucket-preview label{display:flex;gap:10px;align-items:center;white-space:nowrap}.bucket-preview select{font:500 11px var(--font-body),sans-serif;background:#25271d;color:#efff00;padding:5px 24px 5px 9px;border:1px solid #4a4c3e;border-radius:0}
+.bucket-hero{position:relative;isolation:isolate;overflow:hidden;background:#080808}.bucket-hero-photo,.bucket-hero-shade{position:absolute;inset:0;z-index:-1}.bucket-hero-photo{background:url('/brand/blackleys-bucket/crowd.png') center 55%/cover;filter:grayscale(1);opacity:.78}.bucket-hero-shade{background:linear-gradient(90deg,#080808f7 0%,#080808df 32%,#08080840 73%),linear-gradient(0deg,#080808ba,transparent 50%)}.bucket-hero:after{content:"";position:absolute;right:-30px;bottom:0;width:160px;height:12px;transform:rotate(-45deg);transform-origin:100% 100%;background:var(--bucket-acid);box-shadow:0 -23px var(--bucket-acid)}
+.bucket-hero-inner{position:relative;padding-block:58px 55px;min-height:565px}.bucket-hero-copy{max-width:700px}.bucket-eyebrow{font-size:10px;font-weight:700;letter-spacing:.19em;line-height:1.6;color:var(--bucket-acid)}.bucket-hero .bucket-eyebrow{display:flex;align-items:center;gap:10px}.bucket-eyebrow>span{height:6px;width:6px;border-radius:50%;background:var(--bucket-acid)}
+.bucket-page h1{margin:25px 0 20px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}.bucket-blackley-logo{width:440px;max-width:80%;height:auto;object-fit:contain}.bucket-page h1>span{font:400 clamp(70px,8vw,112px)/.97 var(--font-heavy),Impact,sans-serif;letter-spacing:-.065em;color:var(--bucket-acid);margin-left:-5px}.bucket-tagline{font:400 20px/1.4 var(--font-heavy),sans-serif;letter-spacing:-.035em}.bucket-stats{display:flex;align-items:center;list-style:none;padding:0;margin:23px 0 17px;gap:0;font-size:11px;font-weight:600;letter-spacing:.06em}.bucket-stats li{padding:0 17px;border-left:1px solid #777}.bucket-stats li:first-child{padding-left:0;border:0}.bucket-stats strong{font-size:17px;font-weight:700;margin-right:3px}.bucket-intro{color:#c3c3bd;font-size:13px;line-height:1.8;max-width:450px}.bucket-page .bucket-button{justify-content:center;text-align:center;border-radius:0;cursor:pointer}.bucket-page .bucket-hero-button{width:267px;margin-top:24px}.bucket-small{font-size:11px;line-height:1.6;color:#a6a6a0}.bucket-hero .bucket-small{margin-top:12px}.bucket-label-brand{position:absolute;right:15px;top:58px;width:192px}.bucket-cre8{width:100%;aspect-ratio:1.44;background:url('/brand/blackleys-bucket/cre8-source.png') center 49%/102.4% auto no-repeat;filter:grayscale(1) invert(1) contrast(1.5);mix-blend-mode:screen;clip-path:inset(0 0 0 2%)}.bucket-hero-caption{position:absolute;right:4px;bottom:37px;font-size:9px;letter-spacing:.23em;color:#b7b7b2;writing-mode:vertical-rl;transform:rotate(180deg)}
+.bucket-event-strip{background:var(--bucket-acid);color:#111}.bucket-event-strip>.bucket-wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-block:17px;font-size:12px;font-weight:700;letter-spacing:.09em}.bucket-event-strip i{font-style:normal;font-size:20px;line-height:1}
+.bucket-entry{display:grid;grid-template-columns:1fr 1fr;gap:65px;padding-block:65px 46px;align-items:center;scroll-margin-top:90px}.bucket-entry h2{font:400 clamp(30px,3.6vw,46px)/1.1 var(--font-heavy),sans-serif;letter-spacing:-.055em;margin-top:16px}.bucket-page em{font-style:normal;color:var(--bucket-acid)}.bucket-arrival{display:flex;gap:16px;align-items:center;margin-top:33px}.bucket-arrival>span{border:1px solid #43443d;width:42px;height:42px;display:grid;place-items:center;font-size:23px;color:var(--bucket-acid)}.bucket-arrival h3{font:400 16px var(--font-heavy),sans-serif;letter-spacing:-.035em}.bucket-arrival p{font-size:12px;color:#aaa;margin-top:6px}
+.bucket-form-panel{background:#191a17;border:1px solid #41433a;padding:28px 30px;min-width:0}.bucket-eligibility{display:flex;align-items:center;gap:8px;color:#e0e6c0;font-size:12px;line-height:1.5;margin-bottom:25px!important}.bucket-eligibility>span{display:grid;place-items:center;width:21px;height:21px;border:1px solid var(--bucket-acid);color:var(--bucket-acid);border-radius:50%;font-size:12px}.bucket-eligibility b{font-weight:400;color:#818570}.bucket-field{display:block;font-size:12px;font-weight:600;margin-bottom:9px}.bucket-form-panel input:not([type=checkbox]){display:block;width:100%;height:50px;padding:13px 15px;border:1px solid #51534b;background:#10110e;border-radius:0;color:#fff;font:14px var(--font-body),sans-serif;box-shadow:none}.bucket-form-panel input::placeholder{color:#93968b;opacity:1}.bucket-consent{display:flex;align-items:center;gap:10px;font-size:11px;line-height:1.6;color:#c5c7bb;margin:20px 0}.bucket-consent input{appearance:auto;accent-color:var(--bucket-acid);width:16px;height:16px;flex-shrink:0;margin:0}.bucket-form-panel .bucket-button{width:100%}.bucket-form-footnote{text-align:center;font-size:10px;line-height:1.6;color:#9a9e8e;margin-top:13px!important}.bucket-error{color:#ffb4a7;font-size:12px;line-height:1.5;margin-bottom:14px!important}.bucket-success-check{display:grid;place-items:center;width:39px;height:39px;background:var(--bucket-acid);color:#111;font-size:24px;border-radius:50%;margin-bottom:17px}.bucket-form-panel h3{font:400 30px/1.1 var(--font-heavy),sans-serif;letter-spacing:-.04em}.bucket-success>p,.bucket-gated>p:not(.bucket-eyebrow):not(.bucket-form-footnote){margin-top:17px;font-size:13px;line-height:1.7;color:#bfc2b4;overflow-wrap:anywhere}.bucket-gated h3{margin-top:14px}.bucket-gated .bucket-button{margin-top:24px}.bucket-success strong{color:#fff}.bucket-success .bucket-small{font-size:11px;margin-top:8px}
+.bucket-details-wrap{padding-bottom:55px}.bucket-details{border-top:1px solid #3b3c35;border-bottom:1px solid #3b3c35}.bucket-details summary{display:flex;align-items:center;justify-content:space-between;gap:20px;cursor:pointer;padding:23px 0;font-size:12px;font-weight:700;letter-spacing:.06em;list-style:none}.bucket-details summary::-webkit-details-marker{display:none}.bucket-details-icon{width:15px;height:15px;position:relative}.bucket-details-icon:before,.bucket-details-icon:after{content:"";position:absolute;background:var(--bucket-acid);left:0;top:7px;width:15px;height:1px}.bucket-details-icon:after{transform:rotate(90deg)}.bucket-details[open] .bucket-details-icon:after{transform:none}.bucket-rules{display:grid;grid-template-columns:repeat(3,1fr);gap:35px;padding:0 0 27px}.bucket-rules p{font-size:12px;color:#aeb0a5;line-height:1.9}.bucket-rules strong{display:block;color:#eeefe7;font-weight:600;margin-bottom:4px}.bucket-page :is(a,button,input,select,summary):focus-visible{outline:2px solid var(--bucket-acid);outline-offset:4px}
+@media(min-width:1600px){.bucket-hero-inner{padding-block:68px;min-height:600px}}
+@media(max-width:900px){.bucket-wrap{width:calc(100% - 56px)}.bucket-preview{padding-inline:28px}.bucket-label-brand{width:145px;right:0;top:45px}.bucket-hero-inner{min-height:540px;padding-block:45px}.bucket-hero-copy{max-width:560px}.bucket-blackley-logo{width:365px}.bucket-tagline{font-size:17px}.bucket-entry{gap:30px;padding-top:45px}.bucket-entry h2{font-size:33px}.bucket-form-panel{padding:24px}.bucket-eligibility{font-size:10px;gap:5px}.bucket-event-strip>.bucket-wrap{font-size:10px}.bucket-rules{gap:20px}}
+@media(max-width:640px){.bucket-wrap{width:calc(100% - 40px)}.bucket-preview{padding:8px 20px;font-size:8px;letter-spacing:.04em}.bucket-preview-note{display:none}.bucket-preview label{font-size:9px;gap:6px}.bucket-preview select{font-size:10px;max-width:125px}.bucket-hero-inner{padding-block:34px 35px;min-height:0}.bucket-hero-photo{background-position:62% center;opacity:.6}.bucket-hero-shade{background:linear-gradient(90deg,#080808e0,#08080868),linear-gradient(0deg,#080808c9,transparent)}.bucket-label-brand{width:83px;top:25px;right:0}.bucket-hero .bucket-eyebrow{font-size:9px}.bucket-page h1{margin-top:40px;margin-bottom:20px}.bucket-blackley-logo{width:300px;max-width:86%}.bucket-page h1>span{font-size:clamp(68px,19vw,100px);margin-left:-3px}.bucket-tagline{font-size:15px}.bucket-stats{font-size:8px;letter-spacing:.02em;margin-top:21px}.bucket-stats li{padding-inline:10px}.bucket-stats strong{font-size:15px}.bucket-intro{font-size:12px;max-width:300px}.bucket-hero-caption{display:none}.bucket-page .bucket-hero-button{width:100%;max-width:330px}.bucket-hero .bucket-small{font-size:10px}.bucket-event-strip>.bucket-wrap{flex-wrap:wrap;justify-content:center;gap:9px 12px;padding-block:13px;font-size:9px;letter-spacing:.025em}.bucket-event-strip i{font-size:12px}.bucket-event-strip i:last-of-type{display:none}.bucket-event-strip span:last-child{flex-basis:100%;text-align:center;font-size:10px}.bucket-entry{grid-template-columns:1fr;gap:27px;padding-block:37px 30px}.bucket-entry h2{font-size:35px;margin-top:12px}.bucket-entry-copy>.bucket-eyebrow{font-size:9px}.bucket-arrival{margin-top:22px}.bucket-arrival h3{font-size:14px}.bucket-arrival p{font-size:11px}.bucket-form-panel{padding:23px 20px}.bucket-eligibility{font-size:11px;gap:6px}.bucket-consent{font-size:11px}.bucket-details-wrap{padding-bottom:35px}.bucket-details summary{font-size:11px;padding-block:21px}.bucket-rules{grid-template-columns:1fr;gap:16px}}
+@media(prefers-reduced-motion:reduce){.bucket-page *{scroll-behavior:auto;transition:none!important}}
+
+/* Event details remain prominent at every breakpoint. */
+.bucket-event-strip>.bucket-wrap{font-size:17px;padding-block:19px}
+@media(max-width:900px){.bucket-event-strip>.bucket-wrap{font-size:13px}}
+@media(max-width:640px){.bucket-event-strip>.bucket-wrap{font-size:12px;gap:10px;padding-block:16px}.bucket-event-strip span:last-child{font-size:13px}}
+
+.bucket-page h1{margin-bottom:8px}
+
+/* Stronger hierarchy for the draw rules. */
+.bucket-details summary{font-weight:900;font-size:14px}
+.bucket-rules p{color:#fff;font-size:14px;font-weight:500;line-height:1.8}
+.bucket-rules strong{color:var(--bucket-acid);font-size:16px;font-weight:900;margin-bottom:8px}
+@media(max-width:640px){.bucket-details summary{font-size:13px}.bucket-rules strong{font-size:15px}}
+
+.bucket-details summary{position:relative;justify-content:center;text-align:center;padding:28px 35px;font-family:var(--font-heavy),Arial,sans-serif;font-size:clamp(24px,3vw,38px);line-height:1.2;letter-spacing:-.035em}
+.bucket-details-icon{position:absolute;right:0;top:50%;transform:translateY(-50%)}
+
+/* Match the live NYE page's content grid, typography and ticket panel. */
+.bucket-page{background:transparent}
+.bucket-wrap{width:min(1280px,calc(100% - 96px))}
+.bucket-hero-inner{min-height:520px;padding-block:48px}
+.bucket-hero-copy{max-width:700px}
+.bucket-page h1{margin-top:12px}
+.bucket-tagline{font-size:clamp(20px,2vw,26px)}
+.bucket-stats{font-size:13px;margin-top:26px}.bucket-stats strong{font-size:21px}
+.bucket-event-strip>.bucket-wrap{font-family:var(--font-heavy),Arial,sans-serif;font-size:clamp(15px,1.6vw,22px);letter-spacing:-.02em}
+.bucket-entry{grid-template-columns:.9fr 1.1fr;gap:64px;padding-block:80px;align-items:center}
+.bucket-entry h2{font-size:clamp(40px,4.3vw,62px);line-height:1.04;letter-spacing:-.04em;margin-top:0}
+.bucket-entry-intro{max-width:480px;margin-top:24px!important;color:#fff;font-size:16px;font-weight:600;line-height:1.8}
+.bucket-arrival{margin-top:30px;padding-top:26px;border-top:1px solid #414141}
+.bucket-arrival h3{font-size:clamp(23px,2.2vw,30px);color:var(--bucket-acid);line-height:1.2}
+.bucket-arrival p{font-size:16px;line-height:1.75;font-weight:600;color:#fff;margin-top:10px;max-width:470px}
+.bucket-arrival p+p{font-size:15px;font-weight:500;margin-top:8px}
+.bucket-form-panel{background:#151515;border-color:#414141;padding:32px;box-shadow:8px 8px 0 var(--bucket-acid)}
+.bucket-eligibility{font-size:14px;font-weight:700;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid #414141;margin-bottom:20px!important;color:#fff}
+.bucket-eligibility>span{width:25px;height:25px;font-size:15px}
+.bucket-form-intro{font-size:15px;line-height:1.7;color:#fff;margin-bottom:22px!important;font-weight:500}
+.bucket-field{font-size:15px;font-weight:700}.bucket-form-panel input:not([type=checkbox]){font-size:16px;min-height:56px;background:#111;border-color:#747474}
+.bucket-consent{font-size:14px;line-height:1.65;color:#fff;margin-block:24px}.bucket-consent input{width:19px;height:19px}
+.bucket-form-panel .bucket-button{font-size:14px;min-height:56px}.bucket-form-footnote{font-size:12px;color:#fff;margin-top:16px!important}
+.bucket-details-wrap{padding-bottom:80px}.bucket-details{border-top:2px solid var(--bucket-acid)}
+.bucket-details summary{padding-block:32px}.bucket-rules{gap:32px;padding-bottom:32px}
+.bucket-rules p{font-size:15px;line-height:1.8;font-weight:500}.bucket-rules strong{font-size:19px;line-height:1.4;font-weight:900}
+@media(max-width:1000px){.bucket-wrap{width:calc(100% - 56px)}.bucket-entry{gap:32px}.bucket-form-panel{padding:26px}.bucket-eligibility{font-size:12px}.bucket-entry h2{font-size:40px}}
+@media(max-width:800px){.bucket-entry{grid-template-columns:1fr;gap:36px;padding-block:48px}.bucket-entry-intro{max-width:600px}.bucket-arrival p{max-width:600px}.bucket-form-panel{width:100%;max-width:650px}.bucket-eligibility{font-size:14px}.bucket-rules{grid-template-columns:1fr;gap:24px}.bucket-rules p+p{padding-top:22px;border-top:1px solid #414141}}
+@media(max-width:640px){.bucket-wrap{width:calc(100% - 36px)}.bucket-hero-inner{padding-block:36px;min-height:0}.bucket-page h1{margin-top:52px}.bucket-tagline{font-size:17px}.bucket-stats{font-size:9px}.bucket-stats strong{font-size:17px}.bucket-event-strip>.bucket-wrap{font-size:12px}.bucket-event-strip span:last-child{font-size:14px}.bucket-entry h2{font-size:clamp(34px,9vw,44px)}.bucket-entry-intro{font-size:15px;margin-top:20px!important}.bucket-arrival h3{font-size:24px}.bucket-arrival p{font-size:16px}.bucket-arrival p+p{font-size:15px}.bucket-form-panel{padding:24px 20px;width:calc(100% - 6px);box-shadow:6px 6px 0 var(--bucket-acid)}.bucket-eligibility{font-size:12px;gap:6px}.bucket-consent{font-size:13px}.bucket-details-wrap{padding-bottom:48px}.bucket-rules strong{font-size:18px}}
+
+.bucket-success>p,.bucket-gated>p:not(.bucket-eyebrow):not(.bucket-form-footnote){font-size:15px;line-height:1.75;color:#fff}.bucket-success .bucket-small{font-size:13px;color:#fff}
+
+.bucket-page .bucket-how-title{text-align:center;padding:32px 0;font-family:var(--font-heavy),Arial,sans-serif;font-size:clamp(24px,3vw,38px);line-height:1.2;letter-spacing:-.035em}
+
+/* Give the artist logo priority over the Bucket title. */
+.bucket-blackley-logo{width:560px;max-width:100%}
+@media(max-width:900px){.bucket-blackley-logo{width:460px;max-width:100%}}
+@media(max-width:640px){.bucket-blackley-logo{width:100%;max-width:380px}.bucket-page h1>span{font-size:clamp(60px,17vw,90px)}}
+
+.bucket-stats strong{color:var(--bucket-acid)}
+
+.bucket-stats{align-items:baseline}
+
+/* Centre the page's content on mobile screens. */
+@media(max-width:640px){
+  .bucket-page{text-align:center}
+  .bucket-page h1{align-items:center}
+  .bucket-page h1>span{margin-left:0}
+  .bucket-hero-copy,.bucket-entry-intro,.bucket-arrival p{margin-inline:auto}
+  .bucket-stats,.bucket-arrival,.bucket-eligibility,.bucket-consent{justify-content:center}
+  .bucket-page .bucket-hero-button{margin-inline:auto}
+  .bucket-form-panel input:not([type=checkbox]){text-align:center}
+  .bucket-success-check{margin-inline:auto}
+  .bucket-rules p,.bucket-field,.bucket-form-panel{text-align:center}
+}
+@media(max-width:640px){.bucket-consent{justify-content:flex-start;text-align:left;align-items:flex-start}.bucket-consent input{margin-top:3px}.bucket-consent span{text-align:left}}
+
+.bucket-entry h2 .bucket-your-name{font-size:1.1em}
+.bucket-entry h2 .bucket-white-stop{color:#fff}
