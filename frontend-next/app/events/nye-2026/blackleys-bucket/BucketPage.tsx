@@ -75,7 +75,7 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
               <span className="bucket-logo-row"><span className="bucket-cre8 bucket-hero-cre8" role="img" aria-label="CRE8#DNB, Blackley’s label" /><Image src="/brand/nye-2026/blackley-logo.png" alt="Blackley’s" width={2835} height={587} className="bucket-blackley-logo" priority /><span className="bucket-cre8 bucket-hero-cre8 bucket-cre8-right" aria-hidden="true" /></span>
               <span>BUCKET</span>
             </h1>
-            <p className="bucket-tagline">YOUR CHANCE TO PLAY AT NYE.</p>
+            <p className="bucket-tagline">YOUR CHANCE TO PLAY AT NYE2026</p>
             <ul className="bucket-stats" aria-label="Draw details"><li><strong>8</strong> DJs</li><li><strong>15</strong> MINUTES EACH</li><li>LIVE DRAW</li></ul>
             <a className="industrial-button bucket-button bucket-hero-button" href={state === "no-ticket" ? "/events/nye-2026" : "#bucket-entry"}>{cta}</a>
           </div>
