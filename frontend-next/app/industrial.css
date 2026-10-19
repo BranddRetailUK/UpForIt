@@ -743,3 +743,4 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 .nye-list-banner .industrial-button{font-size:18px;min-height:60px;padding:18px 26px}
 @media(max-width:1000px){.nye-list-banner .nye-hero__date{flex-direction:column}.nye-list-banner .nye-hero__date>span[aria-hidden]{display:none}}
 @media(max-width:700px){.nye-list-banner .nye-hero__eyebrow{font-size:14px}.nye-list-banner .nye-hero__date{font-size:16px}.nye-list-banner .nye-hero__venue{font-size:26px}}
+@media(max-width:700px){.nye-list-banner .nye-hero__date{display:none}}
