@@ -16,6 +16,5 @@ export default function TicketLaunchCountdown() {
     <span className="ticket-launch-countdown__clock" role="timer" aria-live="off" aria-label="Countdown to Friday 23 October, 8am UK time">
       {values.map((value, index) => <span className="ticket-launch-countdown__unit" key={index}><strong>{value === null ? "--" : String(value).padStart(2, "0")}</strong><small>{["Days", "Hours", "Mins", "Secs"][index]}</small></span>)}
     </span>
-    <span className="ticket-launch-countdown__date">FRIDAY 23 OCTOBER · 8AM UK TIME</span>
   </span>;
 }

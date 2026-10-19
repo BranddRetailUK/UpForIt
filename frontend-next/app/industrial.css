@@ -754,3 +754,15 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 .bucket-event-promo .bucket-promo-logos{display:flex;align-items:center;gap:20px;max-width:100%}.bucket-promo-logos img{display:block;height:auto;object-fit:contain;min-width:0}.bucket-promo-blackley{width:340px;max-width:58%}.bucket-promo-bucket{width:230px;max-width:38%}
 @media(max-width:800px){.bucket-event-promo .bucket-promo-logos{flex-direction:column;gap:0}.bucket-promo-blackley{width:380px;max-width:100%}.bucket-promo-bucket{width:260px;max-width:76%;margin-top:-6px}}
 @media(max-width:380px){.ticket-launch-countdown__clock{gap:16px}.ticket-launch-countdown__date{font-size:10px}}
+
+.bucket-promo-bucket-frame{display:contents}
+@media(min-width:801px){
+ .bucket-event-promo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 32px;align-items:center}
+ .bucket-event-promo>div{display:contents}
+ .bucket-event-promo .bucket-promo-logos{grid-column:1;grid-row:1;gap:3px;height:clamp(40px,4.2vw,58px)}
+ .bucket-promo-logos .bucket-promo-blackley{width:auto;height:100%;max-width:none}
+ .bucket-promo-bucket-frame{display:block;position:relative;height:100%;aspect-ratio:2172/474;overflow:hidden;flex-shrink:0}
+ .bucket-promo-bucket-frame .bucket-promo-bucket{position:absolute;top:-26%;left:0;width:100%;max-width:none;height:auto;margin:0}
+ .bucket-event-promo>div>p{grid-column:1;grid-row:2;margin:0}
+ .bucket-event-promo>.industrial-button{grid-column:2;grid-row:1;align-self:center}
+}

@@ -127,7 +127,7 @@ export default function TicketSelector({
   return (
     <section className="ticket-selector" id="tickets" aria-label="Select tickets">
       {eventSlug !== "nye-2026" ? <h2>Tickets</h2> : null}
-      {eventSlug === "nye-2026" ? <div className="nye-ticket-offer"><strong>BUY 3.<br />GET THE 4TH FREE.</strong></div> : <TicketMerchPromoBanner compact />}
+      {eventSlug === "nye-2026" ? <div className="nye-ticket-offer"><strong>BUY 3 TICKETS.<br />GET THE 4TH FREE.</strong></div> : <TicketMerchPromoBanner compact />}
       <div className="ticket-tier-list">
         {tiers.map((tier) => {
           const maximum = Math.min(tier.maxPerOrder, tier.remaining ?? tier.maxPerOrder);
