@@ -744,3 +744,13 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 @media(max-width:1000px){.nye-list-banner .nye-hero__date{flex-direction:column}.nye-list-banner .nye-hero__date>span[aria-hidden]{display:none}}
 @media(max-width:700px){.nye-list-banner .nye-hero__eyebrow{font-size:14px}.nye-list-banner .nye-hero__date{font-size:16px}.nye-list-banner .nye-hero__venue{font-size:26px}}
 @media(max-width:700px){.nye-list-banner .nye-hero__date{display:none}}
+
+/* Ticket launch and group offer. */
+.nye-event .nye-ticket-offer{display:block;background:var(--yellow);border:0;padding:26px 18px;color:#111;text-align:center}
+.nye-event .nye-ticket-offer strong{display:block;font:400 clamp(26px,2.6vw,36px)/1.1 var(--font-heavy),sans-serif;letter-spacing:-.025em;text-align:center}
+.ticket-launch-countdown{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.ticket-launch-countdown__heading{font-size:14px;letter-spacing:.06em}.ticket-launch-countdown__clock{display:flex;justify-content:center;gap:24px}.ticket-launch-countdown__unit{display:flex;flex-direction:column;gap:3px}.ticket-launch-countdown__unit strong{font:400 32px/1 var(--font-heavy),sans-serif;font-variant-numeric:tabular-nums}.ticket-launch-countdown__unit small{font-size:10px;letter-spacing:.06em}.ticket-launch-countdown__date{font-size:11px;letter-spacing:.03em}
+.ticket-account-prompt{border:1px solid #777;padding:22px;margin-top:24px;text-align:center}.ticket-account-prompt:focus{outline:2px solid var(--yellow);outline-offset:4px}.ticket-account-prompt h3{font:400 24px/1.2 var(--font-heavy),sans-serif}.ticket-account-prompt p{margin:14px 0;font-size:14px;line-height:1.6}.ticket-account-prompt p a{color:var(--yellow);text-decoration:underline}.ticket-account-prompt .industrial-button{display:flex;margin-top:20px;justify-content:center}
+.bucket-event-promo .bucket-promo-logos{display:flex;align-items:center;gap:20px;max-width:100%}.bucket-promo-logos img{display:block;height:auto;object-fit:contain;min-width:0}.bucket-promo-blackley{width:340px;max-width:58%}.bucket-promo-bucket{width:230px;max-width:38%}
+@media(max-width:800px){.bucket-event-promo .bucket-promo-logos{flex-direction:column;gap:0}.bucket-promo-blackley{width:380px;max-width:100%}.bucket-promo-bucket{width:260px;max-width:76%;margin-top:-6px}}
+@media(max-width:380px){.ticket-launch-countdown__clock{gap:16px}.ticket-launch-countdown__date{font-size:10px}}

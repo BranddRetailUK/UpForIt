@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ticketPrice, ticketPriceLines } from "../lib/ticket-pricing";
 import { useEffect, useRef, useState } from "react";
 import { useMetaTracking } from "./MetaTrackingProvider";
+import TicketLaunchCountdown from "./TicketLaunchCountdown";
 import TicketMerchPromoBanner from "./TicketMerchPromoBanner";
 
 type Tier = {
@@ -38,12 +39,12 @@ export default function TicketSelector({
   ));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [showAccountPrompt, setShowAccountPrompt] = useState(false);
+  const accountPromptRef = useRef<HTMLDivElement>(null);
   const [verificationRequired, setVerificationRequired] = useState(false);
   const activeTiers = tiers.filter((tier) => tier.active);
   const prices = activeTiers.map(tier => ticketPrice(eventSlug, tier.priceMinor, quantities[tier.id] ?? 0));
   const total = prices.reduce((sum, price) => sum + price.totalMinor, 0);
-  const freeQuantity = prices.reduce((sum, price) => sum + price.freeQuantity, 0);
-  const admissionCount = prices.reduce((sum, price) => sum + price.quantity, 0);
 
   useEffect(() => {
     if (preview || consent !== "granted" || viewContentTracked.current === eventId) return;
@@ -71,7 +72,13 @@ export default function TicketSelector({
   }, [quantities, eventId]);
 
   async function checkout() {
-    if (preview || checkoutInFlight.current) return;
+    if (!signedIn) {
+      setShowAccountPrompt(true);
+      requestAnimationFrame(() => accountPromptRef.current?.focus());
+      return;
+    }
+    if (preview) { setError("Ticket checkout is not open yet. Please check back when tickets go live."); return; }
+    if (checkoutInFlight.current) return;
     checkoutInFlight.current = true;
     setBusy(true);
     setError("");
@@ -120,7 +127,7 @@ export default function TicketSelector({
   return (
     <section className="ticket-selector" id="tickets" aria-label="Select tickets">
       {eventSlug !== "nye-2026" ? <h2>Tickets</h2> : null}
-      {eventSlug === "nye-2026" ? <div className="nye-ticket-offer"><strong>BUY 3. GET THE 4TH FREE.</strong><p>Select 4 tickets and pay £30. Every fourth ticket is free, automatically.</p></div> : <TicketMerchPromoBanner compact />}
+      {eventSlug === "nye-2026" ? <div className="nye-ticket-offer"><strong>BUY 3.<br />GET THE 4TH FREE.</strong></div> : <TicketMerchPromoBanner compact />}
       <div className="ticket-tier-list">
         {tiers.map((tier) => {
           const maximum = Math.min(tier.maxPerOrder, tier.remaining ?? tier.maxPerOrder);
@@ -167,20 +174,20 @@ export default function TicketSelector({
           );
         })}
       </div>
-      {eventSlug === "nye-2026" ? <div className="nye-ticket-summary" aria-live="polite"><span>{admissionCount} {admissionCount === 1 ? "admission" : "admissions"}{freeQuantity > 0 ? ` · ${freeQuantity} free` : ""}</span><strong>{freeQuantity > 0 ? `You save £${(freeQuantity * 10).toFixed(2)}` : "£10 per ticket"}</strong></div> : null}
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
       {verificationRequired ? <button disabled={busy} onClick={async()=>{setBusy(true);try{const response=await fetch('/api/auth/resend-verification',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({next:`/events/${eventSlug}#tickets`})});const result=await response.json();setError(response.ok?'Verification email queued. Check your inbox.':result.error);}finally{setBusy(false);}}}>Resend verification email</button> : null}
       <div className="ticket-selector__action">
-        {preview ? <button className="pop-button pop-button--yellow" type="button" disabled>Checkout opens when tickets go live</button> : signedIn ? (
-          <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
-            {busy ? "Opening checkout…" : "Buy tickets"}
-          </button>
-        ) : (
-          <Link className="pop-button pop-button--yellow" href={`/account/login?next=${encodeURIComponent(`/events/${eventSlug}#tickets`)}`}>Sign in to buy tickets</Link>
-        )}
+        <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
+          {preview && eventSlug === "nye-2026" ? <TicketLaunchCountdown /> : preview ? "Checkout opens when tickets go live" : busy ? "Opening checkout…" : "Buy tickets"}
+        </button>
       </div>
-      {eventSlug === "nye-2026" ? <p className="nye-ticket-terms">Choose the total number of people coming, including free places. Offer applies within one order. Each admission gets its own QR ticket. Maximum {Math.max(...tiers.map(tier => tier.maxPerOrder), 0)} admissions per order.</p> : null}
+      {showAccountPrompt && <div className="ticket-account-prompt" ref={accountPromptRef} tabIndex={-1} role="region" aria-labelledby="ticket-account-title">
+        <h3 id="ticket-account-title">CREATE YOUR ACCOUNT</h3>
+        <p>{preview ? "Sign up now so you’re ready when tickets go live." : "Create an account to buy tickets and keep them all in one place."}</p>
+        <Link className="industrial-button" href={`/account/signup?next=${encodeURIComponent(`/events/${eventSlug}#tickets`)}`}>SIGN UP</Link>
+        <p>Already have an account? <Link href={`/account/login?next=${encodeURIComponent(`/events/${eventSlug}#tickets`)}`}>Sign in</Link></p>
+      </div>}
       <p className="ticket-selector__support">
         Having trouble? Contact <a href="mailto:info@upforitevents.co.uk">info@upforitevents.co.uk</a> for help.
       </p>
