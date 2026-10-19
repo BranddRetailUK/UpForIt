@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const user=await getUserForSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
     if (!user) throw new BucketError('Sign in to enter the bucket.',401);
     if (!await consumeRateLimit(`bucket:${user.id}`,15,15)) throw new BucketError('Too many attempts. Please try again later.',429);
-    const name=validateBucketEntry(await request.json());
-    return NextResponse.json(await enterBucket(user,name),{headers:{'Cache-Control':'private, no-store'}});
+    const details=validateBucketEntry(await request.json());
+    return NextResponse.json(await enterBucket(user,details),{headers:{'Cache-Control':'private, no-store'}});
   } catch(e) { return bucketErrorResponse(e); }
 }

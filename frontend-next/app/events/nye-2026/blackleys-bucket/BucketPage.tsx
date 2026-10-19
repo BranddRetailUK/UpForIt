@@ -4,13 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { BUCKET_PATH, type BucketState, type BucketStatus } from "../../../../lib/bucket-shared";
+import { BUCKET_PATH, type BucketState, type BucketStatus, validateBucketEntry } from "../../../../lib/bucket-shared";
 
-export default function BucketPage({initial,preview=false}:{initial:BucketStatus;preview?:boolean}) {
+export default function BucketPage({initial,preview=false,account}:{initial:BucketStatus;preview?:boolean;account?:{fullName:string;email:string}}) {
   const [state, setState] = useState<BucketState>(initial.state);
   const [djName, setDjName] = useState(initial.djName||"");
+  const [fullName,setFullName]=useState(account?.fullName||"");
+  const [phone,setPhone]=useState("");
+  const [attendance,setAttendance]=useState(false);
   const [entryStatus,setEntryStatus]=useState(initial.entryStatus);
   const [busy,setBusy]=useState(false);
+  const [ticketPrompt,setTicketPrompt]=useState(false);
+  const ticketPromptRef=useRef<HTMLDivElement>(null);
   function applyStatus(data:BucketStatus){setState(data.state);setEntryStatus(data.entryStatus);if(data.djName)setDjName(data.djName);}
   useEffect(()=>{
     if(preview)return;
@@ -23,28 +28,37 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
   const [error, setError] = useState("");
   const resultRef = useRef<HTMLDivElement>(null);
   const eligible = state === "eligible";
+  const showForm = eligible || state === "no-ticket";
   const entered = state === "entered";
-  const cta = state === "upcoming" ? "ENTRIES OPENING SOON" : state === "closed" ? "ENTRIES CLOSED" : state === "unavailable" ? "CHECK ENTRY STATUS" : state === "verify-email" ? "VERIFY YOUR EMAIL" : state === "ticket-inactive" ? "CHECK YOUR TICKET" : state === "signed-out" ? "SIGN IN TO ENTER" : state === "no-ticket" ? "GET A TICKET" : entered ? "YOU’RE ENTERED" : "ENTER THE BUCKET";
+  const cta = state === "upcoming" ? "ENTRIES OPENING SOON" : state === "closed" ? "ENTRIES CLOSED" : state === "unavailable" ? "CHECK ENTRY STATUS" : state === "verify-email" ? "VERIFY YOUR EMAIL" : state === "ticket-inactive" ? "CHECK YOUR TICKET" : state === "signed-out" ? "SIGN IN TO ENTER" : entered ? "YOU’RE ENTERED" : "ENTER THE BUCKET";
 
   function changeState(value: BucketState) {
     setState(value);
+    setTicketPrompt(false);
     setDjName("");
     setConsent(false);
+    setAttendance(false);
     setError("");
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!eligible || busy) return;
+    if (busy) return;
+    if (state === "no-ticket") {
+      setTicketPrompt(true);
+      requestAnimationFrame(()=>ticketPromptRef.current?.focus());
+      return;
+    }
+    if (!eligible) return;
     const name = djName.trim();
-    if (!name) { setError("Add your DJ name to enter the bucket."); return; }
-    if (!consent) { setError("Please confirm that a DJ slot is not guaranteed."); return; }
+    try { validateBucketEntry({djName:name,fullName,phone,attendance,consent}); }
+    catch(e) { setError(e instanceof Error ? e.message : "Check your entry details."); return; }
     setDjName(name);
     setError("");
     if(preview){setState("entered");requestAnimationFrame(()=>resultRef.current?.focus());return;}
     setBusy(true);
     try{
-      const r=await fetch('/api/bucket',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({djName:name,consent})});
+      const r=await fetch('/api/bucket',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({djName:name,fullName,phone,attendance,consent})});
       const data=await r.json();
       if(!r.ok){
         const latest=await fetch('/api/bucket',{cache:'no-store'});
@@ -73,11 +87,11 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
           <div className="bucket-hero-copy">
             <h1 id="bucket-title" aria-label="Blackley’s Bucket">
               <span className="bucket-logo-row"><span className="bucket-cre8 bucket-hero-cre8" role="img" aria-label="CRE8#DNB, Blackley’s label" /><Image src="/brand/nye-2026/blackley-logo.png" alt="Blackley’s" width={2835} height={587} className="bucket-blackley-logo" priority /><span className="bucket-cre8 bucket-hero-cre8 bucket-cre8-right" aria-hidden="true" /></span>
-              <span className="bucket-word">BUCKET</span>
+              <Image src="/brand/blackleys-bucket/bucket-wordmark.png" alt="Bucket" width={2172} height={724} className="bucket-wordmark" priority />
             </h1>
-            <p className="bucket-tagline">YOUR CHANCE TO PLAY AT NYE<em>2026</em></p>
+            <p className="bucket-tagline">YOUR CHANCE TO PLAY AT NYE <em>2026</em></p>
             <ul className="bucket-stats" aria-label="Draw details"><li><strong>8</strong> DJs</li><li><strong>15</strong> MINUTES</li><li><strong>LIVE</strong> DRAW</li></ul>
-            <a className="industrial-button bucket-button bucket-hero-button" href={state === "no-ticket" ? "/events/nye-2026" : "#bucket-entry"}>{cta}</a>
+            <a className="industrial-button bucket-button bucket-hero-button" href={state === "signed-out" ? `/account/login?next=${encodeURIComponent(BUCKET_PATH)}` : "#bucket-entry"}>{cta}</a>
           </div>
         </div>
       </section>
@@ -88,19 +102,34 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
         <div className="bucket-entry-copy">
           <h2 id="bucket-entry-title"><span className="bucket-your-name">YOUR NAME<em>.</em></span><br /><em>IN THE BUCKET<span className="bucket-white-stop">.</span></em></h2>
           <p className="bucket-entry-intro">Start your New Year’s Eve behind the decks. Blackley’s picking eight DJs at random to play a 15-minute set during the opening two hours.</p>
-          <div className="bucket-arrival"><div><h3>BE THERE AT 5PM.</h3><p>Bring your USB. Be ready when called.</p><p>The draw runs from 5–7pm, so get down for doors and make sure you don’t miss your name being called.</p></div></div>
+          <div className="bucket-arrival"><div><h3>BE THERE AT <span className="bucket-arrival-time">5PM</span>.</h3><p>Bring your USB. Be ready when called.</p><p>The draw runs from 5–7pm, so get down for doors and make sure you don’t miss your name being called.</p></div></div>
         </div>
         <div className="bucket-form-panel">
-          {!eligible && error && <p className="bucket-error" role="alert">{error}</p>}
-          {eligible ? <>
-            <p className="bucket-eligibility"><span aria-hidden="true">✓</span> Ticket confirmed</p>
+          {!showForm && error && <p className="bucket-error" role="alert">{error}</p>}
+          {showForm ? <>
+            {eligible && <p className="bucket-eligibility"><span aria-hidden="true">✓</span> Ticket confirmed</p>}
             <form onSubmit={submit}>
-              <label className="bucket-field" htmlFor="bucket-dj-name">DJ name</label>
+              <label className="bucket-field" htmlFor="bucket-full-name">Full name</label>
+              <input id="bucket-full-name" name="fullName" placeholder="Your full name" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} aria-describedby="bucket-name-help" />
+              <p className="bucket-field-help" id="bucket-name-help">Used to identify you on the night.</p>
+              <label className="bucket-field" htmlFor="bucket-email">Email</label>
+              <input id="bucket-email" name="email" type="email" autoComplete="email" value={account?.email||""} readOnly aria-describedby="bucket-email-help" />
+              <p className="bucket-field-help" id="bucket-email-help">{eligible ? "Your account email, linked to your website ticket." : "Your account email."}</p>
+              <label className="bucket-field" htmlFor="bucket-phone">Phone number <span className="bucket-optional">(optional)</span></label>
+              <input id="bucket-phone" name="phone" type="tel" autoComplete="tel" placeholder="Your phone number" maxLength={30} value={phone} onChange={event => setPhone(event.target.value)} aria-describedby="bucket-phone-help" />
+              <p className="bucket-field-help" id="bucket-phone-help">For WhatsApp communication about your entry.</p>
+              <label className="bucket-field" htmlFor="bucket-dj-name">Artist / DJ name</label>
               <input id="bucket-dj-name" name="djName" placeholder="Your DJ name" autoComplete="nickname" maxLength={80} required value={djName} onChange={event => { setDjName(event.target.value); setError(""); }} aria-describedby={error ? "bucket-error" : undefined} aria-invalid={!!error} />
+              <label className="bucket-consent"><input type="checkbox" required checked={attendance} onChange={event => setAttendance(event.target.checked)} /><span>I confirm I will be present at the event if selected.</span></label>
               <label className="bucket-consent"><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I understand a DJ slot is not guaranteed.</span></label>
               {error && <p id="bucket-error" className="bucket-error" role="alert">{error}</p>}
-              <button className="industrial-button bucket-button" type="submit" disabled={busy}>{busy ? "SAVING YOUR ENTRY…" : "ENTER THE BUCKET"}</button>
+              <button className="industrial-button bucket-button" type="submit" formNoValidate={state === "no-ticket"} disabled={busy}>{busy ? "SAVING YOUR ENTRY…" : "ENTER THE BUCKET"}</button>
             </form>
+            {state === "no-ticket" && ticketPrompt && <div className="bucket-ticket-prompt bucket-gated" role="region" aria-labelledby="bucket-ticket-prompt-title" tabIndex={-1} ref={ticketPromptRef}>
+              <h3 id="bucket-ticket-prompt-title">GET YOUR TICKET.</h3>
+              <p>You need an NYE ticket to enter Blackley’s Bucket. Buy your ticket, then come back to submit your entry.</p>
+              <Link className="industrial-button bucket-button" href="/events/nye-2026">BUY A TICKET</Link>
+            </div>}
           </> : entered ? <div className="bucket-success" role="status" tabIndex={-1} ref={resultRef}>
             <span className="bucket-success-check" aria-hidden="true">✓</span>
             <h3>YOU’RE IN<br /><em>THE BUCKET.</em></h3>
@@ -124,6 +153,13 @@ export default function BucketPage({initial,preview=false}:{initial:BucketStatus
           <div className="bucket-rules"><p><strong>8 DJs. 15 minutes each.</strong> Blackley draws names at random during the first two hours, from 5–7pm.</p><p><strong>Be there when you’re called.</strong> If you’re missing, another name is drawn. Selected names are removed from the bucket.</p><p><strong>Bring your USB.</strong> One entry per person with a valid NYE ticket. Entry is optional.</p></div>
         </section>
       </div>
+      <section className="section-wrap bucket-wrap bucket-recording" aria-labelledby="bucket-recording-title">
+        <div className="bucket-recording-badge"><span aria-hidden="true" /> AUDIO + VIDEO</div>
+        <h2 id="bucket-recording-title">TWO HOURS.<br /><em>ALL RECORDED.</em></h2>
+        <p>The full two hours of Blackley’s Bucket, from <strong>5–7pm</strong>, will be recorded on audio and video.</p>
+        <p className="bucket-recording-release">All content will be available after the event.</p>
+      </section>
+
     </div>
   );
 }

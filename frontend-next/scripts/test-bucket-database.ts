@@ -9,12 +9,16 @@ import {validateBucketEntry} from '../lib/bucket-shared';
 import {GET,POST} from '../app/api/bucket/route';
 async function main(){
  if(process.env.DATABASE_URL!=='postgresql://bucket_test@127.0.0.1:55441/postgres')throw new Error('Disposable local bucket DB required');
+ process.env.APP_ENV='testing';
+ process.env.PUBLIC_TICKET_SALES_OPEN='true';
+ process.env.TICKETING_ENABLED='true';
  process.env.AUTH_RATE_LIMIT_SECRET='disposable-bucket-rate-secret';
  const db=getPool(),event=randomUUID(),tier=randomUUID(),users:AuthUser[]=[],orders:string[]=[],ticketIds:string[]=[],tokens:string[]=[];
+ const details=(djName:string)=>validateBucketEntry({djName,fullName:'Test Person',phone:'',attendance:true,consent:true});
  const origin='http://localhost:3000';
  function req(path:string,body?:unknown,who=0,foreign=false){return new NextRequest(origin+path,{method:body===undefined?'GET':'POST',headers:{origin:foreign?'https://evil.invalid':origin,'content-type':'application/json',...(tokens[who]?{cookie:`upforit_session=${tokens[who]}`}:{})},body:body===undefined?undefined:JSON.stringify(body)});}
  try{
- await db.query("INSERT INTO events(id,slug,title,venue_name,starts_at,ends_at,status) VALUES($1,'nye-2026','Bucket test','Test',now()+interval '1 day',now()+interval '2 days','published')",[event]);
+ await db.query("INSERT INTO events(id,slug,title,venue_name,starts_at,ends_at,status,sales_open) VALUES($1,'nye-2026','Bucket test','Test',now()+interval '1 day',now()+interval '2 days','published',true)",[event]);
  await db.query("INSERT INTO ticket_types(id,event_id,name,price_minor) VALUES($1,$2,'Admission',1000)",[tier,event]);
  for(let i=0;i<12;i++){
   const id=randomUUID();const u:AuthUser={id,email:`bucket-${id}@example.invalid`,displayName:`DJ ${i}`,role:i===0?'admin':'customer',emailVerified:i!==11};users.push(u);
@@ -24,30 +28,42 @@ async function main(){
   await db.query("INSERT INTO ticket_order_items(id,order_id,ticket_type_id,ticket_type_name,unit_price_minor,quantity,line_total_minor) VALUES($1,$2,$3,'Admission',1000,1,1000)",[item,order,tier]);
   await db.query("INSERT INTO tickets(id,public_id,ticket_number,order_id,order_item_id,user_id,event_id,ticket_type_name,admission_index) VALUES($1,$2,$3,$4,$5,$6,$7,'Admission',1)",[ticket,randomUUID(),`TEST-${ticket}`,order,item,id,event]);
  }
- await db.query("UPDATE events SET status='draft' WHERE id=$1",[event]);assert.equal((await bucketStatus(null)).state,'upcoming');await assert.rejects(enterBucket(users[0],'Too early'));
+ process.env.APP_ENV='production';
+ assert.equal((await bucketStatus(users[0])).state,'upcoming');
+ assert.equal((await POST(req('/api/bucket',{...details('Locked'),consent:true}))).status,403);
+ assert.equal((await db.query('SELECT count(*)::int n FROM bucket_entries WHERE event_id=$1',[event])).rows[0].n,0);
+ process.env.APP_ENV='testing';
+ process.env.PUBLIC_TICKET_SALES_OPEN='false';assert.equal((await bucketStatus(users[0])).state,'upcoming');process.env.PUBLIC_TICKET_SALES_OPEN='true';
+ process.env.TICKETING_ENABLED='false';assert.equal((await bucketStatus(users[0])).state,'upcoming');process.env.TICKETING_ENABLED='true';
+ await db.query('UPDATE events SET sales_open=false WHERE id=$1',[event]);await assert.rejects(enterBucket(users[0],details('Paused')));await db.query('UPDATE events SET sales_open=true WHERE id=$1',[event]);
+ await db.query("UPDATE events SET status='draft' WHERE id=$1",[event]);assert.equal((await bucketStatus(null)).state,'upcoming');await assert.rejects(enterBucket(users[0],details('Too early')));
  await db.query("UPDATE events SET status='published' WHERE id=$1",[event]);assert.equal((await bucketStatus(null)).state,'signed-out');assert.equal((await bucketStatus(users[0])).state,'eligible');assert.equal((await bucketStatus(users[11])).state,'verify-email');
  for(const input of [{djName:' ',consent:true},{djName:'A'.repeat(81),consent:true},{djName:'DJ',consent:false}])assert.throws(()=>validateBucketEntry(input));
- assert.equal(validateBucketEntry({djName:' DJ Test ',consent:true}),'DJ Test');
- assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},99))).status,401);
- assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},0,true))).status,403);
- assert.equal((await POST(req('/api/bucket',{djName:'DJ',consent:true},11))).status,403);
+ assert.equal(details(' DJ Test ').djName,'DJ Test');
+ assert.equal((await POST(req('/api/bucket',{...details('DJ'),consent:true},99))).status,401);
+ assert.equal((await POST(req('/api/bucket',{...details('DJ'),consent:true},0,true))).status,403);
+ assert.equal((await POST(req('/api/bucket',{...details('DJ'),consent:true},11))).status,403);
  for(const status of ['pending','refunded','refund_review']){
   await db.query('UPDATE ticket_orders SET status=$2,admissions_hold=$3 WHERE id=$1',[orders[1],status,status==='refund_review']);
-  assert.equal((await bucketStatus(users[1])).state,'no-ticket');await assert.rejects(enterBucket(users[1],'No ticket'));
+  assert.equal((await bucketStatus(users[1])).state,'no-ticket');await assert.rejects(enterBucket(users[1],details('No ticket')));
  }
  await db.query("UPDATE ticket_orders SET status='refund_review',admissions_hold=false WHERE id=$1",[orders[1]]);assert.equal((await bucketStatus(users[1])).state,'eligible');
  await db.query("UPDATE ticket_orders SET status='paid' WHERE id=$1",[orders[1]]);
  await db.query("UPDATE tickets SET status='void' WHERE id=$1",[ticketIds[1]]);assert.equal((await bucketStatus(users[1])).state,'no-ticket');
  await db.query("UPDATE tickets SET status='checked_in' WHERE id=$1",[ticketIds[1]]);assert.equal((await bucketStatus(users[1])).state,'eligible');
- const posts=await Promise.all(Array.from({length:5},()=>POST(req('/api/bucket',{djName:'DJ Concurrent',consent:true,userId:users[1].id,ticketId:ticketIds[1]}))));assert.ok(posts.every(r=>r.status===200));
+ const posts=await Promise.all(Array.from({length:5},()=>POST(req('/api/bucket',{...details('DJ Concurrent'),consent:true,email:'spoof@example.invalid',userId:users[1].id,ticketId:ticketIds[1]}))));assert.ok(posts.every(r=>r.status===200));
  assert.equal((await db.query('SELECT count(*)::int n FROM bucket_entries WHERE user_id=$1',[users[0].id])).rows[0].n,1);
  assert.equal((await db.query('SELECT count(*)::int n FROM bucket_entries WHERE user_id=$1',[users[1].id])).rows[0].n,0);
+ const persisted=(await db.query('SELECT full_name,email,phone,attendance_confirmed_at FROM bucket_entries WHERE user_id=$1',[users[0].id])).rows[0];
+ assert.equal(persisted.full_name,'Test Person');assert.equal(persisted.email,users[0].email);assert.equal(persisted.phone,null);assert.ok(persisted.attendance_confirmed_at);
+ await enterBucket(users[10],{...details('Phone test'),phone:'+44 7700 900123'});
+ assert.equal((await db.query('SELECT phone FROM bucket_entries WHERE user_id=$1',[users[10].id])).rows[0].phone,'+44 7700 900123');
  const saved=await(await GET(req('/api/bucket'))).json();assert.equal(saved.djName,'DJ Concurrent');assert.equal(saved.state,'entered');assert.equal('email' in saved,false);
  await db.query('UPDATE ticket_orders SET admissions_hold=true WHERE id=$1',[orders[0]]);assert.equal((await bucketStatus(users[0])).state,'ticket-inactive');
  await db.query('UPDATE ticket_orders SET admissions_hold=false WHERE id=$1',[orders[0]]);
- for(let i=1;i<10;i++)await enterBucket(users[i],`DJ ${i}`);
+ for(let i=1;i<10;i++)await enterBucket(users[i],details(`DJ ${i}`));
  await db.query('UPDATE users SET disabled_at=now() WHERE id=$1',[users[9].id]);
- await db.query("UPDATE events SET starts_at=now()-interval '1 minute' WHERE id=$1",[event]);assert.equal((await bucketStatus(users[10])).state,'closed');await assert.rejects(enterBucket(users[10],'Too late'));
+ await db.query("UPDATE events SET starts_at=now()-interval '1 minute' WHERE id=$1",[event]);assert.equal((await bucketStatus(users[11])).state,'closed');await assert.rejects(enterBucket({...users[11],emailVerified:true},details('Too late')));
  console.log('PASS: validation, auth, CSRF, ticket states, partial refunds, concurrent submissions, ownership, persistence, revoked eligibility, cutoff.');
  }finally{
   await db.query('DELETE FROM bucket_audit WHERE entry_id IN (SELECT id FROM bucket_entries WHERE event_id=$1)',[event]);await db.query('DELETE FROM bucket_entries WHERE event_id=$1',[event]);await db.query('DELETE FROM tickets WHERE event_id=$1',[event]);await db.query('DELETE FROM ticket_orders WHERE event_id=$1',[event]);await db.query('DELETE FROM ticket_types WHERE event_id=$1',[event]);await db.query('DELETE FROM events WHERE id=$1',[event]);await db.query('DELETE FROM users WHERE id=ANY($1::uuid[])',[users.map(u=>u.id)]);await db.end();

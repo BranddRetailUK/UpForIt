@@ -1,17 +1,18 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { getPool } from "./db";
+import { publicTicketSalesOpen } from "./event-visibility";
 import type { AuthUser } from "./auth";
-import { BUCKET_SLUG, BucketError, type BucketStatus } from "./bucket-shared";
+import { BUCKET_SLUG, BucketError, type BucketStatus, type BucketEntryDetails } from "./bucket-shared";
 
 type DB = Pick<PoolClient, "query">;
-type EventRow = { id: string; status: string; entry_open: boolean; draw_open: boolean };
+type EventRow = { id: string; status: string; sales_open: boolean; entry_open: boolean; draw_open: boolean };
 // Re-evaluate current admission entitlement, including refunds/disputes, for every use.
 const validTicket = `t.status IN ('valid','checked_in') AND o.status IN ('paid','refund_review') AND NOT o.admissions_hold
   AND t.event_id=o.event_id AND t.user_id=o.user_id`;
 async function eventInfo(db: DB, lock = false) {
-  return (await db.query<EventRow>(`SELECT id,status,
-    (status='published' AND clock_timestamp()<starts_at) AS entry_open,
+  return (await db.query<EventRow>(`SELECT id,status,sales_open,
+    (status='published' AND sales_open AND clock_timestamp()<starts_at) AS entry_open,
     (status='published' AND clock_timestamp()>=starts_at AND clock_timestamp()<LEAST(ends_at,starts_at+interval '2 hours')) AS draw_open
     FROM events WHERE slug=$1 ${lock ? 'FOR UPDATE' : ''}`, [BUCKET_SLUG])).rows[0];
 }
@@ -20,6 +21,7 @@ async function entitlement(db: DB, userId: string, eventId: string) {
     WHERE t.user_id=$1 AND t.event_id=$2 AND ${validTicket} ORDER BY t.created_at,t.id LIMIT 1`, [userId,eventId])).rows[0];
 }
 export async function bucketStatus(user: AuthUser | null, db: DB = getPool()): Promise<BucketStatus> {
+  if (!publicTicketSalesOpen() || process.env.TICKETING_ENABLED !== "true") return {state:"upcoming"};
   const event = await eventInfo(db);
   if (event?.status === 'draft') return { state: 'upcoming' };
   if (!event || event.status !== 'published') return { state: 'closed' };
@@ -35,7 +37,7 @@ export async function bucketStatus(user: AuthUser | null, db: DB = getPool()): P
 async function audit(db: DB, entryId: string, actorId: string, action: string) {
   await db.query('INSERT INTO bucket_audit(id,entry_id,actor_id,action) VALUES($1,$2,$3,$4)', [randomUUID(),entryId,actorId,action]);
 }
-export async function enterBucket(user: AuthUser, djName: string) {
+export async function enterBucket(user: AuthUser, details: BucketEntryDetails) {
   if (!user.emailVerified) throw new BucketError('Verify your email before entering.',403);
   const db = await getPool().connect();
   try {
@@ -50,9 +52,9 @@ export async function enterBucket(user: AuthUser, djName: string) {
     const ticket = await entitlement(db,user.id,event.id);
     if (!ticket) throw new BucketError('Your ticket is no longer eligible.',403);
     const id = randomUUID();
-    await db.query('INSERT INTO bucket_entries(id,event_id,user_id,ticket_id,dj_name) VALUES($1,$2,$3,$4,$5)',[id,event.id,user.id,ticket.id,djName]);
+    await db.query('INSERT INTO bucket_entries(id,event_id,user_id,ticket_id,dj_name,full_name,email,phone,attendance_confirmed_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now())',[id,event.id,user.id,ticket.id,details.djName,details.fullName,user.email,details.phone]);
     await audit(db,id,user.id,'entered');
     await db.query('COMMIT');
-    return {state:'entered',djName,entryStatus:'entered'} satisfies BucketStatus;
+    return {state:'entered',djName:details.djName,entryStatus:'entered'} satisfies BucketStatus;
   } catch(e) { await db.query('ROLLBACK'); throw e; } finally { db.release(); }
 }
