@@ -759,7 +759,7 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 @media(min-width:801px){
  .bucket-event-promo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 32px;align-items:center}
  .bucket-event-promo>div{display:contents}
- .bucket-event-promo .bucket-promo-logos{grid-column:1;grid-row:1;gap:3px;height:clamp(40px,4.2vw,58px)}
+ .bucket-event-promo .bucket-promo-logos{grid-column:1;grid-row:1;gap:2px;height:clamp(44px,5.5vw,76px)}
  .bucket-promo-logos .bucket-promo-blackley{width:auto;height:100%;max-width:none}
  .bucket-promo-bucket-frame{display:block;position:relative;height:100%;aspect-ratio:2172/474;overflow:hidden;flex-shrink:0}
  .bucket-promo-bucket-frame .bucket-promo-bucket{position:absolute;top:-26%;left:0;width:100%;max-width:none;height:auto;margin:0}
