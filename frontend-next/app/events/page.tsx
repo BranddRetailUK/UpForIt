@@ -9,19 +9,16 @@ export const metadata: Metadata = { title: "Events", description: "Explore upcom
 export default function EventsPage() {
  return (
   <div className="section-wrap bass-events">
-   <section aria-labelledby="upcoming-events">
-    <div className="bass-section-heading"><h2 id="upcoming-events">UP <em>NEXT.</em></h2></div>
+   <section aria-label="Upcoming event">
     <article className="nye-hero nye-list-banner" aria-labelledby="nye-list-title">
      <div className="nye-hero__speakers" aria-hidden="true" />
      <div className="nye-hero__paint" aria-hidden="true" />
      <div className="nye-list-banner__content">
-      <p className="nye-list-banner__label">UPCOMING EVENT / 31.12.26</p>
-      <CloudinaryImage className="nye-hero__brand" asset={CLOUDINARY_ASSETS.nye2026Logo} alt="UPFORIT" sizes="240px" maxWidth={720} />
+      <CloudinaryImage className="nye-hero__brand" asset={CLOUDINARY_ASSETS.nye2026Logo} alt="UPFORIT" sizes="(max-width: 700px) 75vw, 360px" maxWidth={1080} />
       <p className="nye-hero__eyebrow">Presents</p>
       <h3 id="nye-list-title" className="nye-hero__title"><CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Title} alt="NYE 2026" sizes="(max-width: 700px) 80vw, 500px" /></h3>
       <p className="nye-hero__date"><time dateTime="2026-12-31">31 December 2026</time><span aria-hidden="true"> / </span><span>Doors open 5pm</span></p>
       <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
-      <p className="nye-hero__entry">£10 on the door</p>
       <div className="industrial-actions nye-hero__actions"><Link className="industrial-button" href="/events/nye-2026">Check the event</Link></div>
      </div>
      <Link className="nye-list-banner__art" href="/events/nye-2026" aria-label="View NYE 2026 event"><Image src="/brand/nye-2026/pre-flyer.png" alt="UPFORIT NYE 2026 featuring Blackley — 31 December, doors open 5pm, McCarthys Sports Bar, Bletchley" width={1122} height={1402} sizes="(max-width: 700px) 80vw, 420px" priority /></Link>

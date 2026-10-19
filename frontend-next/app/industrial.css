@@ -733,3 +733,13 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 }
 
 .bucket-event-promo{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:40px 0;margin-bottom:60px;border-top:2px solid var(--yellow);border-bottom:1px solid #414141}.bucket-event-promo h2{font:400 clamp(26px,3vw,42px)/1.1 var(--font-heavy),sans-serif;letter-spacing:-.04em}.bucket-event-promo em{color:var(--yellow);font-style:normal}.bucket-event-promo p{font-size:16px;line-height:1.7;margin:16px 0 0;color:#fff}.bucket-event-promo .industrial-button{flex-shrink:0;text-align:center;justify-content:center}@media(max-width:800px){.bucket-event-promo{flex-direction:column;text-align:center;align-items:center;margin-bottom:48px}}
+
+/* Larger type for the featured event on the Events index. */
+.nye-list-banner .nye-hero__brand{width:360px;max-width:90%}
+.nye-list-banner .nye-hero__eyebrow{font-size:15px;margin:10px 0 16px}
+.nye-list-banner .nye-hero__title{max-width:560px}
+.nye-list-banner .nye-hero__date{font-size:18px;line-height:1.4;flex-wrap:wrap;gap:6px 10px;padding:14px 20px}
+.nye-list-banner .nye-hero__venue{font-size:clamp(26px,2.6vw,34px);line-height:1.2}
+.nye-list-banner .industrial-button{font-size:18px;min-height:60px;padding:18px 26px}
+@media(max-width:1000px){.nye-list-banner .nye-hero__date{flex-direction:column}.nye-list-banner .nye-hero__date>span[aria-hidden]{display:none}}
+@media(max-width:700px){.nye-list-banner .nye-hero__eyebrow{font-size:14px}.nye-list-banner .nye-hero__date{font-size:16px}.nye-list-banner .nye-hero__venue{font-size:26px}}
