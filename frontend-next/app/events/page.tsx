@@ -1,6 +1,7 @@
 import { PAST_EVENTS } from "../../lib/past-events";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import PastEventCard from "../../components/PastEventCard";
 import CloudinaryImage from "../../components/CloudinaryImage";
 import { CLOUDINARY_ASSETS } from "../../lib/cloudinary";
@@ -23,7 +24,7 @@ export default function EventsPage() {
       <p className="nye-hero__entry">£10 on the door</p>
       <div className="industrial-actions nye-hero__actions"><Link className="industrial-button" href="/events/nye-2026">Check the event</Link></div>
      </div>
-     <Link className="nye-list-banner__art" href="/events/nye-2026" aria-label="View NYE 2026 event"><CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Teaser} alt="UPFORIT NYE 2026 teaser" sizes="(max-width: 700px) 80vw, 420px" /></Link>
+     <Link className="nye-list-banner__art" href="/events/nye-2026" aria-label="View NYE 2026 event"><Image src="/brand/nye-2026/pre-flyer.png" alt="UPFORIT NYE 2026 featuring Blackley — 31 December, doors open 5pm, McCarthys Sports Bar, Bletchley" width={1122} height={1402} sizes="(max-width: 700px) 80vw, 420px" priority /></Link>
     </article>
    </section>
    <section aria-labelledby="past-events">
