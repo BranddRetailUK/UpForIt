@@ -23,9 +23,13 @@ try{
  for(let i=0;i<60;i++){try{const r=await fetch(origin+'/health');if(r.ok)break;}catch{}await new Promise(r=>setTimeout(r,100));if(i===59)throw Error('Server did not start: '+serverError);}
  const request=(path,body,cookie='',sentOrigin=origin)=>fetch(origin+path,{method:body===undefined?'GET':'POST',headers:{...(cookie?{cookie}:{}),...(body===undefined?{}:{'Content-Type':'application/json',Origin:sentOrigin})},...(body===undefined?{}:{body:JSON.stringify(body)})});
  for(const path of ['/api/bucket','/api/bucket?export=csv','/api/dashboard','/api/analytics','/api/traffic','/api/campaigns','/api/campaign?id=00000000-0000-4000-8000-000000000000','/api/export?type=signups'])assert.equal((await request(path)).status,401);
+ assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()})).status,401);
  assert.equal((await request('/api/login',{email:'admin@example.com',password},'','https://evil.example.com')).status,403);
  assert.equal((await request('/api/login',{email:'customer@example.com',password})).status,401);
  const login=await request('/api/login',{email:'admin@example.com',password});assert.equal(login.status,200);const cookie=login.headers.get('set-cookie').split(';')[0];assert.ok(login.headers.get('set-cookie').includes('HttpOnly'));
+ assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()},cookie,'https://evil.example.com')).status,403);
+ assert.equal((await request('/api/checkout/reconcile',{id:'bad'},cookie)).status,400);
+ assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()},cookie)).status,404);
  assert.equal((await request('/api/traffic?days=999',undefined,cookie)).status,400);
  let r=await request('/api/dashboard',undefined,cookie);assert.equal(r.status,200);let d=await r.json();assert.equal(d.entries.length,1);assert.equal(d.subscribers.length,1);
  assert.equal((await request('/api/subscriber',{id:d.subscribers[0].id,status:'Unsubscribed'},cookie)).status,200);

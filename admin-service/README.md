@@ -1,5 +1,15 @@
 # UPFORIT admin
 
+## Ticket scanner
+
+`/scan` accepts signed ticket QRs and ticket numbers without selecting an event. The ticket identifies its event; cancelled/completed/ended events, held/refunded orders and void tickets are rejected. Future-event scans are labelled rehearsals until two hours before the published start. An admission is locked and consumed once. Retrying an uncertain scan uses the same request ID and returns its original success only to the same authenticated principal.
+
+Admins use their existing dedicated-admin login. Door devices use the existing scanner enrolment/session tables and a separate host-only, HttpOnly, Strict cookie. The scanner's device controls choose the current/next event automatically for session expiry only; devices can scan any otherwise eligible ticket. Existing devices need a new activation or relink on the admin host, because storefront cookies are not shared across hosts. Existing activation QR links forward their fragment access key to this host without exposing it to server logs. Device revocation and relinking preserve the shared audit trail.
+
+Configure `TICKET_QR_SIGNING_SECRET` as a Railway reference to `FRONTEND.TICKET_QR_SIGNING_SECRET`; reference `TICKET_QR_PREVIOUS_SIGNING_SECRETS` too when rotation overlap is used. `APP_ENV` must match the ticket environment. Production storefront `/scan` forwards here. Other storefront environments retain their existing isolated scanner unless `ADMIN_SCANNER_ORIGIN` explicitly points at an admin instance using that environment's database and keys; never point Testing at production.
+
+Run `DATABASE_URL=postgresql://...@127.0.0.1:PORT/postgres npm run test:scanner` for isolated HTTP/database checks. It creates and removes its own local database and does not call Stripe or SendGrid. `npm run check` includes scanner server/browser syntax and `npm test` includes QR compatibility checks. The camera decoder is served locally from the pinned `@zxing/browser` dependency.
+
 Dedicated production admin service. Uses the existing UPFORIT PostgreSQL users, bcrypt passwords, sessions, ticketing, competition records and Meta credentials. Every API read, export and mutation requires a current verified, enabled administrator. Sessions use a separate host-only HttpOnly cookie, last 12 hours, and are invalidated on logout. Writes require the configured origin; sign-in and mutations are rate limited in PostgreSQL.
 
 ## Run
@@ -61,3 +71,7 @@ Meta reporting was reconnected on 2026-10-12 with a validated token for UPFORIT 
 All future admin features belong in this dedicated service, not the frontend account-page admin. Production: https://admin-production-7548.up.railway.app/#bucket. Root `AGENTS.md` records this convention for future tasks.
 
 Blackley’s Bucket reads the shared `bucket_entries` and `bucket_audit` tables installed by storefront migration `012_blackleys_bucket.sql`. The public signup API stays in the storefront; admin reads, CSV exports and live-draw mutations run here under the existing verified admin session, same-origin and rate-limit checks. Invalid/refunded/held tickets and disabled accounts are excluded. Draws serialize on the event row, skip absent names and cap confirmed slots at eight. The old storefront `/admin/bucket` redirects here; its admin API has been removed.
+
+Ticket checkout recovery (20 October 2026): the Tickets & orders dialog offers “Check Stripe checkout” for pending orders. Configure `STRIPE_SECRET_KEY` using the Railway reference `${{FRONTEND.STRIPE_SECRET_KEY}}` in the same environment. Reconciliation never creates a checkout, charges a customer, or issues a refund. It verifies metadata, reference, amount and currency before associating a session, and records an audit entry. An absent session is released only after a complete Stripe listing and the last possible expiry; uncertain or incomplete results remain pending. This action shares the order advisory lock used by the storefront and worker.
+
+Deploy migration `015_checkout_recovery_and_worker_health.sql` through the frontend/worker before deploying this admin revision. The tickets dashboard reports stale/erroring worker lanes and email jobs overdue by five minutes. The worker now retries lane-level failures and records a heartbeat only after successful work; maintenance also runs with `--email-only`.

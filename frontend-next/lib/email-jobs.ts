@@ -3,7 +3,7 @@ import type { PoolClient } from "pg";
 import { getPool } from "./db";
 import { encryptJson } from "./security";
 
-export type EmailJobType = "verify_email" | "reset_password" | "ticket_confirmation";
+export type EmailJobType = "verify_email" | "reset_password" | "ticket_confirmation" | "ticket_payment_review";
 
 export async function enqueueEmail(
   jobType: EmailJobType,

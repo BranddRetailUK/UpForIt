@@ -42,6 +42,7 @@ export default async function OrderPage({ params }: { params: Promise<{ orderId:
         {!order.admissions_hold && ["paid","refund_review"].includes(order.status) ? <a className="pop-button pop-button--yellow account-order__download" href={`/api/tickets/orders/${order.id}/pdf`}>{tickets.rows.length === 1 ? "Download ticket" : `Download ${tickets.rows.filter(t=>t.status!=="void").length} tickets (PDF)`}</a> : null}
         {user.role==='admin' && order.status==='refund_review' && order.admissions_hold ? <AdmissionReview orderId={order.id} refundedMinor={order.refunded_minor} netMinor={order.total_minor-order.refunded_minor} tickets={tickets.rows}/> : null}
         {!order.admissions_hold && ['paid','refund_review'].includes(order.status) ? <AdminResendButton orderId={order.id}/> : null}
+        {order.status === "refund_review" && order.admissions_hold ? <p className="form-message">Your payment is under review and admission is unavailable. Please do not pay again. Contact UPFORIT for help with this order.</p> : null}
         {order.status === "pending" ? <PendingCheckout orderId={order.id}/> : null}
         <div className="ticket-wallet">
           {tickets.rows.map((ticket, index) => (

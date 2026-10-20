@@ -39,6 +39,7 @@ export default function TicketSelector({
   ));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [finishedOrder,setFinishedOrder]=useState<string|null>(null);
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const accountPromptRef = useRef<HTMLDivElement>(null);
   const [verificationRequired, setVerificationRequired] = useState(false);
@@ -82,6 +83,7 @@ export default function TicketSelector({
     checkoutInFlight.current = true;
     setBusy(true);
     setError("");
+    if(finishedOrder){checkoutKey.current=null;setFinishedOrder(null);}
     try {
       const eventID = createEventId("ticket_checkout");
       const selected = activeTiers
@@ -99,9 +101,11 @@ export default function TicketSelector({
           meta: getBrowserContext(eventID)
         })
       });
-      const result = (await response.json()) as { url?: string; error?: string; verificationRequired?:boolean };
+      const result = (await response.json()) as { url?: string; error?: string; verificationRequired?:boolean; code?:string; canStartNew?:boolean; orderId?:string; message?:string; confirmationUrl?:string };
       setVerificationRequired(Boolean(result.verificationRequired));
-      if (!response.ok || !result.url) throw new Error(result.error || "Checkout could not be started.");
+      if(result.code==='checkout_finished'&&result.canStartNew&&result.orderId)setFinishedOrder(result.orderId);
+      if(result.confirmationUrl){window.location.assign(result.confirmationUrl);return;}
+      if (!response.ok || !result.url) throw new Error(result.message || result.error || "Checkout could not be started.");
       track("InitiateCheckout", {
         content_ids: selected.map(({ tier }) => tier.id),
         content_name: eventTitle,
@@ -176,10 +180,11 @@ export default function TicketSelector({
       </div>
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
+      {finishedOrder ? <p><Link href={`/account/orders/${finishedOrder}`}>View previous order</Link>. Choose “Start a new purchase” only if you want another order.</p> : null}
       {verificationRequired ? <button disabled={busy} onClick={async()=>{setBusy(true);try{const response=await fetch('/api/auth/resend-verification',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({next:`/events/${eventSlug}#tickets`})});const result=await response.json();setError(response.ok?'Verification email queued. Check your inbox.':result.error);}finally{setBusy(false);}}}>Resend verification email</button> : null}
       <div className="ticket-selector__action">
         <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
-          {preview && eventSlug === "nye-2026" ? <TicketLaunchCountdown /> : preview ? "Checkout opens when tickets go live" : busy ? "Opening checkout…" : "Buy tickets"}
+          {preview && eventSlug === "nye-2026" ? <TicketLaunchCountdown /> : preview ? "Checkout opens when tickets go live" : busy ? "Opening checkout…" : finishedOrder ? "Start a new purchase" : "Buy tickets"}
         </button>
       </div>
       {showAccountPrompt && <div className="ticket-account-prompt" ref={accountPromptRef} tabIndex={-1} role="region" aria-labelledby="ticket-account-title">

@@ -93,7 +93,7 @@ composition=MetaTrackingProvider > CartProvider > site-shell > PopArtScene + Sit
 fonts=Google Bangers(display), Archivo Black(heavy), Space Grotesk(body) via next/font
 metadata_base=https://www.upforitevents.co.uk
 default_title=UPFORIT | Events, Music & Good Vibes
-open_graph=static Cloudinary Summer Roundup image
+open_graph=shared lib/social-metadata.ts clean brand artwork, explicit JPEG q_85 at 1200x630 for crawler compatibility; no original Summer Roundup PNG in current social metadata
 favicon=frontend-next/app/icon.tsx; edge-rendered 512x512 smiley PNG
 global_cart=CartProvider mounted for every route; drawer and header count available site-wide
 
@@ -174,6 +174,10 @@ site_assets=navLogo WHITE_LOGO_WEB_filqtw; roundLogo NEW_ROUND_LOGO_amtvr0; smil
 image_helper=custom responsive `<img>` src/srcset generator; widths 240..1476; Cloudinary f/q/c_limit/w transforms; not Next Image
 next_remote_image_hosts=cdn.shopify.com,res.cloudinary.com
 merch_images=URLs supplied canonically by Good Game; normally Cloudinary; never upload/store copies here
+merch_delivery=MerchImage appends f_auto,q_auto,c_limit after existing crops/transformations and before version/public ID; terminal delivery step is idempotent and width capped at 960; signed/token URLs and non-Cloudinary hosts pass through unchanged
+music_video_delivery=cloudinaryVideoUrl uses c_limit,w_1920,h_1080/q_auto:best and explicit H.264 MP4 (VP9 for WebM); full-HD progressive web encode, not adaptive streaming; cloudinaryOriginalVideoUrl preserves untouched master access; audio download URLs unchanged
+music_loading=MusicHub audio/video preload none; video posters attached within 200px of viewport; invisible audio/video cards do not mount players; switching active playback pauses the other player
+media_preservation=never overwrite/delete originals or bulk regenerate derivatives for delivery optimisation; preserve CloudinaryImage responsive delivery and NYE texture preload
 
 [merch_topology]
 frontend=UpForIt repository/Next service

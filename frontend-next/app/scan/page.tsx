@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getPool } from "../../lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -12,6 +13,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ticket scanner", robots: { index: false, follow: false } };
 
 export default async function ScannerPage() {
+  const scannerOrigin = process.env.ADMIN_SCANNER_ORIGIN || (process.env.APP_ENV === "production" ? "https://admin-production-7548.up.railway.app" : null);
+  if (scannerOrigin) redirect(new URL("/scan", scannerOrigin).toString());
   const isTesting = process.env.APP_ENV === "testing";
   const user = await getCurrentUser();
   const accountAccess = user?.role === "admin" ? user : null;

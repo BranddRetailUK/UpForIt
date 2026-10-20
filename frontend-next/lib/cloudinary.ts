@@ -156,6 +156,17 @@ export function cloudinaryVideoUrl(
   publicId: string,
   format: CloudinaryVideoFormat = "mp4"
 ) {
+  // Keep full-HD detail, never upscale, and favour quality over maximum savings.
+  // Explicit codecs make this URL predictable for native browser playback.
+  const codec = format === "mp4" ? "h264" : "vp9";
+  return `${CLOUDINARY_MEDIA_BASE_URL}/c_limit,w_1920,h_1080/q_auto:best/vc_${codec}/${encodedPublicId(publicId)}.${format}`;
+}
+
+// Use only for an explicit original/master link, never embedded playback.
+export function cloudinaryOriginalVideoUrl(
+  publicId: string,
+  format: CloudinaryVideoFormat = "mp4"
+) {
   return `${CLOUDINARY_MEDIA_BASE_URL}/${encodedPublicId(publicId)}.${format}`;
 }
 

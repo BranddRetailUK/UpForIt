@@ -1,0 +1,97 @@
+UPFORIT TICKET PIPELINE AUDIT — 19 OCTOBER 2026
+
+UPDATE 20 OCTOBER 2026: F1–F7 are now fixed and deployed to production. See ticket-high-priority-fixes-2026-10-20.txt and ticket-recovery-and-key-security-2026-10-20.txt for implementation, validation, deployment and credential-audit evidence. The findings below preserve the original audit evidence. Sales remain closed. Separate credential hardening recommendations remain open in the latest report.
+
+Scope: account/checkout, Stripe completion and adjustments, ticket issuance, PDF/QR generation, email queue/provider callbacks, downloads, door scanning and scanner access. Reviewed working source at baseline 5a9bd0bc38a716c5fbcea33544abee1af10da101, compared the earlier audit, ran automated and isolated real-PostgreSQL tests, and read production configuration/aggregate database state. No real payment, customer email or production admission was created by this audit.
+
+Verdict: core issuance and QR controls are substantially hardened, but recovery and delivery gaps remain. Keep the existing sales gates closed until the high-priority findings are resolved. This audit is not a claim that a fresh hosted checkout or physical phone-camera rehearsal was performed today.
+
+Production evidence (read-only, 19 October)
+- Frontend and production email worker were running the same 5a9bd0b revision with successful deployments.
+- NYE remains draft, sales_open=false; the source launch approval is false and PUBLIC_TICKET_SALES_OPEN is absent. TICKETING_ENABLED=true alone does not open sales.
+- NYE: £10 GBP, unlimited tier, starts 31 December 2026 17:00 UTC; ends 1 January 2027 02:00 UTC; sales cutoff 31 December 17:00 UTC.
+- No ticket orders or tickets currently exist in the production database. Zero overdue retryable emails, old pending orders or unprocessed Stripe receipts were found. Therefore this is not evidence of successful current live ticket-purchase traffic.
+- Frontend/worker QR signing keys, email encryption keys, database and public URL match. No forced email recipient is set. Frontend uses a live Stripe key.
+- Email heartbeat was 1–3 seconds old during checks.
+- Existing transactional diagnostic records include delivered and bounced messages and corresponding provider events. Those are historical diagnostics, not customer-ticket orders created today.
+
+Changes explicitly requested during this audit
+1. Worker Stripe key — FIXED LIVE.
+   EMAIL_WORKER_PRODUCTION lacked STRIPE_SECRET_KEY. Its checkout-expiry function calls getStripe(), so the first eligible pending checkout would throw before entering its per-order catch. Configured the Railway reference ${{FRONTEND.STRIPE_SECRET_KEY}}. Verified deployment b22ecc2a-91a1-44b5-8cc8-7fa17cf0f57a reached SUCCESS, key presence and a fresh heartbeat. The broader worker error-recovery issue below remains.
+2. Event-free scanner — implemented in admin-service/ in accordance with AGENTS.md.
+   A ticket now identifies its event; operators do not choose an event and delegated devices do not filter ticket lookup by their enrolment event. Session expiry still uses the current/next event. Signed QR verification, expiry/cancellation/refund/hold/void rejection, rehearsal timing, role checks, same-origin checks, rate limiting and transactional one-use admission remain. Repeated confirmation of the SAME scan request returns the original success to the same principal, addressing lost-response ambiguity without accepting a new duplicate scan.
+   The dedicated scanner includes admin sign-in, camera/manual entry, automatic event selection for access expiry, enrolment, relinking, revocation and same-host cookies. Production storefront scanner URLs forward to the dedicated admin. Existing door devices require a one-time activation/relink on that host; cookies are deliberately not shared across hosts.
+   Testing retains its existing isolated scanner unless ADMIN_SCANNER_ORIGIN explicitly identifies an admin instance with Testing's database and keys. It is never automatically forwarded to production. This rollout does not change Testing's legacy event selector.
+
+ORIGINAL FINDINGS (F1–F7 resolved 20 October; original evidence preserved below)
+
+F1 — HIGH: Explicit email-provider rejections never retry automatically.
+Evidence: frontend-next/scripts/email-worker.ts:166–177, 193–200; claimEmailJob at 58–72.
+The worker commits sending_at before calling SendGrid. Every later error becomes unknown, including an explicit HTTP 429 rejection. The claimant only takes pending/failed jobs. A transient provider limit therefore stops delivery after one attempt, despite the five-attempt/backoff policy. This affects account verification/reset mail as well as ticket mail.
+Reproduction: executed the actual failEmail function extracted from source against a rolled-back local PostgreSQL job with sending_at set and an explicit HTTP 429 response. Status became unknown and was ineligible for automatic claims.
+Action: distinguish documented definitive rejection from ambiguous transport/acceptance failures. Retry retryable rejected submissions with backoff; surface nonretryable rejection as failed; reserve unknown for genuinely uncertain delivery. Preserve the protection against blindly resending an accepted message.
+Provider reference: https://www.twilio.com/docs/sendgrid/api-reference/mail-send/mail-send
+
+F2 — HIGH: Payment after event cancellation can still issue tickets and queue a normal confirmation.
+Evidence: frontend-next/lib/ticket-payments.ts:23–24; frontend-next/lib/ticket-orders.ts:55–80; frontend-next/app/api/stripe/tickets-webhook/route.ts:65–77.
+Paid-session correlation only holds an order when the scheduled sales deadline/event end is passed. It does not check a cancelled event or manually closed sales. If an existing Stripe session completes after cancellation but before expiry maintenance closes it, fulfilment issues valid rows with admissions_hold=false and the webhook queues the standard ticket email. The scanner correctly rejects a cancelled event, so the customer is charged and receives tickets that cannot admit them.
+Reproduction: created a pending order, cancelled its event, then ran the actual correlated paid-session/fulfilment functions with the current event timestamp. Four tickets were issued with no admission hold.
+Action: define the policy for in-flight payments after cancellation/manual closure and enforce it transactionally at fulfilment. Cancelled-event payments should enter review/refund handling and receive appropriate messaging rather than a normal admission confirmation. Keep date and closure history so late webhook delivery is not confused with a payment genuinely completed after closure.
+
+F3 — MEDIUM: A terminal checkout reference blocks purchasing the same selection again.
+Evidence: frontend-next/components/TicketSelector.tsx:61–71, 90–104; frontend-next/app/api/tickets/checkout/route.ts:38–46; frontend-next/components/PendingCheckout.tsx.
+The browser saves checkoutKey per event and changes it only when the ticket selection changes. There is no clearing on payment completion, account cancellation, expiry or a terminal response. The API rejects that key for any non-pending order. A customer who pays or explicitly cancels and then selects the same quantity in the same browser tab is repeatedly told the checkout has finished. This also contradicts the cancellation message telling them they can start a new order.
+Action: return a structured terminal state, link to the completed order, and rotate the key for an explicitly new purchase after the prior outcome is known. Keep the key stable during uncertain retries.
+
+F4 — MEDIUM: An uncreated Stripe checkout can become permanently unrecoverable and block the whole account.
+Evidence: frontend-next/app/api/tickets/checkout/route.ts:45–46, 54, 62–74; frontend-next/app/api/tickets/orders/[orderId]/checkout/route.ts:22–25; frontend-next/lib/ticket-maintenance.ts:5.
+The committed payload includes a fixed expires_at. If no Stripe session was created, a later retry can violate Stripe's requirement that expiry be at least 30 minutes after creation. Near the cutoff the original expiry is only 31 minutes away, so a short outage can trigger this. The cancellation endpoint also tries to create the same invalid payload before expiring it. Pending orders without a session ID are excluded from maintenance, and any pending order blocks all new ticket orders for that user. After 23 hours the API explicitly requires admin reconciliation, but there is no dedicated admin recovery action for this state.
+Action: distinguish definitive pre-creation failures from uncertain outcomes; reconcile by the persisted attempt identity before releasing stock; provide a safe, audited admin recovery path for missing-session orders. Do not simply discard reservations while a payable session might exist.
+Stripe expiry requirement verified: https://docs.stripe.com/api/checkout/sessions/create (expires_at).
+
+F5 — MEDIUM: A manual resend can coexist with a scheduled retry and send duplicate emails.
+Evidence: frontend-next/lib/ticket-resend.ts:8–10; admin-service/data.mjs:52–54; frontend-next/scripts/email-worker.ts:58–72, 193–200.
+The resend guard considers recent jobs and pending/processing jobs, but excludes retryable failed jobs older than two minutes. Those failed jobs remain claimable. After a PDF/configuration problem, pressing resend can enqueue a new job while the original remains scheduled; both may send when the underlying issue is repaired.
+Reproduction: inserted an older failed job with attempts=1 and a future available_at, then called the actual resend function. Both the old failed job and a new pending job remained eligible for delivery.
+Action: atomically reuse or supersede retryable failures when explicitly resending, or treat them as already queued. Keep unknown-delivery review separate.
+
+F6 — MEDIUM: A worker lane can die while the process and other heartbeats remain alive.
+Evidence: frontend-next/scripts/email-worker.ts:399–422; frontend-next/lib/ticket-maintenance.ts:5–7.
+Exceptions from a lane's claim/heartbeat or from maintenance leave its infinite loop. Promise.all rejects; the top-level catch sets process.exitCode but does not stop the remaining loops/timers. The process need not exit, so Railway restart policy may not act. For example, an expiry configuration/database error can permanently stop maintenance while email heartbeats keep advancing. Supplying the missing Stripe key removes one trigger, not this failure mode.
+Action: catch/retry bounded transient failures inside each lane, or terminate all lanes/process on unrecoverable failure. Track heartbeat/error state per lane and alert on stale queue age, not just a single email heartbeat. --email-only also omits periodic maintenance/recovery; production currently uses the full worker command.
+
+F7 — MEDIUM: Confirmation polling stops permanently on a transient error or initially missing order.
+Evidence: frontend-next/components/TicketConfirmation.tsx:34–36, 58–68; frontend-next/app/api/tickets/confirmation/route.ts:34–37.
+Only a successful pending response schedules another poll. An initial 404 (e.g. Stripe succeeded but session persistence failed and its webhook has not repaired the association), a network error, or a temporary 5xx immediately sets a final error and stops polling. Buyers can see Order not found despite a successful charge, without the normal do-not-pay-again guidance.
+Action: bound retries for transient/missing-yet statuses; show payment-confirmation uncertainty and account/retry actions. Treat auth expiry separately and do not infer payment failure from lookup failure.
+
+Lower-priority follow-up
+- The standalone frontend email-event handler has weaker batch validation than the dedicated ADMIN handler (frontend-next/lib/ticket-email-events.ts:13). Its permissive UUID regex permits invalid UUID strings and its timestamps are unbounded; malformed correlated entries can abort the whole transaction. The live ADMIN ingestion path has the stronger validation. Bring the alternate/Testing path into parity.
+- Sequential ticket numbers remain an authenticated manual admission fallback. Train door staff to inspect the ticket/booking rather than accepting a verbally guessed number. This is not an unauthenticated QR-signature bypass.
+- Scanning requires server connectivity. Use charged backup devices and a tested hotspot; do not maintain independent offline admission lists. Real phone-camera permission/lighting/printed-PDF testing remains required before the event.
+
+Controls verified
+- Server-calculated £10/group-offer pricing and input validation; signed-in, verified buyers; same-origin and rate limits.
+- Stripe signature/mode verification, stored amount/currency/session/order/payment-intent correlation, receipt deduplication and transaction rollback.
+- Independent fulfilment marker plus unique per-item admission index; duplicate completion after a partial refund does not issue more tickets.
+- Refund-before-completion handling; full refunds void tickets; partial refunds/disputes hold admission; review accounts for retained money and already-used admissions.
+- HMAC QR codes contain random public ticket IDs, not buyer PII; strict token parsing, timing-safe comparison and previous-key overlap.
+- Ticket/PDF ownership checks, held/void suppression, encrypted email payloads and current-ticket snapshot checks before delivery.
+- Concurrent live scans admit exactly once. New scanner replay recovery is scoped to the same request and principal.
+
+Validation performed
+- Frontend baseline: 31 test files, 168 tests passed, including actual QR decoding and multipage PDF generation. TypeScript and optimized Next production build passed after scanner routing changes.
+- Admin: 16 unit tests passed; syntax checks passed including new scanner server/browser files.
+- Applied all 13 migrations to a separate disposable PostgreSQL cluster on localhost:55449. Existing services on other ports were untouched.
+- Existing real-DB ticket integration checks passed for simultaneous fulfilment, duplicate completion after partial refund, refund-before-completion, full refund, price-aware admission review, concurrent resend, dispute holds, wrong-event legacy rejection, rehearsal, simultaneous scans and invalid/held ticket rejection.
+- New dedicated-scanner HTTP/database integration passed for admin and delegated scans without eventId, different ticket events, signatures, manual fallback, same-request replay, duplicate concurrent admission, refunds/holds/voids/cancellation/expiry, rehearsal, authentication, CSRF, enrolment/device limit, revocation, relink creation, live role revocation, HTML and the locally served camera decoder.
+- Existing full dedicated-admin integration suite also passed, including login, role checks, campaigns and Bucket controls.
+- Browser login and narrow-screen scanner layout inspected locally; no event picker. No physical camera access was requested and no production ticket was consumed.
+
+Rollout evidence (verified 19 October 2026)
+- Worker configuration deployment b22ecc2a-91a1-44b5-8cc8-7fa17cf0f57a: SUCCESS. The rendered Stripe key matches FRONTEND and the worker heartbeat is fresh.
+- Dedicated ADMIN scanner deployment bb4267f2-c3b3-447a-91f6-a6aee47fc917: SUCCESS. Health, scanner HTML and the locally served camera decoder return HTTP 200. Scanner HTML has no event selector. ADMIN's QR signing key matches FRONTEND and APP_ENV is production, both supplied through Railway references.
+- FRONTEND scanner-forwarding deployment a1d81493-f5c0-4912-8c8b-bb99590a782e: SUCCESS. Browser navigation to https://www.upforitevents.co.uk/scan was verified to reach https://admin-production-7548.up.railway.app/scan. The public domain rejected the command-line HTTP probe with 403; browser verification succeeded.
+- Activation fragment forwarding was verified against the local production build. The access token stays in the URL fragment rather than being sent to the storefront server.
+- Deployments used an isolated snapshot of the baseline plus only this task's changes. Unrelated SignupForm edits and existing untracked work were excluded. The source changes remain uncommitted locally and must be retained in Git before a subsequent Git-based deployment.
+- Local preview servers and the disposable PostgreSQL server were stopped after verification. No real payment, customer email or production admission was created. The seven open findings above remain unresolved by this scanner/configuration rollout.

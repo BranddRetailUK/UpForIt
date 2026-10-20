@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("./ticket-payment-review", () => ({ holdUnavailablePaidOrder: vi.fn().mockResolvedValue(false) }));
+
 vi.mock("./ticket-tiers", () => ({ advanceTicketTierProgression: vi.fn().mockResolvedValue("tier-1") }));
 
 import { fulfilPaidOrder } from "./ticket-orders";

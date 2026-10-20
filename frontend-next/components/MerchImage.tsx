@@ -4,11 +4,23 @@ export function optimizedMerchImageUrl(src: string, width: number) {
   const marker = "/image/upload/";
   try {
     const url = new URL(src);
-    if (!url.hostname.endsWith("res.cloudinary.com") || !url.pathname.includes(marker)) return src;
-    url.pathname = url.pathname.replace(
-      marker,
-      `${marker}f_auto,q_auto,c_limit,w_${Math.max(1, Math.round(width))}/`
-    );
+    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || !url.pathname.includes(marker)) return src;
+    // Signed/token URLs cannot be changed without invalidating their signature.
+    if (url.search || url.pathname.includes("/s--")) return src;
+    const [prefix, delivery] = url.pathname.split(marker);
+    const segments = delivery.split("/");
+    const transformations: string[] = [];
+    // Stop at the version/public ID. Preserve upstream crops, overlays and effects
+    // in their original order; only constrain the finished result.
+    const parameter = /^(?:a|ac|af|ar|b|bo|c|co|cs|d|dl|dn|dpr|du|e|eo|f|fl|fn|fps|g|h|if|ki|l|o|p|pg|q|r|so|sp|t|u|vc|vs|w|x|y|z)_/;
+    while (segments.length > 1 && segments[0].split(",").every((part) => parameter.test(part))) {
+      transformations.push(segments.shift()!);
+    }
+    // Replace only our own terminal delivery step on subsequent calls.
+    if (/^f_auto,q_auto,c_limit,w_\d+$/.test(transformations[transformations.length - 1] || "")) transformations.pop();
+    const safeWidth = Number.isFinite(width) ? Math.min(960, Math.max(1, Math.round(width))) : 960;
+    transformations.push(`f_auto,q_auto,c_limit,w_${safeWidth}`);
+    url.pathname = `${prefix}${marker}${[...transformations, ...segments].join("/")}`;
     return url.toString();
   } catch {
     return src;
@@ -29,7 +41,7 @@ export default function MerchImage({
   priority?: boolean;
 }) {
   const optimizedSrc = optimizedMerchImageUrl(src, 960);
-  const isCloudinary = optimizedSrc !== src;
+  const isCloudinary = optimizedMerchImageUrl(src, 160) !== optimizedSrc;
   const srcSet = isCloudinary
     ? RESPONSIVE_WIDTHS.map((width) => `${optimizedMerchImageUrl(src, width)} ${width}w`).join(", ")
     : undefined;

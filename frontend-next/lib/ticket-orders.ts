@@ -1,3 +1,4 @@
+import { holdUnavailablePaidOrder } from "./ticket-payment-review";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { grantTicketMerchDiscount } from "./merch-discounts";
@@ -57,6 +58,7 @@ export async function fulfilPaidOrder(
   if (!order) throw new Error("Ticket order not found");
   if (order.fulfilled_at || order.status === "paid") return null;
   if (order.status === "refunded") return null;
+  if (source === "stripe" && await holdUnavailablePaidOrder(client, order)) return null;
 
   let orderNumber = order.order_number;
   if (!orderNumber) {

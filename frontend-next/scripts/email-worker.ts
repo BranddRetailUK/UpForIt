@@ -1,3 +1,5 @@
+import { runWorkerLane } from "../lib/worker-loop";
+import { classifyEmailSubmissionError, recordEmailFailure } from "../lib/email-failure";
 import {readFile} from "node:fs/promises";
 import path from "node:path";
 import {expireClosedTicketCheckouts} from "../lib/ticket-maintenance";
@@ -5,6 +7,7 @@ import sgMail from "@sendgrid/mail";
 import QRCode from "qrcode";
 import { getPool } from "../lib/db";
 import {
+  paymentReviewEmailHtml,
   resetPasswordEmailHtml,
   ticketConfirmationEmailHtml,
   verificationEmailHtml
@@ -33,7 +36,7 @@ import { buildTicketPdf, getTicketDocumentRows } from "../lib/ticket-document";
 
 type Job = {
   id: string;
-  job_type: "verify_email" | "reset_password" | "ticket_confirmation";
+  job_type: "verify_email" | "reset_password" | "ticket_confirmation" | "ticket_payment_review";
   order_id: string | null;
   encrypted_payload: string;
   attempts: number;
@@ -101,6 +104,11 @@ async function deliverEmail(job: Job) {
     if (!payload.url) throw new Error("Password reset email job is missing url");
     text = `Hi ${payload.displayName},\n\nChoose a new UPFORIT password:\n${payload.url}\n\nThis one-time link expires in one hour. If you did not request it, ignore this email.`;
     html = resetPasswordEmailHtml({ displayName: payload.displayName, url: payload.url, siteUrl, originalRecipient });
+  } else if (job.job_type === "ticket_payment_review") {
+    if (!payload.orderId) throw new Error("Payment review job is missing orderId");
+    subject = "Your UPFORIT payment needs review";
+    text = `Hi ${payload.displayName},\n\nWe received your payment, but cannot issue tickets because the event or ticket sales are unavailable. Your order is held for review. Please do not pay again. This email is not an admission ticket and does not confirm a refund.\n\nView your order: ${new URL(`/account/orders/${payload.orderId}`, siteUrl).toString()}`;
+    html = paymentReviewEmailHtml({displayName:payload.displayName, accountUrl:new URL(`/account/orders/${payload.orderId}`,siteUrl).toString(),siteUrl,originalRecipient});
   } else {
     if (!payload.orderId) throw new Error("Ticket confirmation job is missing orderId");
     const ticketRows = await getTicketDocumentRows(payload.orderId);
@@ -147,7 +155,14 @@ async function deliverEmail(job: Job) {
   const client = await getPool().connect();
   try {
     await client.query("BEGIN");
-    if (job.order_id) {
+    if (job.job_type === "ticket_payment_review" && job.order_id) {
+      const review = await client.query("SELECT id FROM ticket_orders WHERE id=$1 AND status='refund_review' AND admissions_hold=true AND payment_review_reason IS NOT NULL FOR UPDATE",[job.order_id]);
+      if (!review.rowCount) {
+        await client.query("UPDATE email_jobs SET status='cancelled',locked_at=NULL,last_error='Payment review resolved' WHERE id=$1",[job.id]);
+        await client.query("COMMIT");
+        return;
+      }
+    } else if (job.order_id) {
       const order = await client.query("SELECT id FROM ticket_orders WHERE id=$1 AND status IN ('paid','refund_review') AND admissions_hold=false FOR UPDATE", [job.order_id]);
       if (!order.rowCount) {
         await client.query("UPDATE email_jobs SET status='cancelled',locked_at=NULL,last_error='Admissions unavailable' WHERE id=$1",[job.id]);
@@ -174,7 +189,7 @@ async function deliverEmail(job: Job) {
     attachments,
     customArgs: { ticket_email_job_id: job.id },
     trackingSettings: { clickTracking: { enable: false, enableText: false } }
-  });
+  }).catch(error => { throw classifyEmailSubmissionError(error); });
   await getPool().query(
     `UPDATE email_jobs SET status = CASE WHEN status IN ('delivered','bounced') THEN status ELSE 'sent' END, provider_message_id=$2, sent_at = now(), locked_at = NULL, last_error = NULL, updated_at = now()
       WHERE id = $1`,
@@ -192,13 +207,7 @@ async function deliverEmail(job: Job) {
 
 async function failEmail(job: Job, error: unknown) {
   const message = describeEmailDeliveryError(error);
-  const delayMinutes = Math.min(60, 2 ** job.attempts);
-  await getPool().query(
-    `UPDATE email_jobs SET status = CASE WHEN sending_at IS NULL THEN 'failed' ELSE 'unknown' END, locked_at = NULL, last_error = $2,
-       available_at = now() + ($3 * interval '1 minute'), updated_at = now()
-     WHERE id = $1 AND status = 'processing'`,
-    [job.id, message.slice(0, 1000), delayMinutes]
-  );
+  await recordEmailFailure(getPool(), job, error);
   console.error(`Email job ${job.id} failed: ${message}`);
 }
 
@@ -395,29 +404,18 @@ async function workOnce(lane: "email" | "meta" | "merch") {
 
 async function main() {
   const once=process.argv.includes('--once');
-  await recoverStaleJobs();
-  async function lane(kind:'email'|'meta'|'merch'){
-    do {
-      if(kind==='email')await getPool().query("INSERT INTO ticket_worker_health(worker,heartbeat_at) VALUES('email',now()) ON CONFLICT(worker) DO UPDATE SET heartbeat_at=now()");
-      const worked=await workOnce(kind);
-      if(once)break;
-      if(!worked)await new Promise(resolve=>setTimeout(resolve,5000));
-    }while(true);
-  }
-  async function maintenance(){
-    do{
-      await recoverStaleJobs();
-      await expireClosedTicketCheckouts();
-      if(once)break;
-      await new Promise(resolve=>setTimeout(resolve,30000));
-    }while(true);
-  }
-  if(process.argv.includes('--email-only')) await lane('email');
-  else await Promise.all([lane('email'),lane('meta'),lane('merch'),maintenance()]);
-  await getPool().end();
+  const run=(name:'email'|'meta'|'merch'|'maintenance')=>runWorkerLane({
+    name,once,intervalMs:name==='maintenance'?30000:5000,
+    work:async()=>{
+      if(name==='maintenance'){await recoverStaleJobs();await expireClosedTicketCheckouts();return false;}
+      return workOnce(name);
+    },
+    success:async()=>{await getPool().query("INSERT INTO ticket_worker_health(worker,heartbeat_at) VALUES($1,now()) ON CONFLICT(worker) DO UPDATE SET heartbeat_at=now(),last_error=NULL",[name]);},
+    failure:async(error)=>{await getPool().query("INSERT INTO ticket_worker_health(worker,heartbeat_at,last_error,last_error_at) VALUES($1,'epoch',$2,now()) ON CONFLICT(worker) DO UPDATE SET last_error=$2,last_error_at=now()",[name,error instanceof Error?error.name:'UnknownError']);}
+  });
+  try {
+    // Maintenance must also recover abandoned jobs in email-only deployments.
+    await Promise.all(process.argv.includes('--email-only')?[run('email'),run('maintenance')]:[run('email'),run('meta'),run('merch'),run('maintenance')]);
+  } finally { await getPool().end(); }
 }
-
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+main().catch(error=>{console.error(error instanceof Error?error.message:error);process.exitCode=1;});

@@ -1,0 +1,37 @@
+UPFORIT HIGH-PRIORITY TICKET FIXES — 20 OCTOBER 2026
+
+Scope: F1 and F2 from ticket-pipeline-audit-2026-10-19.txt. The five medium-priority findings remain open.
+
+F1: rejected email submissions
+- Only an error thrown by the SendGrid submission call can be classified as a provider rejection; a later database error cannot masquerade as one.
+- Explicit HTTP 429 responses become retryable failures with the existing exponential backoff and five-attempt ceiling. The sending marker is cleared so a later preparation failure is still safely retryable.
+- Other explicit 4xx rejections (excluding 408) become terminal failed jobs by exhausting their retry budget. Provider validation details remain visible.
+- Timeouts, network errors, HTTP 408/5xx gateway/server ambiguity, and failures recording an accepted submission remain unknown after sending starts. These require reconciliation rather than blind resending. Existing unknown jobs are not mass-requeued.
+- Provider delivery/bounce callbacks cannot be overwritten by this failure handler.
+
+F2: payments for unavailable events or closed sales
+- Operational policy confirmed by Scott: expired events have no Buy Tickets button or purchase route; the button is removed the day after the event. The server-side safeguards cover already-open hosted checkouts, cancellation, and delayed payment notifications. No expired-event purchase route was introduced.
+- Admission eligibility is checked inside fulfilment, while holding the order and event locks. Cancellation that commits before fulfilment's event lock is observed even when the two operations overlap.
+- Cancelled/completed events, elapsed sales deadlines, and sales closed at the Stripe payment-event time route to refund_review with admissions_hold=true and a persisted reason.
+- These orders receive an order number and retain their payment reference but generate no tickets, QR codes, merchandise entitlement or normal ticket-confirmation email.
+- One encrypted payment-review notification is queued per order. Its wording acknowledges payment, says tickets cannot be issued, asks the buyer not to pay again, and does not claim that a refund has happened. The worker cancels a stale review notice if the review has already resolved.
+- Repeated webhooks and later event reopening cannot silently issue tickets for an already-held closure payment. Refunds remain a deliberate reconciliation action; no automated financial refund was added.
+- Stripe event time is persisted as paid_at. Migration 014 records event sales-state history using a database trigger, including closure/reopening. A delayed webhook for a payment made before an ordinary sales closure can fulfil; an already-cancelled event remains blocked regardless. Pre-migration history is not invented: if history cannot establish the state, current state is used conservatively. Stripe's second precision treats closure in the payment second as closed.
+- Existing payment-adjustment/refund protections, signature verification, amount/currency correlation, and fulfilment deduplication are retained. Testing-only admin simulation retains its explicit rehearsal path.
+
+Validation
+- 183 tests across 32 frontend test files passed, including 15 new submission-classification and review-template cases.
+- TypeScript checking and the optimized Next production build passed.
+- All 14 migrations applied to a disposable local PostgreSQL database.
+- scripts/test-ticket-high-priority.ts passed with real SQL and transactions: normal payment and replay; cancellation; closure/reopening; delayed webhook before closure; deadline expiry; full refund before completion; concurrent fulfilment; concurrent cancellation; one review email and no tickets; 429 backoff and retry limit; permanent 4xx rejection; ambiguous 408/500; preparation versus post-send failures; preservation of a delivered callback.
+- The integration script creates/drops only its own database and rejects non-local hosts. No Stripe calls or real emails are used.
+- Production preflight: zero ticket orders and tickets; NYE remains draft with sales closed; worker heartbeat fresh.
+
+Deployment verification
+- Production EMAIL_WORKER_PRODUCTION deployment c2b814d0-9a4b-4c8a-98e2-d434a68324ac reached SUCCESS. Logs confirm migration 014 applied and the email worker started. Read-only database checks confirm the migration and fresh heartbeat.
+- Final FRONTEND deployment ff79f9fe-f024-428e-a836-e57000fed3f0 reached SUCCESS; runtime logs confirm Next ready. This includes the held-order explanation on the account page as well as checkout confirmation. It superseded intermediate deployment ab2c70a7-fd44-4f44-b731-7bc39b6a676c.
+- Worker was deployed before the frontend so new review notices have a compatible consumer.
+- Release sources exclude unrelated local SignupForm edits and untracked work and preserve the scanner changes already deployed on 19 October. No production payments, refunds, customer emails or ticket admissions were initiated for validation. Sales remain closed.
+- The disposable database server was stopped. Source changes remain uncommitted locally; retain them in Git before any later Git-based deployment.
+
+F1 and F2 are resolved by this release. Subsequent update: F3–F7 are also resolved; see ticket-recovery-and-key-security-2026-10-20.txt for that release and the additional credential review.

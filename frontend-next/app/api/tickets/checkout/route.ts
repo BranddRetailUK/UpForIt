@@ -1,3 +1,4 @@
+import { finishedCheckout, recoverTicketCheckout } from "../../../../lib/ticket-checkout-recovery";
 import { createHash, randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
@@ -39,8 +40,7 @@ export async function POST(request: NextRequest) {
       if (existing.rows[0]) {
         order = existing.rows[0];
         if (order.request_hash !== requestHash) throw new TicketRequestError('This checkout reference belongs to a different selection.', 409);
-        if (order.status !== 'pending') throw new TicketRequestError('This checkout has finished. Check your account before starting another order.', 409);
-        if (Date.now() - new Date(order.created_at).getTime() > 23 * 3600_000) throw new TicketRequestError('This checkout needs a status check. Visit your account or contact support.', 409);
+        if (order.status !== 'pending') throw new TicketRequestError('This checkout has finished. View your order before choosing to buy more tickets.',409,finishedCheckout(order));
       } else {
         const pending = await client.query('SELECT id FROM ticket_orders WHERE user_id = $1 AND status = \'pending\'', [user.id]);
         if (pending.rowCount) throw new TicketRequestError('You already have an open checkout. Resume or cancel it from your account first.', 409);
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
           success_url: `${siteUrl}/tickets/confirmation?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${siteUrl}/events/${tiers[0].event_slug}?checkout=cancelled`
         };
-        await client.query(`INSERT INTO ticket_orders (id,user_id,event_id,status,currency,subtotal_minor,total_minor,idempotency_key,request_hash,reserved_until,checkout_payload,meta_consent_granted,meta_purchase_event_id,meta_context_encrypted)
-          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '24 hours',$7::jsonb,$8,$9,$10)`,
+        await client.query(`INSERT INTO ticket_orders (id,user_id,event_id,status,currency,subtotal_minor,total_minor,idempotency_key,request_hash,reserved_until,checkout_payload,checkout_attempted_at,meta_consent_granted,meta_purchase_event_id,meta_context_encrypted)
+          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '24 hours',$7::jsonb,NULL,$8,$9,$10)`,
           [id,user.id,tiers[0].event_id,total,body.idempotencyKey,requestHash,JSON.stringify(payload),meta.consent,meta.consent ? metaEventId('ticket_purchase',id) : null,meta.consent ? encryptJson({fbp:meta.fbp,fbc:meta.fbc,clientIp:meta.clientIp,clientUserAgent:meta.clientUserAgent}) : null]);
         for (const line of lines) await client.query(`INSERT INTO ticket_order_items (id,order_id,ticket_type_id,ticket_type_name,unit_price_minor,quantity,line_total_minor) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(),id,line.tier.id,line.name,line.unitPriceMinor,line.quantity,line.unitPriceMinor*line.quantity]);
         order = { id,request_hash:requestHash,status:'pending',stripe_checkout_url:null,checkout_payload:payload,created_at:new Date() };
@@ -68,18 +68,13 @@ export async function POST(request: NextRequest) {
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; }
     finally { client.release(); }
-    if (order.stripe_checkout_url) return NextResponse.json({ url: order.stripe_checkout_url });
-    if (!order.checkout_payload) throw new TicketRequestError('This checkout needs support. Please contact us.', 409);
-    // The exact payload is persisted. Retrying after a lost response uses the same Stripe key AND parameters.
-    const session = await stripe.checkout.sessions.create(order.checkout_payload, { idempotencyKey: `upforit-ticket-order-${order.id}` });
-    if (!session.url) throw new Error('Stripe did not return a checkout URL');
-    await getPool().query("UPDATE ticket_orders SET stripe_checkout_session_id=$2,stripe_checkout_url=$3,checkout_state='ready',updated_at=now() WHERE id=$1 AND (stripe_checkout_session_id IS NULL OR stripe_checkout_session_id=$2)", [order.id,session.id,session.url]);
-    return NextResponse.json({ url: session.url });
+    const recovered=await recoverTicketCheckout(getPool(),stripe,order.id,'resume',user.id);
+    return NextResponse.json(recovered,{status:'url' in recovered&&recovered.url?200:409});
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     if (message === 'TICKETING_DISABLED') return NextResponse.json({ error: 'Ticket sales are not open.' }, {status:409});
     if (message === 'Invalid request origin') return NextResponse.json({ error: message }, {status:403});
-    if (error instanceof TicketRequestError) return NextResponse.json({error:message},{status:error.status});
+    if (error instanceof TicketRequestError) return NextResponse.json({error:message,...error.details},{status:error.status});
     if (/unavailable|Maximum|sold out/.test(message)) return NextResponse.json({error:message},{status:409});
     console.error('Ticket checkout requires retry', error instanceof Error ? error.name : 'UnknownError');
     // Never declare failure or release inventory after an uncertain Stripe result.

@@ -1,0 +1,46 @@
+UPFORIT TICKET RECOVERY AND KEY SECURITY — 20 OCTOBER 2026
+
+Scope
+Revalidate F1/F2 and fix F3–F7 from ticket-pipeline-audit-2026-10-19.txt. Review credential handling in the production frontend, email worker and dedicated admin. The FRONTEND Railway service runs both browser assets and server-side Next.js handlers; its service name does not make its environment variables public.
+
+Implemented recovery fixes
+F3: Terminal checkout responses now carry an explicit state and previous-order link. Starting another purchase requires an explicit action which rotates the idempotency key; ambiguous retries retain the existing key.
+F4: Checkout creation, resume, cancellation and worker reconciliation share an advisory lock. Immutable Stripe parameters and attempt time are persisted before submission. Recovery looks for an existing matching Stripe session before considering another submission, validates order identity/amount/currency, and refuses retries outside the safe window. Missing/expired parameters cannot create a perpetual blind retry. Reservation release requires sufficient evidence that no payable session remains. Concurrent payment updates are preserved. Migration 015 adds recovery state and conservative compatibility for older writers. Dedicated admin adds authenticated, same-origin, rate-limited Stripe reconciliation with an audit trail; it does not create payments or refunds.
+F5: Resend guards include original retryable failures, unknown delivery states and recently sent emails. Order locking prevents concurrent requests from enqueuing duplicates.
+F6: Each worker lane catches transient errors and retries with bounded backoff. Heartbeats advance after successful work, errors remain visible, maintenance continues in email-only mode, and admin displays stale/erroring lanes and overdue email jobs.
+F7: Confirmation polling retries transient HTTP/network/JSON failures with bounded backoff and request timeouts. Auth failures offer sign-in; exhausted retries offer account access and another check, with an explicit instruction not to pay again. Component cleanup cancels pending requests and timers. Analytics errors cannot invalidate payment confirmation.
+
+Verification
+- 199 frontend tests across 34 files passed, including terminal checkout route, polling and worker recovery tests.
+- Frontend TypeScript check and optimized Next.js production build passed.
+- 16 admin unit tests and syntax checks passed.
+- Admin HTTP/PostgreSQL integration and scanner integration passed. Reconciliation tested for authentication, same-origin and input validation.
+- Real local PostgreSQL regression suite passed for F1/F2 and checkout recovery, immutable attempts, lost responses, expired parameters, incomplete/mismatched Stripe lookup, concurrent resume/cancel, webhook races, safe absence release, rollout compatibility, resend guards and admin auditing.
+- Provider calls are mocked in regression tests. No real Stripe payment, refund, customer email or ticket admission was initiated.
+- git diff --check passed. The release snapshot excludes unrelated SignupForm and other untracked work.
+
+Credential exposure audit
+- Compared 28 configured secret-variable values in memory against 401 tracked/build/public files: no matches. Values were not printed or written into this report.
+- Compared those current values against 3,792 eligible Git history objects across local refs: no matches. Binary/media/lock suffixes were excluded from history scanning; this is not a guarantee about every historical or revoked credential.
+- Checked recent available Railway runtime log output: frontend 21 lines, worker 17, admin 7; no exact current-secret matches. This is bounded evidence, not a complete historical logging review.
+- Scanned live homepage HTML plus 9 frontend and 1 admin same-origin JavaScript assets: no exact current-secret matches. Other pages are covered by the local built-static scan, not exhaustive live crawling.
+- Both public origins return 404 for /.env, /.env.local and /.git/config. Admin reconciliation returns 401 without authentication.
+- Only NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_META_PIXEL_ID are public environment variables. No secret is configured with NEXT_PUBLIC_. No Next config env export was found.
+- Stripe access is in server modules/API handlers and the worker. Admin sends its key in an Authorization header to the fixed Stripe HTTPS endpoint. Meta tokens also use authorization headers; the merch secret signs requests with HMAC. QR payloads are signed rather than containing the signing key. Queued sensitive email content uses AES-256-GCM encryption.
+- Worker and admin resolve the same live Stripe secret as FRONTEND through Railway references. Relevant app signing/encryption/rate-limit secrets checked were at least 32 characters. This checks length, not independently provable entropy.
+- Database URLs resolve to Railway private-network hostnames in all three services.
+
+Security conclusions and remaining hardening
+No evidence of current key exposure was found in the inspected code, build outputs, live assets, reachable local history or sampled logs. It would be inaccurate to promise zero risk or certify all credential practices from these checks alone.
+1. The three services share a standard sk_live Stripe key. Prefer separate restricted keys with only the operations each service needs; admin reconciliation needs read access. This limits the impact of a service compromise and enables independent revocation. No key was rotated during this audit. Stripe recommends restricted keys where possible: https://stripe.com/legal/api-key-security and https://docs.stripe.com/api/authentication .
+2. Existing frontend production PostgreSQL TLS config sets rejectUnauthorized:false (also available under admin DB_SSL=true). Although these services use Railway private networking, this does not authenticate the database certificate. Configure a trusted CA and verified TLS where supported before claiming strict certificate-verification compliance. Changing this blindly could break database access, so it was not changed as part of ticket recovery.
+3. Railway/Stripe account MFA, human access permissions, key age/rotation history, complete retained logs and API-key permission settings were not verified. Provider/error logging merits ongoing redaction protection; sampled logs contained no current secrets, but that cannot prove arbitrary future provider errors never contain sensitive data.
+
+Production deployment verification
+- Worker ac3e8c3f-08de-40cf-a04c-2e27379a357b: SUCCESS. Migrations 014 and 015 confirmed in production. Email, maintenance, merch and Meta lanes have fresh successful heartbeats and no recorded errors.
+- FRONTEND 7c0ab117-2ad1-4c11-9c30-be5287bd1e64: SUCCESS.
+- ADMIN 64384b09-6e80-43e3-bbfc-0d432aec6881: SUCCESS; runtime log confirms server listening. Admin STRIPE_SECRET_KEY resolves the FRONTEND Railway reference.
+- No production orders or tickets exist at the time of verification. NYE is still draft with sales_open=false. These checks do not constitute a new live purchase or physical phone-camera rehearsal.
+- The disposable local PostgreSQL server was stopped after testing. Source changes remain uncommitted locally and should be retained in Git before a later Git-based deployment.
+
+All seven original ticket-pipeline findings are addressed by the 20 October releases. The credential hardening recommendations above are separate and remain open.

@@ -18,11 +18,8 @@ export async function correlatePaidSession(client: PoolClient, session: Stripe.C
   if (!result.rows[0]) throw new Error('Ticket order not found');
   const pi = validatePaidSession(result.rows[0], session);
   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`ticket-payment:${pi}`]);
-  await client.query('UPDATE ticket_orders SET stripe_checkout_session_id=$2,stripe_payment_intent_id=$3,paid_at=COALESCE(paid_at,now()) WHERE id=$1',[id,session.id,pi]);
+  await client.query('UPDATE ticket_orders SET stripe_checkout_session_id=$2,stripe_payment_intent_id=$3,paid_at=COALESCE(paid_at,to_timestamp($4),now()) WHERE id=$1',[id,session.id,pi,paidEventTime ?? null]);
   await applyPaymentAdjustments(client, pi);
-  if(paidEventTime){
-    await client.query(`UPDATE ticket_orders o SET admissions_hold=true,status='refund_review',order_number=COALESCE(order_number,'UFI-'||lpad(nextval('ticket_order_number_seq')::text,6,'0')) WHERE o.id=$1 AND o.fulfilled_at IS NULL AND o.status<>'refunded' AND EXISTS(SELECT 1 FROM ticket_order_items i JOIN ticket_types tt ON tt.id=i.ticket_type_id JOIN events e ON e.id=tt.event_id WHERE i.order_id=o.id AND LEAST(tt.sales_end_at,e.ends_at)<=to_timestamp($2))`,[id,paidEventTime]);
-  }
   return { id, pi };
 }
 export async function applyPaymentAdjustments(client: PoolClient, pi: string) {

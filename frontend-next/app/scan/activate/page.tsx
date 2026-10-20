@@ -1,3 +1,4 @@
+import ScannerActivationRedirect from "../../../components/ScannerActivationRedirect";
 import type { Metadata } from "next";
 import ScannerActivation from "../../../components/ScannerActivation";
 
@@ -6,6 +7,8 @@ export const metadata: Metadata = { title: "Activate ticket scanner", robots: { 
 export default async function ScannerActivationPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
   const query = await searchParams;
   const relink = query.mode === "relink";
+  const scannerOrigin = process.env.ADMIN_SCANNER_ORIGIN || (process.env.APP_ENV === "production" ? "https://admin-production-7548.up.railway.app" : null);
+  if (scannerOrigin) return <ScannerActivationRedirect destination={new URL(`/scan/activate${relink ? "?mode=relink" : ""}`, scannerOrigin).toString()} />;
   return (
     <div className="inner-page section-wrap account-page scanner-activation-page">
       <section className="account-panel">

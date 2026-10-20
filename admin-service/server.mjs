@@ -1,4 +1,6 @@
+import {reconcileCheckout} from './checkout-recovery.mjs';
 import {adminBucketData,administerBucket} from './bucket.mjs';
+import {scannerCookie,scannerPrincipal,checkIn,activateScanner,scannerDevices,enrolScanner,revokeScanner} from './scanner.mjs';
 import {ingestTicketEmailEvents} from './ticket-email-events.mjs';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
@@ -23,7 +25,7 @@ const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8'
 const dummy='$2b$12$lQAEeVgLq1f7nNcxz6A19u/wCgh4hfTi2qvYozqzDAt2JplQyhj5G';
 function json(res,status,body){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));}
 async function body(req){if(!req.headers['content-type']?.startsWith('application/json'))throw httpError(415,'JSON required.');let chunks=[],size=0;for await(const chunk of req){size+=chunk.length;if(size>65536)throw httpError(413,'Request too large.');chunks.push(chunk);}try{const v=JSON.parse(Buffer.concat(chunks).toString());if(!v||typeof v!=='object'||Array.isArray(v))throw Error();return v;}catch{throw httpError(400,'Invalid JSON.');}}
-async function rate(key,limit){const r=await db.query(`INSERT INTO auth_rate_limits(bucket_key,attempt_count,window_started_at) VALUES($1,1,now()) ON CONFLICT(bucket_key) DO UPDATE SET attempt_count=CASE WHEN auth_rate_limits.window_started_at<now()-interval '15 minutes' THEN 1 ELSE auth_rate_limits.attempt_count+1 END,window_started_at=CASE WHEN auth_rate_limits.window_started_at<now()-interval '15 minutes' THEN now() ELSE auth_rate_limits.window_started_at END RETURNING attempt_count`,[hash(process.env.AUTH_RATE_LIMIT_SECRET+':admin:'+key)]);return r.rows[0].attempt_count<=limit;}
+async function rate(key,limit,minutes=15){const r=await db.query(`INSERT INTO auth_rate_limits(bucket_key,attempt_count,window_started_at) VALUES($1,1,now()) ON CONFLICT(bucket_key) DO UPDATE SET attempt_count=CASE WHEN auth_rate_limits.window_started_at<now()-($2*interval '1 minute') THEN 1 ELSE auth_rate_limits.attempt_count+1 END,window_started_at=CASE WHEN auth_rate_limits.window_started_at<now()-($2*interval '1 minute') THEN now() ELSE auth_rate_limits.window_started_at END RETURNING attempt_count`,[hash(process.env.AUTH_RATE_LIMIT_SECRET+':admin:'+key),minutes]);return r.rows[0].attempt_count<=limit;}
 async function admin(req){const token=sessionToken(req);if(!token)throw httpError(401,'Please sign in.');const r=await db.query(`SELECT u.id,u.email,u.display_name FROM user_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.disabled_at IS NULL AND u.email_verified_at IS NOT NULL AND u.role='admin'`,[hash(token)]);if(!r.rows[0])throw httpError(401,'Please sign in with an admin account.');return r.rows[0];}
 const server=createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');res.setHeader('X-Frame-Options','DENY');res.setHeader('X-Robots-Tag','noindex, nofollow');
@@ -58,10 +60,42 @@ const server=createServer(async(req,res)=>{
    const token=randomBytes(32).toString('base64url');await db.query(`INSERT INTO user_sessions(id,user_id,token_hash,expires_at) VALUES($1,$2,$3,now()+interval '12 hours')`,[randomUUID(),user.id,hash(token)]);
    await audit(db,user,'Admin signed in',user.id);res.setHeader('Set-Cookie',sessionCookie(token,43200,production));return json(res,200,{ok:true});
   }
+  if(p==='/api/scanner/activate'&&req.method==='POST'){
+   const ip=(req.headers['x-real-ip']||req.socket.remoteAddress||'unknown').slice(0,100);
+   if(!await rate('scanner-activate:'+ip,60))throw httpError(429,'Too many activation attempts. Please wait.');
+   const activated=await activateScanner(db,await body(req),req.headers['user-agent']);
+   res.setHeader('Set-Cookie',scannerCookie(activated.token,activated.expires,production));return json(res,200,{ok:true});
+  }
+  if(['/api/scanner/session','/api/scanner/check-in','/api/scanner/logout'].includes(p)){
+   let principal;
+   try{const u=await admin(req);principal={userId:u.id,scannerSessionId:null,deviceLabel:u.display_name};}
+   catch(error){if(error.status!==401)throw error;principal=await scannerPrincipal(db,req);if(!principal)throw error;}
+   if(p==='/api/scanner/session'&&req.method==='GET')return json(res,200,{label:principal.deviceLabel,admin:!!principal.userId,testing:process.env.APP_ENV==='testing'});
+   if(p==='/api/scanner/check-in'&&req.method==='POST'){
+    if(!await rate('scan:'+(principal.scannerSessionId||principal.userId),180,1))throw httpError(429,'Too many scans. Please wait.');
+    return json(res,200,await checkIn(db,principal,await body(req)));
+   }
+   if(p==='/api/scanner/logout'&&req.method==='POST'){
+    if(principal.scannerSessionId)await db.query('UPDATE scanner_sessions SET revoked_at=now() WHERE id=$1',[principal.scannerSessionId]);
+    res.setHeader('Set-Cookie',scannerCookie('',new Date(0),production));return json(res,200,{ok:true});
+   }
+   throw httpError(405,'Method not allowed.');
+  }
   // Every data read, export and mutation rechecks the live user role and session.
   const user=await admin(req);
   if(p==='/api/session'&&req.method==='GET')return json(res,200,{user,storefront:process.env.STOREFRONT_URL||'https://www.upforitevents.co.uk'});
   if(p==='/api/logout'&&req.method==='POST'){await db.query('DELETE FROM user_sessions WHERE token_hash=$1',[hash(sessionToken(req))]);res.setHeader('Set-Cookie',sessionCookie('',0,production));return json(res,200,{ok:true});}
+  if(p==='/api/scanner/devices'&&req.method==='GET')return json(res,200,{devices:await scannerDevices(db)});
+  if(p==='/api/scanner/enrol'&&req.method==='POST'){
+   if(!await rate('scanner-enrol:'+user.id,60))throw httpError(429,'Too many scanner access requests.');
+   return json(res,200,await enrolScanner(db,user.id,await body(req),origin));
+  }
+  if(p==='/api/scanner/revoke'&&req.method==='POST'){
+   const b=await body(req);await revokeScanner(db,user.id,b.id);await audit(db,user,'Scanner revoked',b.id);return json(res,200,{ok:true});
+  }
+  if(p==='/api/scanner/close-enrolment'&&req.method==='POST'){
+   await db.query('UPDATE scanner_enrolments SET closed_at=now() WHERE closed_at IS NULL');return json(res,200,{ok:true});
+  }
   if(p==='/api/bucket'&&req.method==='GET'){
    const data=await adminBucketData(db);
    if(url.searchParams.get('export')==='csv'){
@@ -79,6 +113,7 @@ const server=createServer(async(req,res)=>{
    await administerBucket(db,user.id,b.action,b.entryId);
    return json(res,200,await adminBucketData(db));
   }
+  if(p==='/api/checkout/reconcile'&&req.method==='POST'){if(!await rate('checkout-reconcile:'+user.id,20))throw httpError(429,'Too many reconciliation requests.');const b=await body(req);return json(res,200,await reconcileCheckout(db,user,b.id));}
   if(p==='/api/dashboard'&&req.method==='GET')return json(res,200,await dashboard(db));
   if(p==='/api/campaigns'&&req.method==='GET')return json(res,200,await campaignList(db));
   if(p==='/api/campaign'&&req.method==='GET')return json(res,200,await campaignDetail(db,url.searchParams.get('id')));
@@ -107,9 +142,12 @@ const server=createServer(async(req,res)=>{
   throw httpError(404,'Not found.');
  }
  if(!['GET','HEAD'].includes(req.method))throw httpError(405,'Method not allowed.');
- const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
+ if(p==='/vendor/zxing-browser.min.js'){
+  const data=await readFile(new URL('./node_modules/@zxing/browser/umd/zxing-browser.min.js',import.meta.url));res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:data);
+ }
+ const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':['/scan','/scan/activate'].includes(p)?'/scanner.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
  const data=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(req.method==='HEAD'?undefined:data);
- }catch(e){const status=e.status||(e.code==='ENOENT'?404:500);if(status===500)console.error('Admin request failed',{code:e.code||e.name,...(!production?{message:e.message,position:e.position}:{})});if(!res.headersSent)json(res,status,{error:status===500?'Unable to complete the request. Please try again.':e.message});else res.end();}
+ }catch(e){const status=e.status||(e.code==='ENOENT'?404:500);if(status===500)console.error('Admin request failed',{code:e.code||e.name,...(!production?{message:e.message,position:e.position}:{})});if(!res.headersSent)json(res,status,{error:status===500?'Unable to complete the request. Please try again.':e.message,...(e.ticket?{ticket:e.ticket}:{})});else res.end();}
 });
 server.requestTimeout=20000;server.headersTimeout=15000;
 server.listen(port,production?'0.0.0.0':'127.0.0.1',()=>console.log(`UPFORIT admin listening on port ${port}`));

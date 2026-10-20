@@ -206,7 +206,7 @@ function AudioPlayer({
         <audio
           ref={audioRef}
           src={source}
-          preload="metadata"
+          preload="none"
           onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
           onDurationChange={(event) => setDuration(event.currentTarget.duration)}
           onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
@@ -319,6 +319,7 @@ function AudioCard({
   onPlay,
   visible
 }: { block: AudioMusicBlock; visible: boolean } & PlaybackProps) {
+  if (!visible) return null;
   return (
     <article
       className={`music-card music-card--audio music-card--${block.presentation}`}
@@ -343,6 +344,8 @@ function VideoCard({
   onPlay,
   visible
 }: { block: VideoMusicBlock; visible: boolean } & PlaybackProps) {
+  const cardRef = useRef<HTMLElement>(null);
+  const [nearViewport, setNearViewport] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const source = block.mediaPublicId
     ? cloudinaryVideoUrl(block.mediaPublicId, block.format)
@@ -358,10 +361,26 @@ function VideoCard({
   const [mediaError, setMediaError] = useState(false);
 
   useEffect(() => {
-    if (activeId !== block.id && videoRef.current && !videoRef.current.paused) {
+    if (!visible || !cardRef.current) return;
+    if (!("IntersectionObserver" in window)) {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setNearViewport(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "200px" });
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  useEffect(() => {
+    if ((!visible || activeId !== block.id) && videoRef.current && !videoRef.current.paused) {
       videoRef.current.pause();
     }
-  }, [activeId, block.id]);
+  }, [activeId, block.id, visible]);
 
   const startVideo = async () => {
     if (!videoRef.current || !canPlay) return;
@@ -373,8 +392,11 @@ function VideoCard({
     }
   };
 
+  if (!visible) return null;
+
   return (
     <article
+      ref={cardRef}
       className={`music-card music-card--video music-card--${block.presentation}`}
       hidden={!visible}
     >
@@ -383,10 +405,10 @@ function VideoCard({
           <video
             ref={videoRef}
             src={source}
-            poster={poster}
+            poster={nearViewport ? poster : undefined}
             controls
             controlsList="nodownload"
-            preload="metadata"
+            preload="none"
             playsInline
             onPlay={() => {
               setPlaying(true);

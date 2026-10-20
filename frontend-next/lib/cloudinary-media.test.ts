@@ -5,6 +5,7 @@ import {
   cloudinaryAudioUrl,
   cloudinaryVideoPosterUrl,
   cloudinaryVideoUrl,
+  cloudinaryOriginalVideoUrl,
   safeCloudinaryDownloadName
 } from "./cloudinary";
 
@@ -14,7 +15,16 @@ describe("Cloudinary music delivery URLs", () => {
       "https://res.cloudinary.com/brandduk/video/upload/f_mp3,q_auto/UPFORIT/mixes/opening%20set.mp3"
     );
     expect(cloudinaryVideoUrl("UPFORIT/videos/main-room", "webm")).toBe(
-      "https://res.cloudinary.com/brandduk/video/upload/UPFORIT/videos/main-room.webm"
+      "https://res.cloudinary.com/brandduk/video/upload/c_limit,w_1920,h_1080/q_auto:best/vc_vp9/UPFORIT/videos/main-room.webm"
+    );
+  });
+
+  it("separates high-quality web playback from untouched master delivery", () => {
+    expect(cloudinaryVideoUrl("UpForIt_MiniMix_rhs1ez")).toBe(
+      "https://res.cloudinary.com/brandduk/video/upload/c_limit,w_1920,h_1080/q_auto:best/vc_h264/UpForIt_MiniMix_rhs1ez.mp4"
+    );
+    expect(cloudinaryOriginalVideoUrl("UpForIt_MiniMix_rhs1ez")).toBe(
+      "https://res.cloudinary.com/brandduk/video/upload/UpForIt_MiniMix_rhs1ez.mp4"
     );
   });
 

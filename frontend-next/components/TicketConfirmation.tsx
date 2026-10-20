@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { pollConfirmation } from "../lib/confirmation-polling";
 import { useEffect, useRef, useState } from "react";
 import { useMetaTracking } from "./MetaTrackingProvider";
 
@@ -25,17 +26,17 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
   const trackedEventId = useRef("");
 
   const [waiting, setWaiting] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [signInRequired, setSignInRequired] = useState(false);
 
   useEffect(() => {
-    let stopped = false;
-    let attempts = 0;
-    async function refresh() {
-      try {
-        const response = await fetch(`/api/tickets/confirmation?session_id=${encodeURIComponent(sessionId)}`, { cache: "no-store" });
-        const result = await response.json() as Status & { error?: string };
-        if (!response.ok) throw new Error(result.error || "Order not found.");
-        if (stopped) return;
+    setWaiting(false); setError(""); setSignInRequired(false);
+    return pollConfirmation<Status>({sessionId,
+      waiting:()=>setWaiting(true),signIn:()=>setSignInRequired(true),
+      error:()=>setError("We cannot display this order. Check your account or contact support; do not pay again."),
+      result:(result)=>{
         setOrder(result);
+        try {
         if (result.status === "paid" && result.meta?.eventId && consent === "granted") {
           const storageKey = `upforit.meta.purchase.${result.meta.eventId}`;
           const alreadyTracked = trackedEventId.current === result.meta.eventId || window.localStorage.getItem(storageKey) === "1";
@@ -54,19 +55,15 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
             window.localStorage.setItem(storageKey, "1");
           }
         }
-        attempts += 1;
-        if (result.status === "pending" && attempts < 30) window.setTimeout(refresh, 2000);
-        else if (result.status === "pending") setWaiting(true);
-      } catch (refreshError) {
-        if (!stopped) setError(refreshError instanceof Error ? refreshError.message : "Order not found.");
+        } catch { /* Analytics/storage availability must not change payment confirmation. */ }
       }
-    }
-    refresh();
-    return () => { stopped = true; };
-  }, [consent, sessionId, track]);
+    });
+  }, [consent, sessionId, track, retry]);
 
+  if(signInRequired)return <p>Your session has expired. Please <Link href={`/account/login?next=${encodeURIComponent(`/tickets/confirmation?session_id=${sessionId}`)}`}>sign in to check your order</Link>. Do not pay again.</p>;
   if (error) return <p className="form-message form-message--error">{error}</p>;
-  if (!order || order.status === "pending") return <p>{waiting ? "We are still waiting for payment confirmation. Please do not pay again. Refresh this page or check your account shortly." : "Checking your payment and ticket status…"} <Link href="/account">View account</Link></p>;
+  if (!order || order.status === "pending") return <p>{waiting ? "We are still waiting for payment confirmation. Please do not pay again. Refresh this page or check your account shortly." : "Checking your payment and ticket status…"} <Link href="/account">View account</Link> {waiting && <button onClick={()=>setRetry(value=>value+1)}>Check again</button>}</p>;
+  if (order.status === "refund_review") return <p>Payment received. Your order is held for review and tickets are unavailable. Please do not pay again. <Link href={`/account/orders/${order.id}`}>View your order</Link></p>;
   if (order.status !== "paid") return <p>Your order status is {order.status}. Please contact us if this looks wrong.</p>;
   if (!order.order_number) return <p>Payment received. We’re issuing your order number now…</p>;
   return (

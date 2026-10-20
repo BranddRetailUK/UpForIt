@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMetaTracking } from "./MetaTrackingProvider";
 
-type FormStatus = "idle" | "loading" | "success" | "error";
+type FormStatus = "idle" | "loading" | "success" | "duplicate" | "error";
 
 export default function SignupForm() {
   const { createEventId, getBrowserContext, track } = useMetaTracking();
@@ -33,6 +33,7 @@ export default function SignupForm() {
 
     setStatus("loading");
     setMessage("");
+    setShowModal(false);
 
     try {
       const eventId = createEventId("newsletter_lead");
@@ -53,8 +54,14 @@ export default function SignupForm() {
         throw new Error(data?.error || "Unable to sign up right now.");
       }
 
+      if (data?.created === false) {
+        setStatus("duplicate");
+        setMessage("This email is already signed up.");
+        return;
+      }
+
       setStatus("success");
-      if (data?.created !== false) track("Lead", { content_name: "UPFORIT newsletter" }, eventId);
+      track("Lead", { content_name: "UPFORIT newsletter" }, eventId);
       setMessage("");
       setEmail("");
     } catch (error) {
@@ -77,7 +84,11 @@ export default function SignupForm() {
           autoComplete="email"
           required
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setStatus("idle");
+            setMessage("");
+          }}
           disabled={status === "loading"}
         />
         <button className="btn btn--solid" type="submit" disabled={status === "loading"}>

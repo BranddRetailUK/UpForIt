@@ -6,7 +6,7 @@ export const entrySql=`SELECT e.id,e.artist,e.title,e.genre,e.email,e.source,e.s
  (SELECT count(*)::int FROM mix_votes v JOIN users u ON u.id=v.user_id WHERE v.entry_id=e.id AND v.invalidated_at IS NULL AND u.disabled_at IS NULL AND u.email_verified_at IS NOT NULL) votes
  FROM mix_entries e LEFT JOIN admin_mix_reviews r ON r.entry_id=e.id WHERE e.competition_id=$1`;
 export async function dashboard(db){
- const [subs,entries,settings,orders,tiers,metrics,event,growth,audit]=await Promise.all([
+ const [subs,entries,settings,orders,tiers,metrics,event,growth,audit,workers,queue]=await Promise.all([
  db.query(subscriberSql+' ORDER BY s.created_at DESC'),db.query(entrySql+' ORDER BY e.created_at DESC',[competitionId]),
  db.query('SELECT * FROM mix_competitions WHERE id=$1',[competitionId]),
  db.query(`SELECT o.id,o.order_number,o.status,o.total_minor,o.refunded_minor,o.admissions_hold,o.currency,o.created_at,o.confirmation_email_sent_at,u.display_name,u.email,e.title event_title,
@@ -26,9 +26,11 @@ export async function dashboard(db){
  (SELECT count(*)::int FROM ticket_orders WHERE status<>'expired') order_count`),
  db.query(`SELECT id,title,starts_at,venue_name,slug FROM events WHERE status='published' AND ends_at>now() ORDER BY starts_at LIMIT 1`),
  db.query(`SELECT to_char(series_day,'YYYY-MM-DD') AS day,count(s.id)::int count FROM generate_series((now() AT TIME ZONE 'Europe/London')::date-29,(now() AT TIME ZONE 'Europe/London')::date,interval '1 day') AS series_day LEFT JOIN signups s ON (s.created_at AT TIME ZONE 'Europe/London')::date=series_day::date GROUP BY series_day ORDER BY series_day`),
- db.query(`SELECT a.action,a.created_at,u.display_name actor FROM admin_audit_log a JOIN users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 8`)
+ db.query(`SELECT a.action,a.created_at,u.display_name actor FROM admin_audit_log a JOIN users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 8`),
+ db.query(`SELECT worker,heartbeat_at,last_error,last_error_at FROM ticket_worker_health`),
+ db.query(`SELECT count(*)::int overdue,EXTRACT(EPOCH FROM now()-min(available_at))::int oldest_seconds FROM email_jobs WHERE status IN ('pending','failed') AND attempts<5 AND available_at<now()-interval '5 minutes'`)
  ]);
- return {subscribers:subs.rows,entries:entries.rows,settings:settings.rows[0]||null,orders:orders.rows,tiers:tiers.rows,metrics:metrics.rows[0],event:event.rows[0]||null,growth:growth.rows,activity:audit.rows};
+ return {subscribers:subs.rows,entries:entries.rows,settings:settings.rows[0]||null,orders:orders.rows,tiers:tiers.rows,metrics:metrics.rows[0],event:event.rows[0]||null,growth:growth.rows,activity:audit.rows,workers:workers.rows,emailQueue:queue.rows[0]};
 }
 export async function audit(db,user,action,subject,details={}){await db.query('INSERT INTO admin_audit_log(id,actor_id,action,subject_id,details) VALUES($1,$2,$3,$4,$5)',[randomUUID(),user.id,action,String(subject||''),JSON.stringify(details)]);}
 export async function mutate(pool,user,path,b){
@@ -50,7 +52,7 @@ export async function mutate(pool,user,path,b){
   await db.query('INSERT INTO mix_admin_audit(id,actor_id,action,details) VALUES($1,$2,$3,$4)',[randomUUID(),user.id,'settings',JSON.stringify(b)]);await audit(db,user,'Competition settings updated',competitionId,b);
  }else if(path==='/api/resend'){
   const order=(await db.query(`SELECT o.user_id,o.id,u.email,u.display_name FROM ticket_orders o JOIN users u ON u.id=o.user_id WHERE o.id=$1 AND o.status IN ('paid','refund_review') AND o.admissions_hold=false FOR UPDATE OF o`,[b.id])).rows[0];if(!order)throw httpError(404,'Paid order not found.');
-  const recent=await db.query(`SELECT id FROM email_jobs WHERE order_id=$1 AND job_type='ticket_confirmation' AND (created_at>now()-interval '2 minutes' OR status IN ('pending','processing'))`,[b.id]);if(recent.rowCount)throw httpError(429,'A confirmation was recently queued. Please wait two minutes.');
+  const recent=await db.query(`SELECT id FROM email_jobs WHERE order_id=$1 AND job_type='ticket_confirmation' AND (created_at>now()-interval '2 minutes' OR sent_at>now()-interval '2 minutes' OR status IN ('pending','processing','unknown') OR (status='failed' AND attempts<5))`,[b.id]);if(recent.rowCount)throw httpError(429,'A confirmation is already queued, awaiting delivery review, or was recently requested. Check its delivery status before resending.');
   await db.query(`INSERT INTO email_jobs(id,job_type,user_id,order_id,encrypted_payload) VALUES($1,'ticket_confirmation',$2,$3,$4)`,[randomUUID(),order.user_id,order.id,encryptJson({to:order.email,displayName:order.display_name,orderId:order.id})]);await audit(db,user,'Ticket confirmation queued',order.id);
  }else throw httpError(404,'Not found.');
  await db.query('COMMIT');return {ok:true};

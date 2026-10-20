@@ -1,0 +1,10 @@
+import {execFileSync} from 'node:child_process';
+import pg from 'pg';
+const vars=JSON.parse(execFileSync('railway',['variable','list','--project','f2b0b5dd-cc1f-4b80-b7bd-c0f3939ae013','--environment','9878dca0-f0ef-4e9c-8d1a-84fe67bef158','--service','95604718-456d-499a-97db-97e7fbe331cd','--json'],{encoding:'utf8',env:{...process.env,RAILWAY_CALLER:'skill:use-railway@1.6.1',RAILWAY_AGENT_SESSION:'upforit-ticket-cleanup-20261012'},stdio:['ignore','pipe','pipe']}));
+const db=new pg.Client({connectionString:vars.DATABASE_PUBLIC_URL,ssl:{rejectUnauthorized:false}});
+try{await db.connect();await db.query('BEGIN READ ONLY');
+console.log('Event orders',JSON.stringify((await db.query(`SELECT e.id,e.title,e.starts_at,o.status,count(*)::int orders,min(o.created_at) first_order,max(o.created_at) last_order,array_agg(o.order_number) numbers FROM ticket_orders o JOIN events e ON e.id=o.event_id GROUP BY e.id,o.status ORDER BY e.starts_at,o.status`)).rows));
+console.log('Ticket-related foreign keys',JSON.stringify((await db.query(`SELECT conrelid::regclass::text AS child,confrelid::regclass::text AS parent,pg_get_constraintdef(oid) definition FROM pg_constraint WHERE contype='f' AND confrelid IN ('ticket_orders'::regclass,'tickets'::regclass,'ticket_order_items'::regclass,'merch_discount_entitlements'::regclass)`)).rows));
+console.log('Related table columns',JSON.stringify((await db.query(`SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' AND (table_name LIKE '%discount%' OR table_name LIKE '%stripe%' OR table_name LIKE '%meta_conversion%' OR table_name='ticket_audit_log') ORDER BY table_name,ordinal_position`)).rows));
+console.log('Counts',JSON.stringify((await db.query(`SELECT (SELECT count(*) FROM ticket_orders) orders,(SELECT count(*) FROM tickets) tickets,(SELECT count(*) FROM ticket_order_items) items,(SELECT count(*) FROM stripe_event_receipts) stripe_receipts,(SELECT count(*) FROM email_jobs WHERE order_id IS NOT NULL) ticket_emails,(SELECT count(*) FROM meta_conversion_jobs WHERE order_id IS NOT NULL) ticket_conversions`)).rows[0]));
+await db.query('ROLLBACK');}finally{await db.end();}

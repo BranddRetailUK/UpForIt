@@ -166,3 +166,15 @@ export function ticketConfirmationEmailHtml({
       ${callToAction({ label: "View my account", url: accountUrl })}`
   });
 }
+
+export function paymentReviewEmailHtml(options: TicketEmailOptions) {
+  return emailShell({
+    ...options,
+    preheader: "Payment received. Your order needs review; please do not pay again.",
+    eyebrow: "PAYMENT UPDATE",
+    title: "Your order needs review",
+    bodyHtml: `<p>Hi ${escapeHtml(options.displayName)},</p><p>We received your payment, but cannot issue tickets because the event or ticket sales are unavailable. Your order is held for review.</p>${callToAction({label:"View your order",url:options.accountUrl})}`,
+    noticeTitle: "Please do not pay again",
+    noticeText: "This email is not an admission ticket and does not confirm a refund. Contact UPFORIT if you need help with your order."
+  });
+}
