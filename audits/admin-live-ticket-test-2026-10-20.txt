@@ -18,4 +18,15 @@ Verification:
 
 Live rehearsal still requires the human purchase, actual inbox receipt, attachment inspection and physical-camera scan. Sent/accepted is not equivalent to delivered; delivered is not equivalent to inbox placement. The checklist on /ticket-test includes customer confirmation/downloads, unique admissions/QRs, group offer, optional merchandise entitlement, resends, duplicate scans and refund rejection. Source references: https://docs.stripe.com/api/checkout/sessions/create and https://docs.stripe.com/api/idempotent_requests .
 
-Deployment evidence will be appended after all exact deployments reach SUCCESS.
+Deployment evidence follows.
+
+Production verification completed:
+- Worker 20e74153-7259-4eef-9287-adeb2959b10a: SUCCESS (Git revision 5e7ef0b).
+- Frontend 0ec51682-c901-406e-afe7-afb27b0e80a0: SUCCESS (Git revision 5e7ef0b).
+- Admin fbb1692f-dca4-4831-a0f5-9306ab4af850: SUCCESS (source snapshot, including payment-webhook-only status count).
+- Initial worker upload failed with Railway upload status 520 before build logs. Retry a6c9c7db-070e-41ad-ab94-ddf6358d9ff3 was followed by the successful Git-backed worker release above.
+- Migration 016 verified in PostgreSQL. All four worker heartbeats fresh and without recorded errors. NYE remains draft, sales_open=false, and the public sales environment gate is false. No real ticket orders or tickets existed at completion.
+- /ticket-test returns 200 and its visible browser UI was inspected. GET/POST /api/ticket-test reject anonymous requests with 401; cross-origin POST rejects with 403. Public POST /api/tickets/checkout returns 409, Ticket sales are not open.
+- Live Stripe API read confirms the enabled www.upforitevents.co.uk/api/stripe/tickets-webhook endpoint subscribes to completed/async success/async failure/expired checkouts, charge.refunded and dispute created/updated/closed events. Required webhook/email variables are present; no forced recipient is set. Admin test switch is enabled in production and its Stripe key matches the frontend reference. No key values were printed.
+- Real payment, delivery/inbox placement, attachment inspection and phone-camera validation remain the next human-assisted rehearsal, not claimed as completed by this deployment.
+- Security scope update: while the live-test feature is enabled, ADMIN needs restricted Checkout Session read/create/expire permissions, not read-only access. Refunds are intentionally left to the Stripe dashboard. The earlier restricted-key and verified-database-TLS hardening recommendations remain open.

@@ -24,7 +24,7 @@ export async function liveTestData(db,user){
   (SELECT json_agg(json_build_object('ticket_number',t.ticket_number,'status',t.status,'checked_in_at',t.checked_in_at) ORDER BY t.ticket_number) FROM tickets t WHERE t.order_id=o.id) AS tickets,
   (SELECT json_agg(json_build_object('type',j.job_type,'status',j.status,'attempts',j.attempts,'sent_at',j.sent_at) ORDER BY j.created_at) FROM email_jobs j WHERE j.order_id=o.id) AS emails,
   (SELECT json_agg(json_build_object('status',m.status)) FROM merch_discount_entitlements m WHERE m.source_ticket_order_id=o.id) AS merch_discounts,
-  (SELECT count(*)::int FROM stripe_event_receipts r WHERE r.payload#>>'{data,object,metadata,ticketOrderId}'=o.id::text AND r.processed_at IS NOT NULL) AS processed_webhooks
+  (SELECT count(*)::int FROM stripe_event_receipts r WHERE r.event_type IN ('checkout.session.completed','checkout.session.async_payment_succeeded') AND r.payload#>>'{data,object,metadata,ticketOrderId}'=o.id::text AND r.processed_at IS NOT NULL) AS processed_webhooks
   FROM ticket_admin_live_tests a JOIN ticket_orders o ON o.id=a.order_id JOIN events e ON e.id=o.event_id WHERE a.actor_user_id=$1 AND o.user_id=$1 ORDER BY a.authorised_at DESC LIMIT 30`,[user.id])).rows;
  return {enabled:liveTestEnabled(),email:user.email,tiers:tiers.map(t=>({id:t.id,name:t.name,event_title:t.title,event_slug:t.slug,price_minor:t.price_minor,max_per_order:Math.min(t.max_per_order,10)})),orders};
 }
