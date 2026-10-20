@@ -10,9 +10,12 @@ export async function holdUnavailablePaidOrder(client: PoolClient, order: {
   const state = (await client.query<{reason:string|null}>(`
     SELECT CASE
       WHEN o.payment_review_reason IS NOT NULL THEN o.payment_review_reason
-      WHEN e.status IN ('cancelled','completed') THEN 'event_unavailable'
+      WHEN e.status IN ('cancelled','completed') OR COALESCE(h.status,e.status) IN ('cancelled','completed') THEN 'event_unavailable'
       WHEN EXISTS(SELECT 1 FROM ticket_order_items i JOIN ticket_types tt ON tt.id=i.ticket_type_id
         WHERE i.order_id=o.id AND LEAST(tt.sales_end_at,e.ends_at)<=COALESCE(o.paid_at,now())) THEN 'sales_deadline_passed'
+      WHEN e.ends_at<=now() THEN 'event_unavailable'
+      WHEN EXISTS(SELECT 1 FROM ticket_admin_live_tests a WHERE a.order_id=o.id AND a.actor_user_id=o.user_id
+        AND COALESCE(o.paid_at,now()) BETWEEN date_trunc('second',a.authorised_at) AND a.expires_at) THEN NULL
       WHEN COALESCE(h.status,e.status)<>'published' OR NOT COALESCE(h.sales_open,e.sales_open) THEN 'sales_closed_at_payment'
       ELSE NULL END AS reason
     FROM ticket_orders o JOIN events e ON e.id=o.event_id

@@ -1,3 +1,4 @@
+import {liveTestData,createLiveTest,operateLiveTest} from './live-ticket-test.mjs';
 import {reconcileCheckout} from './checkout-recovery.mjs';
 import {adminBucketData,administerBucket} from './bucket.mjs';
 import {scannerCookie,scannerPrincipal,checkIn,activateScanner,scannerDevices,enrolScanner,revokeScanner} from './scanner.mjs';
@@ -113,6 +114,12 @@ const server=createServer(async(req,res)=>{
    await administerBucket(db,user.id,b.action,b.entryId);
    return json(res,200,await adminBucketData(db));
   }
+  if(p==='/api/ticket-test'&&req.method==='GET')return json(res,200,await liveTestData(db,user));
+  if(p==='/api/ticket-test'&&req.method==='POST'){
+   if(!await rate('live-ticket-test:'+user.id,20))throw httpError(429,'Too many test checkout requests. Please wait.');
+   const b=await body(req);
+   return json(res,200,b.action==='create'?await createLiveTest(db,user,b,origin):await operateLiveTest(db,user,b.id,b.action));
+  }
   if(p==='/api/checkout/reconcile'&&req.method==='POST'){if(!await rate('checkout-reconcile:'+user.id,20))throw httpError(429,'Too many reconciliation requests.');const b=await body(req);return json(res,200,await reconcileCheckout(db,user,b.id));}
   if(p==='/api/dashboard'&&req.method==='GET')return json(res,200,await dashboard(db));
   if(p==='/api/campaigns'&&req.method==='GET')return json(res,200,await campaignList(db));
@@ -145,7 +152,7 @@ const server=createServer(async(req,res)=>{
  if(p==='/vendor/zxing-browser.min.js'){
   const data=await readFile(new URL('./node_modules/@zxing/browser/umd/zxing-browser.min.js',import.meta.url));res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:data);
  }
- const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':['/scan','/scan/activate'].includes(p)?'/scanner.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
+ const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':p==='/ticket-test'?'/ticket-test.html':['/scan','/scan/activate'].includes(p)?'/scanner.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
  const data=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(req.method==='HEAD'?undefined:data);
  }catch(e){const status=e.status||(e.code==='ENOENT'?404:500);if(status===500)console.error('Admin request failed',{code:e.code||e.name,...(!production?{message:e.message,position:e.position}:{})});if(!res.headersSent)json(res,status,{error:status===500?'Unable to complete the request. Please try again.':e.message,...(e.ticket?{ticket:e.ticket}:{})});else res.end();}
 });

@@ -18,18 +18,22 @@ try{
  await db.query(`INSERT INTO users(id,email,display_name,password_hash,role,email_verified_at) VALUES($1,'admin@example.com','Test Admin',$3,'admin',now()),($2,'customer@example.com','Test Customer',$3,'customer',now())`,[admin,customer,passwordHash]);
  await db.query(`INSERT INTO signups(email) VALUES('signup@example.com')`);
  await db.query(`INSERT INTO mix_entries(id,competition_id,user_id,artist,title,genre,email,source,source_url) VALUES($1,'nye-2026',$2,'Test DJ','Test Mix','UKG','dj@example.com','Link','https://soundcloud.com/example/mix')`,[entry,customer]);
- const origin='http://localhost:4311';server=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,DATABASE_URL:connection.href,AUTH_RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),PORT:'4311',ADMIN_ORIGIN:origin,NODE_ENV:'test'},stdio:['ignore','pipe','pipe']});
+ const origin='http://localhost:4311';server=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,DATABASE_URL:connection.href,AUTH_RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),PORT:'4311',ADMIN_ORIGIN:origin,NODE_ENV:'test',ADMIN_LIVE_TICKET_TESTS_ENABLED:'false'},stdio:['ignore','pipe','pipe']});
  let serverError='';server.stderr.on('data',d=>{serverError+=d.toString();process.stderr.write(d);});
  for(let i=0;i<60;i++){try{const r=await fetch(origin+'/health');if(r.ok)break;}catch{}await new Promise(r=>setTimeout(r,100));if(i===59)throw Error('Server did not start: '+serverError);}
  const request=(path,body,cookie='',sentOrigin=origin)=>fetch(origin+path,{method:body===undefined?'GET':'POST',headers:{...(cookie?{cookie}:{}),...(body===undefined?{}:{'Content-Type':'application/json',Origin:sentOrigin})},...(body===undefined?{}:{body:JSON.stringify(body)})});
- for(const path of ['/api/bucket','/api/bucket?export=csv','/api/dashboard','/api/analytics','/api/traffic','/api/campaigns','/api/campaign?id=00000000-0000-4000-8000-000000000000','/api/export?type=signups'])assert.equal((await request(path)).status,401);
+ for(const path of ['/api/ticket-test','/api/bucket','/api/bucket?export=csv','/api/dashboard','/api/analytics','/api/traffic','/api/campaigns','/api/campaign?id=00000000-0000-4000-8000-000000000000','/api/export?type=signups'])assert.equal((await request(path)).status,401);
  assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()})).status,401);
+ assert.equal((await request('/api/ticket-test',{action:'create'})).status,401);
  assert.equal((await request('/api/login',{email:'admin@example.com',password},'','https://evil.example.com')).status,403);
  assert.equal((await request('/api/login',{email:'customer@example.com',password})).status,401);
  const login=await request('/api/login',{email:'admin@example.com',password});assert.equal(login.status,200);const cookie=login.headers.get('set-cookie').split(';')[0];assert.ok(login.headers.get('set-cookie').includes('HttpOnly'));
  assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()},cookie,'https://evil.example.com')).status,403);
  assert.equal((await request('/api/checkout/reconcile',{id:'bad'},cookie)).status,400);
  assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()},cookie)).status,404);
+ assert.equal((await request('/api/ticket-test',{action:'create'},cookie,'https://evil.example.com')).status,403);
+ assert.equal((await request('/api/ticket-test',{action:'create'},cookie)).status,503);
+ assert.equal((await request('/api/ticket-test',undefined,cookie)).status,200);
  assert.equal((await request('/api/traffic?days=999',undefined,cookie)).status,400);
  let r=await request('/api/dashboard',undefined,cookie);assert.equal(r.status,200);let d=await r.json();assert.equal(d.entries.length,1);assert.equal(d.subscribers.length,1);
  assert.equal((await request('/api/subscriber',{id:d.subscribers[0].id,status:'Unsubscribed'},cookie)).status,200);

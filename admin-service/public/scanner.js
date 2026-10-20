@@ -33,7 +33,7 @@ async function scan(attempt) {
   try {
     const data = await api('/api/scanner/check-in', attempt, 15000);
     lastScan = null;
-    result(data.validationOnly ? 'Rehearsal: valid ticket — not checked in' : data.replayed ? 'Confirmed: your previous scan checked this ticket in' : 'Ticket checked in', data.validationOnly ? 'rehearsal' : 'success', data.ticket);
+    result(data.validationOnly ? 'Rehearsal: valid ticket — not checked in' : data.replayed ? 'Confirmed: your previous scan checked this ticket in' : data.ticket.admin_live_test ? 'Paid test ticket checked in — admission consumed' : 'Ticket checked in', data.validationOnly ? 'rehearsal' : 'success', data.ticket);
     $('manual').reset();
   } catch (error) {
     if (!error.status || error.status >= 500) {

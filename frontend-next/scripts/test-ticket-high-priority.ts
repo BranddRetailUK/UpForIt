@@ -1,3 +1,4 @@
+import {adminLiveTestRegression} from './admin-live-test-regression';
 import {recoveryRegression} from './ticket-recovery-regression';
 // Creates and removes its own local database. No Stripe or email provider calls.
 import pg from 'pg';
@@ -69,6 +70,7 @@ async function main(){
   }finally{await closer.query('ROLLBACK');closer.release();}
   const callback=randomUUID();await pool.query("INSERT INTO email_jobs(id,job_type,encrypted_payload,status,attempts,sending_at) VALUES($1,'verify_email','test','delivered',1,now())",[callback]);await recordEmailFailure(pool,{id:callback,attempts:1},new Error('lost response'));assert.equal((await pool.query('SELECT status FROM email_jobs WHERE id=$1',[callback])).rows[0].status,'delivered');
   if(process.argv.includes('--recovery'))await recoveryRegression(pool,fixture,user,pay);
+  if(process.argv.includes('--admin-live-test'))await adminLiveTestRegression(pool);
   console.log('PASS: payment closure history, cancellation, review deduplication, deadlines, refunds, concurrent fulfilment, email rejections/backoff/ambiguity/callback races');
  }finally{await pool?.end();await root.query(`DROP DATABASE IF EXISTS ${name}`);await root.end();}
 }

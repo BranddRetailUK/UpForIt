@@ -27,12 +27,13 @@ export async function recoverTicketCheckout(pool:Pool,stripe:Stripe,id:string,ac
   locked=Boolean((await db.query('SELECT pg_try_advisory_lock(hashtextextended($1,0)) AS locked',[`ticket-session:${id}`])).rows[0].locked);
   if(!locked)throw new TicketRequestError('Checkout is being checked. Please try again shortly.',409);
   const order=(await db.query(`SELECT o.*, e.status AS event_status,e.sales_open,
+    EXISTS(SELECT 1 FROM ticket_admin_live_tests a WHERE a.order_id=o.id AND a.actor_user_id=o.user_id AND a.expires_at>now()) AS admin_live_test,
     LEAST(e.ends_at,(SELECT min(tt.sales_end_at) FROM ticket_order_items i JOIN ticket_types tt ON tt.id=i.ticket_type_id WHERE i.order_id=o.id)) AS sales_deadline
     FROM ticket_orders o JOIN events e ON e.id=o.event_id WHERE o.id=$1 AND ($2::uuid IS NULL OR o.user_id=$2)`,[id,userId??null])).rows[0];
   if(!order)throw new TicketRequestError('Order not found.',404);
   if(order.status!=='pending')return finishedCheckout(order);
   await db.query('UPDATE ticket_orders SET checkout_checked_at=now() WHERE id=$1',[id]);
-  const now=Date.now(),canSell=order.event_status==='published'&&order.sales_open&&new Date(order.sales_deadline).getTime()>now;
+  const now=Date.now(),canSell=(order.admin_live_test&&['draft','published'].includes(order.event_status)||order.event_status==='published'&&order.sales_open)&&new Date(order.sales_deadline).getTime()>now;
   let session:Stripe.Checkout.Session|null=null;
   if(order.stripe_checkout_session_id)session=await stripe.checkout.sessions.retrieve(order.stripe_checkout_session_id);
   else {

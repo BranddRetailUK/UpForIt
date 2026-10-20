@@ -1,0 +1,21 @@
+ADMIN LIVE PAID TICKET TEST — 20 OCTOBER 2026
+
+Purpose: permit an authenticated administrator to purchase their own real ticket through live Stripe while public checkout remains closed. Implemented exclusively in the dedicated admin service, with shared pipeline changes for the stored per-order authorisation.
+
+Entry: /ticket-test, linked from Tickets & orders. GET/POST /api/ticket-test require the current verified, enabled admin session. POST requires exact origin and is rate limited. The buyer and email come from the authenticated user, never from request input. The server selects real ticket pricing/capacity, validates the reviewed total and requires LIVE PAYMENT confirmation. One open checkout per account; immutable parameters, persistent intent key and a per-order advisory lock protect retry/concurrency. The hosted checkout expires in 35 minutes; creation retry is restricted to its original valid window. Later uncertain submissions go through existing Stripe reconciliation.
+
+Migration 016 creates an authorisation table: one hour, one order, its owner and actor. No public request or Stripe metadata can grant authorisation. Normal signed Stripe webhooks perform payment matching and issuance. Only closed/draft sales are bypassed; cancelled/completed/ended events, ticket deadlines, payment mismatch, existing holds and refund/dispute restrictions remain. Maintenance preserves an eligible test checkout. Public event configuration and release gates remain unchanged.
+
+The normal production email worker generates the PDF and signed QR codes, sends the confirmation through SendGrid and records delivery callbacks. Admin test page shows payment webhook state, tickets, email statuses, merchandise entitlement and refunds. Customer confirmation, account and download routes remain the normal storefront ones. Test orders omit Meta conversion consent rather than sending test purchases to advertising measurement.
+
+Scanner behaviour: authorised paid-test tickets consume an admission before event day; a new repeat scan is rejected, and retrying the same uncertain request returns its original result. Ordinary future-event tickets retain validation-only rehearsal. Full refunds are made through the linked Stripe payment dashboard, then normal refund webhooks void admissions. There is no simulated paid state, check-in reset or automatic refund action.
+
+Verification:
+- 205 frontend tests; TypeScript and optimized production build pass.
+- 18 admin unit tests and server/browser syntax checks pass.
+- Admin HTTP access-control/CSRF/disabled-switch tests and scanner integration pass.
+- Real local PostgreSQL regressions pass for pricing parity (1–10 admissions), four-for-three offer, lost Stripe response retry, concurrent same-intent requests, owner isolation, non-admin rejection, amount mismatch, maintenance preservation, actual four-page ticket PDF, real QR PNG generation/decoding and check-in, duplicate/replay handling, single confirmation queue entry, cancellation, expired authorisation, full-refund voiding and unchanged closed event sales. Provider calls in automated tests are mocked; no real charge, refund or outbound email has been initiated.
+
+Live rehearsal still requires the human purchase, actual inbox receipt, attachment inspection and physical-camera scan. Sent/accepted is not equivalent to delivered; delivered is not equivalent to inbox placement. The checklist on /ticket-test includes customer confirmation/downloads, unique admissions/QRs, group offer, optional merchandise entitlement, resends, duplicate scans and refund rejection. Source references: https://docs.stripe.com/api/checkout/sessions/create and https://docs.stripe.com/api/idempotent_requests .
+
+Deployment evidence will be appended after all exact deployments reach SUCCESS.
