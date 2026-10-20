@@ -1,0 +1,92 @@
+Upforit Cloudinary delivery optimisation — 20 October 2026
+
+Scope
+Read contract.md and repository instructions, plus the Cloudinary account audit
+and adjacent delivery/inventory evidence in Good Game Apparel. Only Upforit was
+edited. Existing unrelated work was preserved. No originals were overwritten or
+deleted, and no bulk derivative regeneration was performed.
+
+Changes
+- cloudinaryVideoUrl now delivers a full-HD c_limit web encode using q_auto:best,
+  H.264 for MP4 / VP9 for WebM. Explicit cloudinaryOriginalVideoUrl retains the
+  original URL for future master/download consumers. Existing audio download
+  behaviour and links are unchanged.
+- MusicHub audio/video use preload=none. Posters load within 200px of the viewport.
+  Hidden audio/video cards do not mount media players.
+- MerchImage applies its bounded delivery step AFTER upstream crops/effects and
+  before the version/public ID. Repeated application replaces its own terminal
+  step; widths are finite and capped at 960. Exact Cloudinary host matching;
+  signed/token and other-provider URLs pass through unchanged.
+- Contract updated. Existing CloudinaryImage and NYE texture preload preserved.
+
+Measured MiniMix results
+Original: 557,310,509 bytes, 1920x1080, H.264, 30fps, AAC stereo 48kHz, 435s.
+Final cached encode: 187,830,615 bytes, 1920x1080, H.264, 30fps, 435.008s
+(Cloudinary Content-Range and Server-Timing metadata).
+Reduction: 66.30%, or 369,479,894 bytes per equivalent complete transfer.
+Range request: HTTP 206 for bytes 1000000-1001023; Accept-Ranges: bytes.
+Cache-Control: public, no-transform, max-age=2592000.
+URL:
+https://res.cloudinary.com/brandduk/video/upload/c_limit,w_1920,h_1080/q_auto:best/vc_h264/UpForIt_MiniMix_rhs1ez.mp4
+
+The first conversion streamed a fragmented MP4 without range support and produced
+188,057,311 bytes locally. Its ffprobe result is web-probe.json; this is distinct
+from the final cached MP4 size above. The completed cached derivative supports
+seeking. This specific MP4 has now been generated; future new public IDs can have
+first-generation latency.
+
+Quality verification
+Inspected source and initial-stream samples near 30, 210 and 410 seconds for logo,
+text, fine waveform edges and colour. Fast seeking into the initial fragmented
+stream did not return precisely aligned animation frames, so a matching 210s frame
+was fetched from the final cached encode for the conclusive comparison.
+cached-compare-210.jpg: master left, cached encode right. Visible logo/text detail
+retained. Full-resolution decoded RGB frame SSIM: 0.987203. This is one aligned
+frame, not a whole-video quality score or proof of perceptual equivalence.
+The downloaded stream retained AAC stereo at 48kHz. No formal listening comparison
+was conducted. WebM generation was URL-tested, not fetched or playback-tested.
+
+Social artwork review
+The historical Summer Roundup original PNG is no longer used by social metadata.
+lib/social-metadata.ts already serves the clean brand artwork as explicit JPEG
+q_85, 1200x630. Measured current response: 196,919 bytes (~192 KiB).
+Preserved this existing optimisation and current branding. Historical external
+links/crawler caches pointing to the old original are not changed by source edits.
+
+Validation
+- 11 focused Vitest tests passed: cloudinary-media, MerchImage, MusicHub.
+- npm run build passed.
+- npm run lint (tsc --noEmit) passed.
+- git diff --check passed.
+- Built frontend smoke-tested at http://127.0.0.1:3107/music in the in-app browser:
+  video and audio readyState 0/currentTime 0 before playback; click-to-play video
+  advanced normally, readyState 3, duration 435.008s, without a media error.
+  Temporary browser tab and local server were closed after verification.
+- Local account/session background request reported a pre-existing database SSL
+  configuration error; account flows were not part of this media verification.
+
+Limits and release state
+Progressive web delivery was chosen to keep native playback and a conservative
+quality setting without introducing an adaptive manifest/player lifecycle or
+generating a full bitrate ladder. This is not adaptive streaming. The 66.3% saving
+is a complete-file comparison, not a claim about future monthly account usage.
+No production deployment was initiated by this chat.
+During the work another process committed the shared worktree, including these
+source changes, in ff83e90. This chat did not create or amend that mixed commit.
+
+Reference
+https://cloudinary.com/documentation/video_optimization
+https://cloudinary.com/documentation/image_transformations
+
+Post-deployment verification — 20 October 2026
+Railway FRONTEND production deployment 2fb595e3-10c3-4dd8-a978-c8d556427d7c
+reported SUCCESS for ff83e900a8cbfe7543bd19043704be0b7ed2ef9e.
+The code had already been pushed/deployed through the shared workspace.
+Live canonical home, /music and /merch requests all succeeded.
+Live /music rendered the new web encode and preload=none on both players.
+Browser checks: both players initially readyState 0/currentTime 0. Video played
+past 10 seconds with readyState 4 and duration 435.008 seconds. Starting audio
+paused video; audio advanced normally with readyState 4. Download link unchanged.
+Live /merch selected w_768 responsive variants and the first four product images
+loaded successfully. Live social metadata retained the bounded 1200x630 JPEG.
+No checkout, order or account mutations were performed.

@@ -1,0 +1,18 @@
+HTTP/2 206 
+content-type: video/mp4;codecs=avc1
+etag: "d13c4e3d3cf056f03bf0a3338fd6d759-3"
+last-modified: Tue, 20 Oct 2026 07:42:16 GMT
+content-range: bytes 1000000-1001023/187830615
+date: Tue, 20 Oct 2026 07:43:33 GMT
+strict-transport-security: max-age=604800
+cache-control: public, no-transform, max-age=2592000
+server-timing: cld-fastly;dur=3;cpu=2;start=2026-10-20T07:43:33.202Z;desc=hit,rtt;dur=41,content-info;desc="width=1920,height=1080,abps=431787,fps=30.0,du=435.008,vc=\"h264\",bytes=187830615,format=\"mp4\",crt=1792482134,owidth=1920,oheight=1080,oabps=1281174,ofps=30.0,odu=435.0,ovc=\"h264\",obytes=557310509,oformat=\"mp4\",ocrt=1786450483,ef=(18,41,61,99)"
+server: Cloudinary
+timing-allow-origin: *
+access-control-allow-origin: *
+accept-ranges: bytes
+x-content-type-options: nosniff
+access-control-expose-headers: Content-Length,Content-Range,ETag,Server-Timing,X-Content-Type-Options
+x-request-id: 9e3f2abe71bdec401e81c020d301102f
+content-length: 1024
+
