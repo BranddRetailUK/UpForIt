@@ -58,3 +58,15 @@ test('Meta retains paused campaigns and exposes effective status with zero-activ
   assert.equal(result.campaigns[1].status,'PAUSED');assert.equal(result.campaigns[1].spend,0);assert.equal(result.all.spend,12.5);
  }finally{global.fetch=oldFetch;for(const key of Object.keys(process.env))if(!(key in oldEnv))delete process.env[key];Object.assign(process.env,oldEnv);}
 });
+test('custom traffic windows use matching exclusive bounds and distinct cache entries',async()=>{
+ let calls=0;const filters=[];
+ const read=createTrafficAnalytics({env,fetcher:async(url,options)=>{
+  calls++;const body=JSON.parse(options.body);filters.push(body.variables.filter);
+  assert.match(body.query,/daily:.*limit: 367/);
+  return response({data:{viewer:{accounts:[{total:[],daily:[],pages:[],landings:[]}]}}});
+ }});
+ const first={since:'2026-09-01T00:00:00.000Z',until:'2026-10-01T00:00:00.000Z'};
+ await read(first);await read({...first});await read({...first,until:'2026-09-15T00:00:00.000Z'});
+ assert.equal(calls,2);assert.equal(filters[0].datetime_geq,first.since);assert.equal(filters[0].datetime_lt,first.until);
+ assert.equal((await read({since:'bad',until:first.until})).reason,'invalid_range');
+});

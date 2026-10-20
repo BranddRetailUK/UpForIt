@@ -6,7 +6,7 @@ export const entrySql=`SELECT e.id,e.artist,e.title,e.genre,e.email,e.source,e.s
  (SELECT count(*)::int FROM mix_votes v JOIN users u ON u.id=v.user_id WHERE v.entry_id=e.id AND v.invalidated_at IS NULL AND u.disabled_at IS NULL AND u.email_verified_at IS NOT NULL) votes
  FROM mix_entries e LEFT JOIN admin_mix_reviews r ON r.entry_id=e.id WHERE e.competition_id=$1`;
 export async function dashboard(db){
- const [subs,entries,settings,orders,tiers,metrics,event,growth,audit,workers,queue,trends]=await Promise.all([
+ const [subs,entries,settings,orders,tiers,metrics,event,growth,audit,workers,queue]=await Promise.all([
  db.query(subscriberSql+' ORDER BY s.created_at DESC'),db.query(entrySql+' ORDER BY e.created_at DESC',[competitionId]),
  db.query('SELECT * FROM mix_competitions WHERE id=$1',[competitionId]),
  db.query(`SELECT o.id,o.order_number,o.status,o.total_minor,o.refunded_minor,o.admissions_hold,o.currency,o.created_at,o.confirmation_email_sent_at,u.display_name,u.email,e.title event_title,
@@ -28,24 +28,9 @@ export async function dashboard(db){
  db.query(`SELECT to_char(series_day,'YYYY-MM-DD') AS day,count(s.id)::int count FROM generate_series((now() AT TIME ZONE 'Europe/London')::date-29,(now() AT TIME ZONE 'Europe/London')::date,interval '1 day') AS series_day LEFT JOIN signups s ON (s.created_at AT TIME ZONE 'Europe/London')::date=series_day::date GROUP BY series_day ORDER BY series_day`),
  db.query(`SELECT a.action,a.created_at,u.display_name actor FROM admin_audit_log a JOIN users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 8`),
  db.query(`SELECT worker,heartbeat_at,last_error,last_error_at FROM ticket_worker_health`),
- db.query(`SELECT count(*)::int overdue,EXTRACT(EPOCH FROM now()-min(available_at))::int oldest_seconds FROM email_jobs WHERE status IN ('pending','failed') AND attempts<5 AND available_at<now()-interval '5 minutes'`),
- db.query(`WITH activity AS (
- SELECT created_at AS at, 'signups' AS metric, 1::numeric AS value FROM signups WHERE created_at >= now()-interval '30 days'
- UNION ALL SELECT created_at, 'tickets', 1 FROM tickets WHERE status<>'void' AND created_at >= now()-interval '30 days'
- UNION ALL SELECT paid_at, 'conversions', 1 FROM ticket_orders WHERE status='paid' AND paid_at >= now()-interval '30 days'
- UNION ALL SELECT paid_at, 'revenue', (total_minor-refunded_minor)::numeric/100 FROM ticket_orders WHERE paid_at >= now()-interval '30 days'
- UNION ALL SELECT created_at, 'mixes', 1 FROM mix_entries WHERE competition_id='nye-2026' AND created_at >= now()-interval '30 days'
- ) SELECT to_char(day,'YYYY-MM-DD') AS day,
- COALESCE(sum(value) FILTER (WHERE metric='signups'),0) AS signups,
- COALESCE(sum(value) FILTER (WHERE metric='tickets'),0) AS tickets,
- COALESCE(sum(value) FILTER (WHERE metric='conversions'),0) AS conversions,
- COALESCE(sum(value) FILTER (WHERE metric='revenue'),0) AS revenue,
- COALESCE(sum(value) FILTER (WHERE metric='mixes'),0) AS mixes
- FROM generate_series((now() AT TIME ZONE 'UTC')::date-30,(now() AT TIME ZONE 'UTC')::date,interval '1 day') day
- LEFT JOIN activity ON (activity.at AT TIME ZONE 'UTC')::date=day::date AND activity.at<now()
- GROUP BY day ORDER BY day`)
+ db.query(`SELECT count(*)::int overdue,EXTRACT(EPOCH FROM now()-min(available_at))::int oldest_seconds FROM email_jobs WHERE status IN ('pending','failed') AND attempts<5 AND available_at<now()-interval '5 minutes'`)
  ]);
- return {subscribers:subs.rows,entries:entries.rows,settings:settings.rows[0]||null,orders:orders.rows,tiers:tiers.rows,metrics:metrics.rows[0],event:event.rows[0]||null,growth:growth.rows,trends:trends.rows,activity:audit.rows,workers:workers.rows,emailQueue:queue.rows[0]};
+ return {subscribers:subs.rows,entries:entries.rows,settings:settings.rows[0]||null,orders:orders.rows,tiers:tiers.rows,metrics:metrics.rows[0],event:event.rows[0]||null,growth:growth.rows,activity:audit.rows,workers:workers.rows,emailQueue:queue.rows[0]};
 }
 export async function audit(db,user,action,subject,details={}){await db.query('INSERT INTO admin_audit_log(id,actor_id,action,subject_id,details) VALUES($1,$2,$3,$4,$5)',[randomUUID(),user.id,action,String(subject||''),JSON.stringify(details)]);}
 export async function mutate(pool,user,path,b){
@@ -72,4 +57,22 @@ export async function mutate(pool,user,path,b){
  }else throw httpError(404,'Not found.');
  await db.query('COMMIT');return {ok:true};
  }catch(e){await db.query('ROLLBACK');if(e.code==='22P02')throw httpError(400,'Invalid record identifier.');throw e;}finally{db.release();}
+}
+
+export async function kpiTrends(db,range){
+ return (await db.query(`WITH activity AS (
+ SELECT created_at AS at, 'signups' AS metric, 1::numeric AS value FROM signups WHERE created_at >= $1::timestamptz AND created_at < $2::timestamptz
+ UNION ALL SELECT created_at, 'tickets', 1 FROM tickets WHERE status<>'void' AND created_at >= $1::timestamptz AND created_at < $2::timestamptz
+ UNION ALL SELECT paid_at, 'conversions', 1 FROM ticket_orders WHERE status='paid' AND paid_at >= $1::timestamptz AND paid_at < $2::timestamptz
+ UNION ALL SELECT paid_at, 'revenue', (total_minor-refunded_minor)::numeric/100 FROM ticket_orders WHERE paid_at >= $1::timestamptz AND paid_at < $2::timestamptz
+ UNION ALL SELECT created_at, 'mixes', 1 FROM mix_entries WHERE competition_id='nye-2026' AND created_at >= $1::timestamptz AND created_at < $2::timestamptz
+ ) SELECT to_char(day,'YYYY-MM-DD') AS day,
+ COALESCE(sum(value) FILTER (WHERE metric='signups'),0) AS signups,
+ COALESCE(sum(value) FILTER (WHERE metric='tickets'),0) AS tickets,
+ COALESCE(sum(value) FILTER (WHERE metric='conversions'),0) AS conversions,
+ COALESCE(sum(value) FILTER (WHERE metric='revenue'),0) AS revenue,
+ COALESCE(sum(value) FILTER (WHERE metric='mixes'),0) AS mixes
+ FROM generate_series(($1::timestamptz AT TIME ZONE 'UTC')::date,(($2::timestamptz-interval '1 millisecond') AT TIME ZONE 'UTC')::date,interval '1 day') day
+ LEFT JOIN activity ON (activity.at AT TIME ZONE 'UTC')::date=day::date
+ GROUP BY day ORDER BY day`,[range.since,range.until])).rows;
 }

@@ -6,18 +6,20 @@ const number = value => Number.isFinite(Number(value)) ? Math.max(0, Number(valu
 export function createTrafficAnalytics({env=process.env,fetcher=fetch,now=()=>new Date()}={}) {
   const cache=new Map(),pending=new Map();
   return async function trafficAnalytics(days=7) {
-    if(![1,7,30].includes(days))return {state:'error',reason:'invalid_range'};
+    const custom=typeof days==='object'&&days!==null;
+    if(custom?(!Number.isFinite(Date.parse(days.since))||!Number.isFinite(Date.parse(days.until))||Date.parse(days.until)<=Date.parse(days.since)||Date.parse(days.until)-Date.parse(days.since)>366*86400000):![1,7,30].includes(days))return {state:'error',reason:'invalid_range'};
     const token=env.CLOUDFLARE_ANALYTICS_API_TOKEN?.trim(),account=env.CLOUDFLARE_ACCOUNT_ID?.trim();
     const hosts=(env.CLOUDFLARE_ANALYTICS_HOSTS||'upforitevents.co.uk,www.upforitevents.co.uk').split(',').map(h=>h.trim()).filter(Boolean);
     if(!token||!account)return {state:'not_configured'};
     if(!/^[a-f0-9]{32}$/i.test(account)||!hosts.length||hosts.some(h=>!/^([a-z0-9-]+\.)+[a-z0-9-]+$/i.test(h)))return {state:'error',reason:'configuration'};
-    if(cache.get(days)?.until>Date.now())return cache.get(days).value;
-    if(pending.has(days))return pending.get(days);
+    const key=custom?days.since+'|'+days.until:days;
+    if(cache.get(key)?.until>Date.now())return cache.get(key).value;
+    if(pending.has(key))return pending.get(key);
     const task=(async()=>{
-      const end=now(),start=new Date(end.getTime()-days*86400000);
-      const range={since:start.toISOString(),until:end.toISOString(),days};
+      const end=custom?new Date(days.until):now(),start=custom?new Date(days.since):new Date(end.getTime()-days*86400000);
+      const range={since:start.toISOString(),until:end.toISOString(),days:(end-start)/86400000};
       const filter={datetime_geq:range.since,datetime_lt:range.until,OR:hosts.map(requestHost=>({requestHost}))};
-      const groups=Object.entries(dimensions).map(([name,dimension])=>`${name}: rumPageloadEventsAdaptiveGroups(filter: $filter, limit: ${name==='daily'?32:10}, orderBy: [${name==='daily'?'date_ASC':name==='landings'?'sum_visits_DESC':'count_DESC'}]) { count sum { visits } dimensions { label: ${dimension} } }`).join('\n');
+      const groups=Object.entries(dimensions).map(([name,dimension])=>`${name}: rumPageloadEventsAdaptiveGroups(filter: $filter, limit: ${name==='daily'?367:10}, orderBy: [${name==='daily'?'date_ASC':name==='landings'?'sum_visits_DESC':'count_DESC'}]) { count sum { visits } dimensions { label: ${dimension} } }`).join('\n');
       const query=`query Traffic($account: String!, $filter: AccountRumPageloadEventsAdaptiveGroupsFilter_InputObject!) {
         viewer { accounts(filter: {accountTag: $account}) {
           total: rumPageloadEventsAdaptiveGroups(filter: $filter, limit: 1) { count sum { visits } }
@@ -36,12 +38,13 @@ export function createTrafficAnalytics({env=process.env,fetcher=fetch,now=()=>ne
         if(!data||!Array.isArray(data.total)||Object.keys(dimensions).some(key=>!Array.isArray(data[key])))return {state:'error',reason:'provider'};
         const metrics=row=>({pageviews:number(row?.count),visits:number(row?.sum?.visits)});
         const value={state:'ready',range,hosts,updatedAt:end.toISOString(),...metrics(data.total[0]),...Object.fromEntries(Object.keys(dimensions).map(key=>[key,data[key].map(row=>({label:String(row.dimensions?.label|| (key==='referrers'?'Direct / unknown':'Unknown')).split('?')[0].slice(0,250),...metrics(row)}))]))};
-        cache.set(days,{until:Date.now()+60000,value});
+        if(cache.size>=64)cache.delete(cache.keys().next().value);
+        cache.set(key,{until:Date.now()+60000,value});
         return value;
       }catch{return {state:'error',reason:'unavailable'};}
     })();
-    pending.set(days,task);
-    try{return await task;}finally{pending.delete(days);}
+    pending.set(key,task);
+    try{return await task;}finally{pending.delete(key);}
   };
 }
 export const trafficAnalytics=createTrafficAnalytics();

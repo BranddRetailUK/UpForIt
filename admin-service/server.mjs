@@ -11,7 +11,8 @@ import {randomUUID,randomBytes} from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import pg from 'pg';
 import {hash,sessionToken,sameOrigin,sessionCookie,csvCell,httpError} from './security.mjs';
-import {dashboard,mutate,audit,subscriberSql,entrySql,competitionId} from './data.mjs';
+import {reportingRange} from './reporting-range.mjs';
+import {kpiTrends,dashboard,mutate,audit,subscriberSql,entrySql,competitionId} from './data.mjs';
 import {metaAnalytics} from './meta.mjs';
 import {trafficAnalytics} from './traffic.mjs';
 import {campaignList,campaignDetail,saveCampaign,queueCampaign,verifyWebhook,ingestEvents,unsubscribe,startCampaignWorker,emailHTML} from './campaigns.mjs';
@@ -121,6 +122,11 @@ const server=createServer(async(req,res)=>{
    return json(res,200,b.action==='create'?await createLiveTest(db,user,b,origin):await operateLiveTest(db,user,b.id,b.action));
   }
   if(p==='/api/checkout/reconcile'&&req.method==='POST'){if(!await rate('checkout-reconcile:'+user.id,20))throw httpError(429,'Too many reconciliation requests.');const b=await body(req);return json(res,200,await reconcileCheckout(db,user,b.id));}
+  if(p==='/api/kpis'&&req.method==='GET'){
+   const range=reportingRange(url.searchParams);
+   const [rows,traffic]=await Promise.all([kpiTrends(db,range),trafficAnalytics(range)]);
+   return json(res,200,{state:'ready',range,rows,traffic});
+  }
   if(p==='/api/dashboard'&&req.method==='GET')return json(res,200,await dashboard(db));
   if(p==='/api/campaigns'&&req.method==='GET')return json(res,200,await campaignList(db));
   if(p==='/api/campaign'&&req.method==='GET')return json(res,200,await campaignDetail(db,url.searchParams.get('id')));

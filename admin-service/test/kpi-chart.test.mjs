@@ -15,3 +15,9 @@ test('database metrics use numeric daily values and currency labels without depe
  const zero=kpiChart({rows:[{day:'2026-10-20',tickets:0}],selected:'tickets',context:'analytics'});
  assert.doesNotMatch(zero,/NaN|Infinity/);
 });
+test('custom range ends on the selected date without an extra zero day',()=>{
+ const traffic={state:'ready',range:{since:'2026-10-01T00:00:00Z',until:'2026-10-03T00:00:00Z'},daily:[]};
+ assert.deepEqual(kpiSeries([],traffic,'pageviews').map(r=>r.day),['2026-10-01','2026-10-02']);
+ const html=kpiChart({rows:[],selected:'tickets',context:'analytics',selection:{period:'custom',from:'2026-10-01',to:'2026-10-02'},result:{state:'pending'}});
+ assert.match(html,/Apply range/);assert.match(html,/24 hours/);assert.match(html,/7 days/);assert.match(html,/30 days/);assert.match(html,/Choose dates and apply/);assert.doesNotMatch(html,/<svg/);
+});
