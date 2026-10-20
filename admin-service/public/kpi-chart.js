@@ -6,13 +6,13 @@ export function kpiSeries(rows,traffic,key){
  const website=['pageviews','visits'].includes(key);
  if(website&&traffic?.state!=='ready')return null;
  // Both sources use UTC days, including partial first/last days in a rolling window.
- const values=new Map((website?traffic.daily:rows).map(row=>[row.day||row.label,Number(row[key]||0)]));
+ const values=new Map((website?traffic.daily:rows).map(row=>[row.day||row.label,row[key]==null?null:Number(row[key])]));
  const start=website?traffic.range.since.slice(0,10):rows[0]?.day;
  const end=website?new Date(Date.parse(traffic.range.until)-1).toISOString().slice(0,10):rows.at(-1)?.day;
  if(!start||!end)return [];
  const result=[];
  for(let day=new Date(start+'T00:00:00Z');day.toISOString().slice(0,10)<=end;day.setUTCDate(day.getUTCDate()+1)){
-  const label=day.toISOString().slice(0,10);result.push({day:label,value:values.get(label)||0});
+  const label=day.toISOString().slice(0,10);result.push({day:label,value:values.has(label)?values.get(label):(website?null:0)});
  }
  return result;
 }
@@ -24,14 +24,16 @@ export function kpiChart({rows,traffic,selected,context,selection={period:'30'},
  if(result&&result.state!=='ready')return controls+`<div class="empty" role="status">${result.state==='loading'?'Loading graph…':result.state==='pending'?'Choose dates and apply the range.':escape(result.message||'Graph unavailable.')}${result.state==='error'?'<p><button class="button" data-action="retry-chart">Retry</button></p>':''}</div>`;
  if(series===null)return controls+`<div class="empty" role="status">${!traffic||traffic.state==='loading'?'Loading website data…':'Website data unavailable.'}${traffic&&traffic.state!=='loading'?'<p><button class="button" data-action="retry-chart">Retry</button></p>':''}</div>`;
  if(!series.length)return controls+'<p class="empty">No data available.</p>';
+ const website=['pageviews','visits'].includes(key),known=series.filter(row=>row.value!==null),estimated=website&&traffic.estimated,incomplete=website&&known.length<series.length;
+ const quality=[estimated?'Estimate':'',incomplete?'Partial data':''].filter(Boolean).join(' · ');
  const total=series.reduce((sum,row)=>sum+row.value,0),scale=chartScale(series.map(row=>row.value));
  const left=85,right=875,top=20,bottom=265;
  const x=i=>series.length===1?(left+right)/2:left+i*(right-left)/(series.length-1),y=value=>bottom-value/scale.max*(bottom-top);
- const points=series.map((row,i)=>`${x(i)},${y(row.value)}`).join(' ');
+ const segments=[];let segment=[];series.forEach((row,i)=>{if(row.value===null){if(segment.length)segments.push(segment.join(' '));segment=[];}else segment.push(`${x(i)},${y(row.value)}`);});if(segment.length)segments.push(segment.join(' '));
  const indices=chartDateTicks(series.length);
  const tickFormat=value=>key==='revenue'?new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',notation:'compact',maximumFractionDigits:1}).format(value):new Intl.NumberFormat('en-GB',{notation:'compact',maximumFractionDigits:1}).format(value);
  const dateFormat=day=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',...(series[0].day.slice(0,4)!==series.at(-1).day.slice(0,4)?{year:'2-digit'}:{})}).format(new Date(day+'T00:00:00Z'));
- return controls+`<div class="chart kpi-chart"><div class="chart-summary"><strong>${format(total,key)}</strong><span>${metrics[key]}</span></div><div class="kpi-plot"><svg viewBox="0 0 900 305" role="img" aria-label="${metrics[key]} — ${escape(periodLabel)} (UTC)"><g stroke="#454545" stroke-dasharray="3 4">${scale.ticks.map(value=>`<path d="M${left} ${y(value)}H${right}"/>`).join('')}${indices.map(i=>`<path d="M${x(i)} ${top}V${bottom}"/>`).join('')}</g>${scale.ticks.map(value=>`<text x="${left-14}" y="${y(value)+4}" text-anchor="end">${tickFormat(value)}</text>`).join('')}${indices.map(i=>`<text x="${x(i)}" y="${bottom+26}" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}">${dateFormat(series[i].day)}</text>`).join('')}<polyline points="${points}" stroke="#efff00" stroke-width="2.5" fill="none"/>${series.map((row,i)=>`<circle cx="${x(i)}" cy="${y(row.value)}" r="${series.length>60?2:3.5}" fill="#efff00"><title>${row.day}: ${format(row.value,key)}</title></circle>`).join('')}</svg></div></div>`;
+ return controls+`<div class="chart kpi-chart"><div class="chart-summary"><strong>${known.length?format(total,key):'—'}</strong><span>${metrics[key]}${quality?' · '+quality:''}</span></div><div class="kpi-plot"><svg viewBox="0 0 900 305" role="img" aria-label="${metrics[key]} — ${escape(periodLabel)} (UTC)${quality?' — '+quality:''}"><g stroke="#454545" stroke-dasharray="3 4">${scale.ticks.map(value=>`<path d="M${left} ${y(value)}H${right}"/>`).join('')}${indices.map(i=>`<path d="M${x(i)} ${top}V${bottom}"/>`).join('')}</g>${scale.ticks.map(value=>`<text x="${left-14}" y="${y(value)+4}" text-anchor="end">${tickFormat(value)}</text>`).join('')}${indices.map(i=>`<text x="${x(i)}" y="${bottom+26}" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}">${dateFormat(series[i].day)}</text>`).join('')}${segments.map(points=>`<polyline points="${points}" stroke="#efff00" stroke-width="2.5" fill="none"/>`).join('')}${series.map((row,i)=>row.value===null?'':`<circle cx="${x(i)}" cy="${y(row.value)}" r="${series.length>60?2:3.5}" fill="${website&&traffic.daily.find(d=>d.label===row.day)?.estimated?'#202020':'#efff00'}" stroke="#efff00" stroke-width="1.5"><title>${row.day}: ${format(row.value,key)}${website&&traffic.daily.find(d=>d.label===row.day)?.estimated?' (estimate)':''}</title></circle>`).join('')}</svg></div></div>`;
 }
 // Nice, uniform increments keep the Y grid readable for zeros, counts and revenue.
 export function chartScale(values){

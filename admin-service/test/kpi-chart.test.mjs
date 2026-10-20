@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {kpiSeries,kpiChart,chartScale,chartDateTicks} from '../public/kpi-chart.js';
-test('website chart fills missing UTC dates and preserves partial boundary days',()=>{
+test('website chart preserves missing UTC dates and preserves partial boundary days',()=>{
  const traffic={state:'ready',range:{since:'2026-10-01T20:00:00Z',until:'2026-10-03T20:00:00Z'},daily:[{label:'2026-10-01',pageviews:2},{label:'2026-10-03',pageviews:5}]};
- assert.deepEqual(kpiSeries([],traffic,'pageviews'),[{day:'2026-10-01',value:2},{day:'2026-10-02',value:0},{day:'2026-10-03',value:5}]);
+ assert.deepEqual(kpiSeries([],traffic,'pageviews'),[{day:'2026-10-01',value:2},{day:'2026-10-02',value:null},{day:'2026-10-03',value:5}]);
  assert.equal(kpiSeries([],{state:'error'},'pageviews'),null);
  assert.equal(kpiSeries([],{state:'not_configured'},'visits'),null);
 });
@@ -25,4 +25,12 @@ test('custom range ends on the selected date without an extra zero day',()=>{
 test('axes use uniform readable increments and cover the complete value range',()=>{
  for(const peak of [0,1,7,18,999,15203]){const {ticks,step,max}=chartScale([peak]);assert.ok(max>=peak);assert.ok(ticks.length>=6);for(let i=1;i<ticks.length;i++)assert.equal(ticks[i]-ticks[i-1],step);}
  for(const length of [1,2,7,8,31,366]){const ticks=chartDateTicks(length);assert.ok(ticks.every(i=>i>=0&&i<length));for(let i=2;i<ticks.length;i++)assert.equal(ticks[i]-ticks[i-1],ticks[1]-ticks[0]);}
+});
+
+test('website gaps break lines, estimated points are labelled, and absent data is not a zero total',()=>{
+ const traffic={state:'ready',estimated:true,range:{since:'2026-10-01T00:00:00Z',until:'2026-10-04T00:00:00Z'},daily:[{label:'2026-10-01',pageviews:20,estimated:true},{label:'2026-10-03',pageviews:3,estimated:false}]};
+ const html=kpiChart({rows:[],traffic,selected:'pageviews',context:'overview'});
+ assert.match(html,/Estimate · Partial data/);assert.match(html,/20 \(estimate\)/);assert.equal((html.match(/<polyline /g)||[]).length,2);assert.equal((html.match(/<circle /g)||[]).length,2);
+ const missing=kpiChart({rows:[],traffic:{...traffic,daily:[],estimated:false},selected:'pageviews',context:'analytics'});
+ assert.match(missing,/<strong>—<\/strong>/);assert.doesNotMatch(missing,/<circle |<polyline /);
 });
