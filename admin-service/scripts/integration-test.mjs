@@ -35,7 +35,7 @@ try{
  assert.equal((await request('/api/ticket-test',{action:'create'},cookie)).status,503);
  assert.equal((await request('/api/ticket-test',undefined,cookie)).status,200);
  assert.equal((await request('/api/traffic?days=999',undefined,cookie)).status,400);
- let r=await request('/api/dashboard',undefined,cookie);assert.equal(r.status,200);let d=await r.json();assert.equal(d.entries.length,1);assert.equal(d.subscribers.length,1);
+ let r=await request('/api/dashboard',undefined,cookie);assert.equal(r.status,200);let d=await r.json();assert.equal(d.entries.length,1);assert.equal(d.subscribers.length,1);assert.equal(d.trends.length,31);assert.equal(d.trends.reduce((n,r)=>n+Number(r.signups),0),1);assert.equal(d.trends.reduce((n,r)=>n+Number(r.mixes),0),1);
  assert.equal((await request('/api/subscriber',{id:d.subscribers[0].id,status:'Unsubscribed'},cookie)).status,200);
  assert.equal((await request('/api/entry',{id:entry,artist:'Reviewed DJ',title:'Test Mix',genre:'UKG',email:'dj@example.com',status:'hidden',reviewed:true,allow_download:false},cookie)).status,200);
  assert.equal((await request('/api/settings',{submissions:false,voting:false,close:'2026-11-01T00:00:00Z',voteClose:'2026-11-02T00:00:00Z',announce:'2026-11-03T00:00:00Z'},cookie)).status,200);
