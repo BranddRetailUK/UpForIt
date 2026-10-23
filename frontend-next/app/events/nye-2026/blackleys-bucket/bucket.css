@@ -149,3 +149,6 @@
 .bucket-details-wrap + .bucket-recording{margin-top:0;margin-bottom:54px}
 
 .bucket-arrival-time{color:#fff}
+
+/* Keep fields separated when no helper paragraph sits between them. */
+.bucket-form-panel input + .bucket-field { margin-top:22px; }

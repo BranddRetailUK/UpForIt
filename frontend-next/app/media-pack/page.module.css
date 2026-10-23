@@ -40,3 +40,8 @@
 .contactAction { display:flex; justify-content:center; padding-block:54px 64px; }
 
 @media(max-width:600px) { .hero h1, .sectionHeading h2, .cardBody h3 { text-align:center; } .sectionHeading { align-items:stretch; } .heroActions { justify-content:center; } }
+
+@media(max-width:720px) {
+  .heroContent, .sectionHeading, .cardBody { text-align:center; }
+  .formats { justify-content:center; }
+}

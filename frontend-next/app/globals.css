@@ -3987,29 +3987,30 @@ a {
   right: clamp(12px, 3vw, 36px);
   bottom: clamp(12px, 3vw, 30px);
   left: clamp(12px, 3vw, 36px);
-  width: min(940px, calc(100% - 24px));
+  width: min(660px, calc(100% - 24px));
   margin-inline: auto;
-  padding: clamp(18px, 3vw, 28px);
+  padding: 16px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 26px;
-  border: 4px solid var(--ink);
+  gap: 16px;
+  border: 2px solid var(--ink);
   background: var(--paper);
-  box-shadow: 8px 8px 0 var(--ink), 13px 13px 0 var(--pink);
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .cookie-banner h2 {
-  margin: 4px 0 8px;
+  margin: 0 0 6px;
   font-family: var(--font-heavy), Impact, sans-serif;
-  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  font-size: 1.15rem;
   line-height: 1;
   text-transform: uppercase;
 }
 
-.cookie-banner p:not(.comic-kicker) { max-width: 650px; line-height: 1.5; }
-.cookie-banner a { display: inline-block; margin-top: 8px; font-weight: 800; text-decoration: underline; }
-.cookie-banner__actions { display: grid; gap: 10px; min-width: 170px; }
+.cookie-banner p:not(.comic-kicker) { margin: 0; font-size: 0.82rem; line-height: 1.35; }
+.cookie-banner a { display: inline-block; margin-top: 4px; font-size: 0.78rem; font-weight: 800; text-decoration: underline; }
+.cookie-banner__actions { display: grid; gap: 6px; min-width: 130px; }
+.cookie-banner__actions .pop-button { min-height: 44px; padding: 8px 16px; font-size: 0.85rem; box-shadow: none; }
 .cookie-banner__decline { background: var(--paper); }
 
 .privacy-panel {
@@ -4039,7 +4040,8 @@ a {
 .privacy-panel code { padding: 2px 5px; background: var(--muted); font-weight: 800; }
 
 @media (max-width: 700px) {
-  .cookie-banner { grid-template-columns: 1fr; }
+  .cookie-banner { grid-template-columns: 1fr; padding: 10px 12px; gap: 8px; bottom: max(10px, env(safe-area-inset-bottom)); }
+  .cookie-banner h2 { font-size: 1rem; margin-bottom: 4px; }
   .cookie-banner__actions { grid-template-columns: 1fr 1fr; }
   .cookie-banner__actions .text-button { grid-column: 1 / -1; }
 }

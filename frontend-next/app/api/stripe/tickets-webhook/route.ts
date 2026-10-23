@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
                 contents: fulfilled.contents,
                 userData: {
                   email: fulfilled.email,
-                  externalId: fulfilled.userId,
+                  externalId: fulfilled.userId ?? undefined,
                   fbp: context.fbp,
                   fbc: context.fbc,
                   clientIp: context.clientIp,

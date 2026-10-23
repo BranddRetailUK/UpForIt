@@ -40,6 +40,11 @@ export default function TicketSelector({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [finishedOrder,setFinishedOrder]=useState<string|null>(null);
+  const [pendingGuestOrder, setPendingGuestOrder] = useState<string | null>(null);
+  const [showGuest, setShowGuest] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const guestToken = useRef("");
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const accountPromptRef = useRef<HTMLDivElement>(null);
   const [verificationRequired, setVerificationRequired] = useState(false);
@@ -72,8 +77,8 @@ export default function TicketSelector({
     try { sessionStorage.setItem(`tickets:${eventId}`, JSON.stringify({quantities, checkoutKey: checkoutKey.current})); } catch {}
   }, [quantities, eventId]);
 
-  async function checkout() {
-    if (!signedIn) {
+  async function checkout(asGuest = false) {
+    if (!signedIn && !asGuest) {
       setShowAccountPrompt(true);
       requestAnimationFrame(() => accountPromptRef.current?.focus());
       return;
@@ -85,6 +90,10 @@ export default function TicketSelector({
     setError("");
     if(finishedOrder){checkoutKey.current=null;setFinishedOrder(null);}
     try {
+      if (asGuest && !guestToken.current) {
+        guestToken.current = sessionStorage.getItem("upforit:guest-token") || (crypto.randomUUID()+crypto.randomUUID()).replace(/-/g, "");
+        sessionStorage.setItem("upforit:guest-token",guestToken.current);
+      }
       const eventID = createEventId("ticket_checkout");
       const selected = activeTiers
         .map((tier) => ({ tier, quantity: quantities[tier.id] ?? 0 }))
@@ -97,12 +106,14 @@ export default function TicketSelector({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: checkoutKey.current.key,
+          ...(asGuest ? {guest:{name:guestName,email:guestEmail},guestToken:guestToken.current} : {}),
           items: selected.map(({ tier, quantity }) => ({ ticketTypeId: tier.id, quantity })),
           meta: getBrowserContext(eventID)
         })
       });
-      const result = (await response.json()) as { url?: string; error?: string; verificationRequired?:boolean; code?:string; canStartNew?:boolean; orderId?:string; message?:string; confirmationUrl?:string };
+      const result = (await response.json()) as { pendingOrderId?:string; url?: string; error?: string; verificationRequired?:boolean; code?:string; canStartNew?:boolean; orderId?:string; message?:string; confirmationUrl?:string };
       setVerificationRequired(Boolean(result.verificationRequired));
+      setPendingGuestOrder(result.pendingOrderId ?? null);
       if(result.code==='checkout_finished'&&result.canStartNew&&result.orderId)setFinishedOrder(result.orderId);
       if(result.confirmationUrl){window.location.assign(result.confirmationUrl);return;}
       if (!response.ok || !result.url) throw new Error(result.message || result.error || "Checkout could not be started.");
@@ -126,6 +137,21 @@ export default function TicketSelector({
       setBusy(false);
       checkoutInFlight.current = false;
     }
+  }
+
+  async function recoverGuest(action: "resume" | "cancel") {
+    if (!pendingGuestOrder || busy) return;
+    setBusy(true); setError("");
+    try {
+      const response = await fetch(`/api/tickets/orders/${pendingGuestOrder}/checkout`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action})});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to check this booking.");
+      if (result.url) {window.location.assign(result.url);return;}
+      if (result.confirmationUrl) {window.location.assign(result.confirmationUrl);return;}
+      if (result.code === "checkout_finished") {setPendingGuestOrder(null);checkoutKey.current=null;setError("Previous checkout has ended. You can continue with your selection.");}
+      else setError(result.message || "Your checkout is being checked. Please try again shortly.");
+    } catch(error) {setError(error instanceof Error ? error.message : "Unable to check this booking.");}
+    finally {setBusy(false);}
   }
 
   return (
@@ -180,10 +206,11 @@ export default function TicketSelector({
       </div>
       <div className="ticket-selector__total"><span>Total</span><strong>£{(total / 100).toFixed(2)}</strong></div>
       {error ? <p className="form-message form-message--error" role="alert">{error}</p> : null}
-      {finishedOrder ? <p><Link href={`/account/orders/${finishedOrder}`}>View previous order</Link>. Choose “Start a new purchase” only if you want another order.</p> : null}
+      {finishedOrder && signedIn ? <p><Link href={`/account/orders/${finishedOrder}`}>View previous order</Link>. Choose “Start a new purchase” only if you want another order.</p> : null}
+      {pendingGuestOrder && <div className="ticket-guest-recovery"><button className="ticket-guest-continue" type="button" disabled={busy} onClick={() => recoverGuest("resume")}>Resume previous checkout</button><button className="ticket-guest-toggle" type="button" disabled={busy} onClick={() => recoverGuest("cancel")}>Cancel previous unpaid checkout</button></div>}
       {verificationRequired ? <button disabled={busy} onClick={async()=>{setBusy(true);try{const response=await fetch('/api/auth/resend-verification',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({next:`/events/${eventSlug}#tickets`})});const result=await response.json();setError(response.ok?'Verification email queued. Check your inbox.':result.error);}finally{setBusy(false);}}}>Resend verification email</button> : null}
       <div className="ticket-selector__action">
-        <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={checkout}>
+        <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={() => checkout()}>
           {preview && eventSlug === "nye-2026" ? <TicketLaunchCountdown /> : preview ? "Checkout opens when tickets go live" : busy ? "Opening checkout…" : finishedOrder ? "Start a new purchase" : "Buy tickets"}
         </button>
       </div>
@@ -192,6 +219,17 @@ export default function TicketSelector({
         <p>{preview ? "Sign up now so you’re ready when tickets go live." : "Create an account to buy tickets and keep them all in one place."}</p>
         <Link className="industrial-button" href={`/account/signup?next=${encodeURIComponent(`/events/${eventSlug}#tickets`)}`}>SIGN UP</Link>
         <p>Already have an account? <Link href={`/account/login?next=${encodeURIComponent(`/events/${eventSlug}#tickets`)}`}>Sign in</Link></p>
+        {!preview && <>
+          <button className="ticket-guest-toggle" type="button" aria-expanded={showGuest} aria-controls={`guest-${eventId}`} onClick={() => setShowGuest(value => !value)}>Checkout as guest</button>
+          {showGuest && <form id={`guest-${eventId}`} className="ticket-guest-form" onSubmit={event => {event.preventDefault();void checkout(true);}}>
+            <label htmlFor={`guest-name-${eventId}`}>Full name</label>
+            <input id={`guest-name-${eventId}`} name="name" autoComplete="name" required minLength={2} maxLength={80} value={guestName} onChange={event => setGuestName(event.target.value)} placeholder="Your full name" disabled={busy} />
+            <label htmlFor={`guest-email-${eventId}`}>Email address</label>
+            <input id={`guest-email-${eventId}`} name="email" type="email" autoComplete="email" required maxLength={254} value={guestEmail} onChange={event => setGuestEmail(event.target.value)} placeholder="you@example.com" disabled={busy} />
+            <p>We’ll send your tickets and booking confirmation here.</p>
+            <button className="ticket-guest-continue" type="submit" disabled={busy || total === 0}>{busy ? "Opening checkout…" : finishedOrder ? "Start a new guest purchase" : "Continue as guest"}</button>
+          </form>}
+        </>}
       </div>}
       <p className="ticket-selector__support">
         Having trouble? Contact <a href="mailto:info@upforitevents.co.uk">info@upforitevents.co.uk</a> for help.

@@ -6,3 +6,8 @@
 @media(max-width:800px){.draw-simple-layout{gap:35px;padding:40px 24px}.draw-simple-layout .draw-form-panel{padding:24px}.draw-simple-layout .draw-form-panel h2{font-size:27px}}
 @media(max-width:650px){.draw-simple-layout{grid-template-columns:1fr;gap:30px;padding:28px 20px 40px}.draw-simple-layout h1{font-size:clamp(44px,11vw,62px)}.draw-simple-layout .draw-intro{font-size:14px}.draw-simple-date{margin-top:22px;padding-top:16px}.draw-simple-layout .draw-form-panel h2{font-size:29px}.draw-simple-layout .draw-form-panel{padding:23px}.draw-simple-layout .draw-back{margin-bottom:24px}}
 .draw-preview{font-size:11px;color:var(--draw-yellow);font-weight:700}.draw-simple-layout .draw-intro{color:#f3f1e7}.draw-simple-date>span:last-child{color:#f3f1e7;font-size:12px}.draw-form-panel .draw-consent span{color:#f3f1e7;font-size:13px}.draw-form-panel input::placeholder{color:#c5c8bc}.draw-simple-layout .draw-form-panel label:not(.draw-consent){font-size:12px}.draw-simple-layout .draw-form-panel h2{margin-top:3px}
+
+@media(max-width:720px) {
+  .draw-simple-copy, .draw-form-panel > h2 { text-align:center; }
+  .draw-simple-copy .draw-intro { margin-inline:auto; }
+}

@@ -13,7 +13,8 @@
     "worker:emails": "tsx scripts/email-worker.ts",
     "worker:emails:railway": "npm run db:migrate && npm run worker:emails",
     "worker:emails:once": "tsx scripts/email-worker.ts --once",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:guest-checkout": "NODE_PATH=./scripts/test-support node --import tsx scripts/test-guest-checkout.ts"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

@@ -44,10 +44,17 @@ export default function PrivacyPage() {
 
         <h2>Information used</h2>
         <p>
+          With consent, a completed Blackley&apos;s Bucket entry is recorded as a registration,
+          separately from a ticket purchase. The browser and server share an event identifier
+          so the same entry is not counted twice. Entry names, phone numbers and draw results
+          are not sent to Meta.
+        </p>
+        <p>
           Measurement data can include the page path, event time, {merchTrackingEnabled ? "product or ticket" : "ticket"} identifiers,
           quantities, order value and currency, browser information, IP address and Meta&apos;s first-party <code>_fbp</code>
-          and <code>_fbc</code> identifiers. For new newsletter sign-ups, email addresses are normalised and
-          SHA-256 hashed on our server before being sent to Meta. We do not send payment-card details, passwords
+          and <code>_fbc</code> identifiers. For consented sign-ups, ticket activity and bucket entries,
+          email addresses and account identifiers are SHA-256 hashed on our server before being sent to Meta.
+          We do not send payment-card details, passwords
           or Stripe checkout-session references to Meta.
         </p>
 

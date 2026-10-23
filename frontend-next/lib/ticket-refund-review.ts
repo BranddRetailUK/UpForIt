@@ -20,6 +20,6 @@ export async function reviewAdmissions(db: PoolClient, orderId: string, actorId:
   if (!Number.isFinite(price) || ticketPrice(order.slug, price, consumed).totalMinor > order.total_minor-order.refunded_minor) throw new TicketRequestError('Retained payment does not cover the selected and already-used admissions, including the group offer.',409);
   await db.query("UPDATE tickets SET status='void' WHERE order_id=$1 AND status='valid' AND NOT(id=ANY($2::uuid[]))",[orderId,keepIds]);
   await db.query('UPDATE ticket_orders SET admissions_hold=false,updated_at=now() WHERE id=$1',[orderId]);
-  if(order.merch_discount_enabled && consumed>0 && order.stripe_payment_intent_id) await grantTicketMerchDiscount(db,{userId:order.user_id,ticketOrderId:orderId,source:'stripe'});
+  if(order.user_id && order.merch_discount_enabled && consumed>0 && order.stripe_payment_intent_id) await grantTicketMerchDiscount(db,{userId:order.user_id,ticketOrderId:orderId,source:'stripe'});
   await db.query("INSERT INTO ticket_audit_log(id,order_id,actor_user_id,action,details) VALUES($1,$2,$3,'admissions_reviewed',$4::jsonb)",[randomUUID(),orderId,actorId,JSON.stringify({keepIds,refundedMinor:order.refunded_minor,consumed})]);
 }

@@ -22,7 +22,7 @@ export type MetaContent = {
 };
 
 export type MetaConversionInput = {
-  eventName: "Lead" | "InitiateCheckout" | "Purchase";
+  eventName: "Lead" | "InitiateCheckout" | "Purchase" | "CompleteRegistration";
   eventId: string;
   eventSourceUrl: string;
   eventTime?: number;

@@ -67,3 +67,8 @@
  .mix-hero-speakers::before,.mix-hero-speakers::after{background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452865/UPFORIT/nye-2026/speakers-paper-background.png')}
  .mix-hero-bars::before,.mix-hero-bars::after{background-image:url('https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_800/v1791452872/UPFORIT/nye-2026/yellow-corner-bars.png')}
 }
+
+@media(max-width:720px) {
+  .mix-prize, .mix-how, .mix-error, .mix-notice, .mix-form-message { text-align:center; }
+  .mix-how article { border-left:0; padding-left:0; }
+}

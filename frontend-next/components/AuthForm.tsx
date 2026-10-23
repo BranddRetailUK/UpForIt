@@ -173,7 +173,7 @@ export default function AuthForm({ mode, token, nextPath }: { mode: Mode; token?
             minLength={mode === "login" ? undefined : 12}
             required
           />
-          {mode !== "login" ? <small>At least 12 characters.</small> : null}
+          {mode === "reset" ? <small>At least 12 characters.</small> : null}
         </label>
       ) : null}
       {mode === "signup" ? (

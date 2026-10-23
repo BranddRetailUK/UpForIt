@@ -25,6 +25,7 @@ type AuthEmailOptions = {
 };
 
 type TicketEmailOptions = {
+  guest?: boolean;
   displayName: string;
   accountUrl: string;
   siteUrl: string;
@@ -130,6 +131,7 @@ export function resetPasswordEmailHtml({ displayName, url, siteUrl, originalReci
 }
 
 export function ticketConfirmationEmailHtml({
+  guest = false,
   displayName,
   accountUrl,
   siteUrl,
@@ -163,7 +165,7 @@ export function ticketConfirmationEmailHtml({
         <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0 0 12px;color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">02</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 12px;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Keep your QR code private" : "Bring every ticket you purchased"}</strong>${hasSingleTicketQr ? " until you reach the entrance." : " for your group."}</td></tr>
         <tr><td class="ufi-ticket-step-number" width="36" valign="top" style="padding:0;color:#efff00!important;-webkit-text-fill-color:#efff00!important;font-family:Arial Black,Arial,sans-serif;font-size:20px;font-weight:900">03</td><td class="ufi-ticket-step-copy" valign="top" style="padding:1px 0 0;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:20px"><strong>${hasSingleTicketQr ? "Show the QR code at entry" : "Show each QR code at entry"}</strong> for quick check-in.</td></tr>
       </table>
-      ${callToAction({ label: "View my account", url: accountUrl })}`
+      ${callToAction({ label: guest ? "Download my tickets" : "View my account", url: accountUrl })}`
   });
 }
 
@@ -173,7 +175,7 @@ export function paymentReviewEmailHtml(options: TicketEmailOptions) {
     preheader: "Payment received. Your order needs review; please do not pay again.",
     eyebrow: "PAYMENT UPDATE",
     title: "Your order needs review",
-    bodyHtml: `<p>Hi ${escapeHtml(options.displayName)},</p><p>We received your payment, but cannot issue tickets because the event or ticket sales are unavailable. Your order is held for review.</p>${callToAction({label:"View your order",url:options.accountUrl})}`,
+    bodyHtml: `<p>Hi ${escapeHtml(options.displayName)},</p><p>We received your payment, but cannot issue tickets because the event or ticket sales are unavailable. Your order is held for review.</p>${options.guest ? "<p>Please contact info@upforitevents.co.uk for help with your booking.</p>" : callToAction({label:"View your order",url:options.accountUrl})}`,
     noticeTitle: "Please do not pay again",
     noticeText: "This email is not an admission ticket and does not confirm a refund. Contact UPFORIT if you need help with your order."
   });

@@ -1,5 +1,6 @@
-/** Deliberate release lock: change only after the launch checklist is signed off. */
-export const TICKET_LAUNCH_APPROVED = false;
-export function ticketLaunchAllowed() {
-  return TICKET_LAUNCH_APPROVED || process.env.APP_ENV === "testing";
+import { TICKET_LAUNCH_AT } from "./ticket-launch-countdown";
+/** Approved for the scheduled launch; the public switch remains an emergency stop. */
+export const TICKET_LAUNCH_APPROVED = true;
+export function ticketLaunchAllowed(now = Date.now()) {
+  return process.env.APP_ENV === "testing" || (TICKET_LAUNCH_APPROVED && now >= TICKET_LAUNCH_AT);
 }

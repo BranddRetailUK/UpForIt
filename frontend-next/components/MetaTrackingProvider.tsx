@@ -18,6 +18,7 @@ import {
   readMetaConsent
 } from "../lib/meta-client";
 import {
+  isMetaConsentLandingPath,
   shouldSendMetaBrowserEvent,
   type MetaBrowserContext,
   type MetaConsent,
@@ -142,8 +143,7 @@ export function MetaTrackingProvider({
     track
   }), [consent, merchTrackingEnabled, track]);
 
-  // Show cookie choices only when opened from the footer, never automatically.
-  const showBanner = ready && settingsOpen;
+  const showBanner = ready && (settingsOpen || (consent === "unknown" && !!pixelId && isMetaConsentLandingPath(pathname)));
 
   return (
     <MetaTrackingContext.Provider value={value}>
@@ -152,13 +152,11 @@ export function MetaTrackingProvider({
         <section className="cookie-banner" role="dialog" aria-modal="false" aria-labelledby="cookie-banner-title">
           <div>
 
-            <h2 id="cookie-banner-title">Help us measure what works?</h2>
+            <h2 id="cookie-banner-title">Allow cookies?</h2>
             <p>
-              With your permission, we use the Meta Pixel and Conversions API to measure visits,
-              newsletter sign-ups, ticket purchases{merchTrackingEnabled ? " and merchandise activity" : ""} from our ads.
-              Declining does not affect checkout.
+              We use optional cookies to understand how you use our website and measure our advertising. You can accept or decline these cookies.
             </p>
-            <Link href="/privacy">How tracking works</Link>
+            <Link href="/privacy">Privacy</Link>
           </div>
           <div className="cookie-banner__actions">
             <button className="pop-button pop-button--yellow" type="button" onClick={() => chooseConsent("granted")}>Accept</button>

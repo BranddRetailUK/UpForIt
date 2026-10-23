@@ -4,6 +4,8 @@ import { getPool } from "./db";
 import { publicTicketSalesOpen } from "./event-visibility";
 import type { AuthUser } from "./auth";
 import { BUCKET_SLUG, BucketError, type BucketStatus, type BucketEntryDetails } from "./bucket-shared";
+import { bucketRegistrationEvent, type BucketTrackingContext } from "./meta-bucket";
+import { insertMetaConversionJob } from "./meta-jobs";
 
 type DB = Pick<PoolClient, "query">;
 type EventRow = { id: string; status: string; sales_open: boolean; entry_open: boolean; draw_open: boolean };
@@ -37,7 +39,7 @@ export async function bucketStatus(user: AuthUser | null, db: DB = getPool()): P
 async function audit(db: DB, entryId: string, actorId: string, action: string) {
   await db.query('INSERT INTO bucket_audit(id,entry_id,actor_id,action) VALUES($1,$2,$3,$4)', [randomUUID(),entryId,actorId,action]);
 }
-export async function enterBucket(user: AuthUser, details: BucketEntryDetails) {
+export async function enterBucket(user: AuthUser, details: BucketEntryDetails, tracking?: BucketTrackingContext) {
   if (!user.emailVerified) throw new BucketError('Verify your email before entering.',403);
   const db = await getPool().connect();
   try {
@@ -54,7 +56,9 @@ export async function enterBucket(user: AuthUser, details: BucketEntryDetails) {
     const id = randomUUID();
     await db.query('INSERT INTO bucket_entries(id,event_id,user_id,ticket_id,dj_name,full_name,email,phone,attendance_confirmed_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now())',[id,event.id,user.id,ticket.id,details.djName,details.fullName,user.email,details.phone]);
     await audit(db,id,user.id,'entered');
+    const conversion = bucketRegistrationEvent(id, user, tracking);
+    if (conversion) await insertMetaConversionJob(db, conversion);
     await db.query('COMMIT');
-    return {state:'entered',djName:details.djName,entryStatus:'entered'} satisfies BucketStatus;
+    return {state:'entered',djName:details.djName,entryStatus:'entered',...(conversion ? {meta:{eventId:conversion.eventId}} : {})} satisfies BucketStatus;
   } catch(e) { await db.query('ROLLBACK'); throw e; } finally { db.release(); }
 }

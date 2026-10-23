@@ -3,10 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { TICKET_LAUNCH_AT } from "../../../../lib/ticket-launch-countdown";
 
 import { BUCKET_PATH, type BucketState, type BucketStatus, validateBucketEntry } from "../../../../lib/bucket-shared";
+import { useMetaTracking } from "../../../../components/MetaTrackingProvider";
 
 export default function BucketPage({initial,preview=false,account}:{initial:BucketStatus;preview?:boolean;account?:{fullName:string;email:string}}) {
+  const { track } = useMetaTracking();
   const [state, setState] = useState<BucketState>(initial.state);
   const [djName, setDjName] = useState(initial.djName||"");
   const [fullName,setFullName]=useState(account?.fullName||"");
@@ -22,8 +25,12 @@ export default function BucketPage({initial,preview=false,account}:{initial:Buck
     let active=true;
     async function refresh(){try{const r=await fetch('/api/bucket',{cache:'no-store'});if(r.ok&&active)applyStatus(await r.json());}catch{/* Keep the rendered state; submission always rechecks. */}}
     window.addEventListener('focus',refresh);
-    return()=>{active=false;window.removeEventListener('focus',refresh);};
-  },[preview]);
+    let lastRefresh=0;
+    const checkLaunch=()=>{const now=Date.now();if(state==='upcoming'&&now>=TICKET_LAUNCH_AT&&now-lastRefresh>=5000){lastRefresh=now;void refresh();}};
+    checkLaunch();
+    const timer=state==='upcoming'?window.setInterval(checkLaunch,1000):undefined;
+    return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',refresh);};
+  },[preview,state]);
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const resultRef = useRef<HTMLDivElement>(null);
@@ -66,6 +73,11 @@ export default function BucketPage({initial,preview=false,account}:{initial:Buck
         throw new Error(data.error||'Unable to save your entry. Please try again.');
       }
       applyStatus(data);
+      if (data.state === "entered" && data.meta?.eventId) {
+        try {
+          track("CompleteRegistration", {content_name:"Blackley's Bucket — NYE 2026",content_category:"bucket entry",status:true},data.meta.eventId);
+        } catch { /* Measurement must not prevent the saved entry confirmation. */ }
+      }
       requestAnimationFrame(()=>resultRef.current?.focus());
     }catch(e){setError(e instanceof Error?e.message:'Unable to save your entry. Please try again.');}
     finally{setBusy(false);}
@@ -109,17 +121,15 @@ export default function BucketPage({initial,preview=false,account}:{initial:Buck
           {showForm ? <>
             {eligible && <p className="bucket-eligibility"><span aria-hidden="true">✓</span> Ticket confirmed</p>}
             <form onSubmit={submit}>
+              <label className="bucket-field" htmlFor="bucket-dj-name">Artist / DJ name</label>
+              <input id="bucket-dj-name" name="djName" placeholder="Your DJ name" autoComplete="nickname" maxLength={80} required value={djName} onChange={event => { setDjName(event.target.value); setError(""); }} aria-describedby={error ? "bucket-error" : undefined} aria-invalid={!!error} />
               <label className="bucket-field" htmlFor="bucket-full-name">Full name</label>
-              <input id="bucket-full-name" name="fullName" placeholder="Your full name" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} aria-describedby="bucket-name-help" />
-              <p className="bucket-field-help" id="bucket-name-help">Used to identify you on the night.</p>
+              <input id="bucket-full-name" name="fullName" placeholder="Your full name" autoComplete="name" maxLength={120} required value={fullName} onChange={event => setFullName(event.target.value)} />
               <label className="bucket-field" htmlFor="bucket-email">Email</label>
               <input id="bucket-email" name="email" type="email" autoComplete="email" value={account?.email||""} readOnly aria-describedby="bucket-email-help" />
               <p className="bucket-field-help" id="bucket-email-help">{eligible ? "Your account email, linked to your website ticket." : "Your account email."}</p>
               <label className="bucket-field" htmlFor="bucket-phone">Phone number <span className="bucket-optional">(optional)</span></label>
-              <input id="bucket-phone" name="phone" type="tel" autoComplete="tel" placeholder="Your phone number" maxLength={30} value={phone} onChange={event => setPhone(event.target.value)} aria-describedby="bucket-phone-help" />
-              <p className="bucket-field-help" id="bucket-phone-help">For WhatsApp communication about your entry.</p>
-              <label className="bucket-field" htmlFor="bucket-dj-name">Artist / DJ name</label>
-              <input id="bucket-dj-name" name="djName" placeholder="Your DJ name" autoComplete="nickname" maxLength={80} required value={djName} onChange={event => { setDjName(event.target.value); setError(""); }} aria-describedby={error ? "bucket-error" : undefined} aria-invalid={!!error} />
+              <input id="bucket-phone" name="phone" type="tel" autoComplete="tel" placeholder="Your phone number" maxLength={30} value={phone} onChange={event => setPhone(event.target.value)} />
               <label className="bucket-consent"><input type="checkbox" required checked={attendance} onChange={event => setAttendance(event.target.checked)} /><span>I confirm I will be present at the event if selected.</span></label>
               <label className="bucket-consent"><input type="checkbox" required checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I understand a DJ slot is not guaranteed.</span></label>
               {error && <p id="bucket-error" className="bucket-error" role="alert">{error}</p>}

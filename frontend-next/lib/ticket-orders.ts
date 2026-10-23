@@ -7,7 +7,7 @@ import { grantTicketMerchDiscount } from "./merch-discounts";
 export type FulfilledOrder = {
   orderId: string;
   orderNumber: string;
-  userId: string;
+  userId: string | null;
   email: string;
   displayName: string;
   totalMinor: number;
@@ -30,7 +30,7 @@ export async function fulfilPaidOrder(
   const result = await client.query<{
     id: string;
     order_number: string | null;
-    user_id: string;
+    user_id: string | null;
     status: string;
     fulfilled_at: Date | null;
     admissions_hold: boolean;
@@ -47,9 +47,9 @@ export async function fulfilPaidOrder(
   }>(
     `SELECT o.id, o.order_number, o.user_id, o.status, o.total_minor, o.currency, o.fulfilled_at, o.admissions_hold, e.merch_discount_enabled,
             o.meta_consent_granted, o.meta_purchase_event_id, o.meta_context_encrypted,
-            u.email, u.display_name, e.title AS event_title, e.slug AS event_slug
+            COALESCE(o.guest_email,u.email) AS email, COALESCE(o.guest_name,u.display_name) AS display_name, e.title AS event_title, e.slug AS event_slug
        FROM ticket_orders o
-       JOIN users u ON u.id = o.user_id
+       LEFT JOIN users u ON u.id = o.user_id
        JOIN events e ON e.id = o.event_id
       WHERE o.id = $1 FOR UPDATE OF o`,
     [orderId]
@@ -106,7 +106,7 @@ export async function fulfilPaidOrder(
       );
     }
   }
-  if (order.merch_discount_enabled && !order.admissions_hold) await grantTicketMerchDiscount(client, {
+  if (order.user_id && order.merch_discount_enabled && !order.admissions_hold) await grantTicketMerchDiscount(client, {
     userId: order.user_id,
     ticketOrderId: orderId,
     source

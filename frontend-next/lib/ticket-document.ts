@@ -7,6 +7,7 @@ import { getPool } from "./db";
 import { createTicketQrToken } from "./security";
 
 export type TicketDocumentRow = {
+  guest?: boolean;
   order_number: string;
   display_name: string;
   event_title: string;
@@ -20,10 +21,10 @@ export type TicketDocumentRow = {
 
 export async function getTicketDocumentRows(orderId: string) {
   const result = await getPool().query<TicketDocumentRow>(
-    `SELECT o.order_number, u.display_name, e.title AS event_title, e.venue_name,
+    `SELECT o.order_number, (o.user_id IS NULL) AS guest, COALESCE(o.guest_name,u.display_name) AS display_name, e.title AS event_title, e.venue_name,
             e.starts_at, e.timezone, t.ticket_number, t.public_id, t.ticket_type_name
        FROM ticket_orders o
-       JOIN users u ON u.id = o.user_id
+       LEFT JOIN users u ON u.id = o.user_id
        JOIN events e ON e.id = o.event_id
        JOIN tickets t ON t.order_id = o.id
       WHERE o.id = $1 AND o.status IN ('paid','refund_review') AND o.admissions_hold=false AND t.status <> 'void'

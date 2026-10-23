@@ -9,10 +9,10 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   const nextPath = safeNextPath(query.next);
   return (
     <div className="inner-page section-wrap account-page">
-      <section className="account-panel account-panel--centered-heading">
+      <section className="account-panel account-panel--centered-heading account-panel--signup">
 
         <h1>Create account</h1>
-        <p>Set up your account before buying tickets.</p>
+        <p className="account-signup-intro">Set up your account before buying tickets.</p>
         <AuthForm mode="signup" nextPath={nextPath} />
       </section>
     </div>

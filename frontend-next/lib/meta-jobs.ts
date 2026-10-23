@@ -6,7 +6,7 @@ import { encryptJson } from "./security";
 type Queryable = Pick<PoolClient, "query">;
 
 export type MetaJobInput = MetaConversionInput & {
-  eventName: "InitiateCheckout" | "Purchase";
+  eventName: "InitiateCheckout" | "Purchase" | "CompleteRegistration";
 };
 
 export const META_JOB_MAX_ATTEMPTS = 8;

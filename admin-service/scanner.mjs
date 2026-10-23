@@ -42,10 +42,10 @@ export async function checkIn(pool, principal, body) {
       if (!access.rowCount) throw httpError(401, 'Scanner access has ended. Ask for a new scanner QR.');
     }
     // The ticket identifies its event. Neither a UI selection nor a device event filter controls admission.
-    const ticket = (await db.query(`SELECT t.id,t.ticket_number,t.ticket_type_name,t.status,t.checked_in_at,u.display_name,e.title AS event_title,
+    const ticket = (await db.query(`SELECT t.id,t.ticket_number,t.ticket_type_name,t.status,t.checked_in_at,COALESCE(o.guest_name,u.display_name) display_name,e.title AS event_title,
       EXISTS(SELECT 1 FROM ticket_admin_live_tests a WHERE a.order_id=o.id AND a.actor_user_id=o.user_id) AS admin_live_test,
       ((e.status='published' AND now()>=e.starts_at-interval '2 hours') OR EXISTS(SELECT 1 FROM ticket_admin_live_tests a WHERE a.order_id=o.id AND a.actor_user_id=o.user_id)) AS live_check_in
-      FROM tickets t JOIN ticket_orders o ON o.id=t.order_id JOIN users u ON u.id=t.user_id JOIN events e ON e.id=t.event_id
+      FROM tickets t JOIN ticket_orders o ON o.id=t.order_id LEFT JOIN users u ON u.id=t.user_id JOIN events e ON e.id=t.event_id
       WHERE ${publicId ? 't.public_id=$1' : 'upper(t.ticket_number)=upper($1)'} AND e.status NOT IN ('cancelled','completed')
       AND now()<e.ends_at+interval '2 hours' AND o.status IN ('paid','refund_review') AND o.admissions_hold=false
       FOR UPDATE OF o,t`, [publicId || code])).rows[0];

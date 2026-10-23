@@ -8,7 +8,7 @@ export type EmailJobType = "verify_email" | "reset_password" | "ticket_confirmat
 export async function enqueueEmail(
   jobType: EmailJobType,
   payload: Record<string, unknown>,
-  references: { userId?: string; orderId?: string } = {}
+  references: { userId?: string | null; orderId?: string } = {}
 ) {
   await insertEmailJob(getPool(), jobType, payload, references);
 }
@@ -19,7 +19,7 @@ export async function insertEmailJob(
   database: Queryable,
   jobType: EmailJobType,
   payload: Record<string, unknown>,
-  references: { userId?: string; orderId?: string } = {}
+  references: { userId?: string | null; orderId?: string } = {}
 ) {
   await database.query(
     `INSERT INTO email_jobs (id, job_type, user_id, order_id, encrypted_payload)

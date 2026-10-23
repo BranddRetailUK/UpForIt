@@ -1,3 +1,4 @@
+import { guestDownloadToken } from "../lib/ticket-guest-access";
 import { runWorkerLane } from "../lib/worker-loop";
 import { classifyEmailSubmissionError, recordEmailFailure } from "../lib/email-failure";
 import {readFile} from "node:fs/promises";
@@ -106,9 +107,10 @@ async function deliverEmail(job: Job) {
     html = resetPasswordEmailHtml({ displayName: payload.displayName, url: payload.url, siteUrl, originalRecipient });
   } else if (job.job_type === "ticket_payment_review") {
     if (!payload.orderId) throw new Error("Payment review job is missing orderId");
+    const guest = !(await getPool().query('SELECT user_id FROM ticket_orders WHERE id=$1',[payload.orderId])).rows[0]?.user_id;
     subject = "Your UPFORIT payment needs review";
-    text = `Hi ${payload.displayName},\n\nWe received your payment, but cannot issue tickets because the event or ticket sales are unavailable. Your order is held for review. Please do not pay again. This email is not an admission ticket and does not confirm a refund.\n\nView your order: ${new URL(`/account/orders/${payload.orderId}`, siteUrl).toString()}`;
-    html = paymentReviewEmailHtml({displayName:payload.displayName, accountUrl:new URL(`/account/orders/${payload.orderId}`,siteUrl).toString(),siteUrl,originalRecipient});
+    text = `Hi ${payload.displayName},\n\nWe received your payment, but cannot issue tickets because the event or ticket sales are unavailable. Your order is held for review. Please do not pay again. This email is not an admission ticket and does not confirm a refund.\n\n${guest ? "Contact info@upforitevents.co.uk for help with your booking." : `View your order: ${new URL(`/account/orders/${payload.orderId}`, siteUrl).toString()}`}`;
+    html = paymentReviewEmailHtml({guest,displayName:payload.displayName, accountUrl:new URL(`/account/orders/${payload.orderId}`,siteUrl).toString(),siteUrl,originalRecipient});
   } else {
     if (!payload.orderId) throw new Error("Ticket confirmation job is missing orderId");
     const ticketRows = await getTicketDocumentRows(payload.orderId);
@@ -118,6 +120,8 @@ async function deliverEmail(job: Job) {
     }
     ticketSnapshot = ticketRows.map(row => row.public_id).join(",");
     const pdf = await buildTicketPdf(payload.orderId, ticketRows);
+    const guest = Boolean(ticketRows[0].guest);
+    const ticketUrl = guest ? new URL(`/api/tickets/orders/${payload.orderId}/pdf?guest_token=${guestDownloadToken(payload.orderId)}`,siteUrl).toString() : new URL("/account",siteUrl).toString();
     const singleTicket = ticketRows.length === 1 ? ticketRows[0] : undefined;
     const qrContentId = singleTicket ? `upforit-ticket-${singleTicket.public_id}@upforitevents.co.uk` : undefined;
     const qrImage = singleTicket
@@ -130,11 +134,12 @@ async function deliverEmail(job: Job) {
       : undefined;
     subject = singleTicket ? "Your UPFORIT ticket" : "Your UPFORIT tickets";
     text = singleTicket
-      ? `Hi ${payload.displayName},\n\nYour UPFORIT ticket is attached as a PDF. Its unique QR code is also included in the HTML email for quick access on your phone. Keep both private and show the QR code at entry.\n\nView your account: ${new URL("/account", siteUrl).toString()}`
-      : `Hi ${payload.displayName},\n\nYour UPFORIT tickets are attached in one PDF, with one page and one unique QR code per admission ticket. Save the PDF to your phone and show each QR code at entry.\n\nView your account: ${new URL("/account", siteUrl).toString()}`;
+      ? `Hi ${payload.displayName},\n\nYour UPFORIT ticket is attached as a PDF. Its unique QR code is also included in the HTML email for quick access on your phone. Keep both private and show the QR code at entry.\n\n${guest ? "Download your tickets" : "View your account"}: ${ticketUrl}`
+      : `Hi ${payload.displayName},\n\nYour UPFORIT tickets are attached in one PDF, with one page and one unique QR code per admission ticket. Save the PDF to your phone and show each QR code at entry.\n\n${guest ? "Download your tickets" : "View your account"}: ${ticketUrl}`;
     html = ticketConfirmationEmailHtml({
       displayName: payload.displayName,
-      accountUrl: new URL("/account", siteUrl).toString(),
+      accountUrl: ticketUrl,
+      guest,
       siteUrl,
       originalRecipient,
       singleTicketQrCid: qrContentId,

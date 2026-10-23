@@ -5,7 +5,7 @@ import { insertEmailJob } from './email-jobs';
 // Caller holds the order lock. Lock its event too, so cancellation/closure and
 // fulfilment cannot read inconsistent states. Keep this inside the payment tx.
 export async function holdUnavailablePaidOrder(client: PoolClient, order: {
-  id:string; user_id:string; email:string; display_name:string;
+  id:string; user_id:string|null; email:string; display_name:string;
 }) {
   const state = (await client.query<{reason:string|null}>(`
     SELECT CASE

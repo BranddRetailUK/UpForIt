@@ -18,5 +18,5 @@ export default async function NyeTickets({ preview }: { preview: boolean }) {
   );
   if (result.rows.length !== 1) return <section id="tickets" className="ticket-selector"><h2>Tickets coming soon</h2><p>£10 admission. Buy 3 tickets and get the 4th free.</p></section>;
   const tier = result.rows[0];
-  return <TicketSelector eventId={tier.event_id} eventSlug="nye-2026" eventTitle="NYE 2026" signedIn={Boolean(user)} tiers={[{ id: tier.id, name: tier.name, priceMinor: 1000, maxPerOrder: tier.max_per_order, remaining: null, active: true, status: "on_sale" }]} />;
+  return <TicketSelector key={tier.id} eventId={tier.event_id} eventSlug="nye-2026" eventTitle="NYE 2026" signedIn={Boolean(user)} tiers={[{ id: tier.id, name: tier.name, priceMinor: 1000, maxPerOrder: tier.max_per_order, remaining: null, active: true, status: "on_sale" }]} />;
 }
