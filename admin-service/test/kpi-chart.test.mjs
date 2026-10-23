@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {kpiSeries,kpiChart,chartScale,chartDateTicks} from '../public/kpi-chart.js';
+import {kpiSeries,kpiChart,kpiCards,chartScale,chartDateTicks} from '../public/kpi-chart.js';
 test('website chart preserves missing UTC dates and preserves partial boundary days',()=>{
  const traffic={state:'ready',range:{since:'2026-10-01T20:00:00Z',until:'2026-10-03T20:00:00Z'},daily:[{label:'2026-10-01',pageviews:2},{label:'2026-10-03',pageviews:5}]};
  assert.deepEqual(kpiSeries([],traffic,'pageviews'),[{day:'2026-10-01',value:2},{day:'2026-10-02',value:null},{day:'2026-10-03',value:5}]);
@@ -11,7 +11,7 @@ test('database metrics use numeric daily values and currency labels without depe
  const rows=[{day:'2026-10-19',revenue:'15.50',conversions:'2'},{day:'2026-10-20',revenue:'20',conversions:'1'}];
  assert.deepEqual(kpiSeries(rows,null,'conversions').map(r=>r.value),[2,1]);
  const html=kpiChart({rows,traffic:null,selected:'revenue',context:'overview'});
- assert.match(html,/£35.50/);assert.doesNotMatch(html,/Daily values|chart-dates/);assert.doesNotMatch(html,/NaN|Infinity/);
+ assert.match(kpiCards({rows,traffic:null,selected:'revenue',context:'overview'}),/£35.50/);assert.doesNotMatch(html,/Daily values|chart-dates/);assert.doesNotMatch(html,/NaN|Infinity/);
  const zero=kpiChart({rows:[{day:'2026-10-20',tickets:0}],selected:'tickets',context:'analytics'});
  assert.doesNotMatch(zero,/NaN|Infinity/);
 });
@@ -32,5 +32,5 @@ test('unrecorded history breaks lines and is not a zero total',()=>{
  const html=kpiChart({rows:[],traffic,selected:'pageviews',context:'overview'});
  assert.match(html,/Partial data/);assert.equal((html.match(/<polyline /g)||[]).length,2);assert.equal((html.match(/<circle /g)||[]).length,2);
  const missing=kpiChart({rows:[],traffic:{...traffic,daily:[]},selected:'pageviews',context:'analytics'});
- assert.match(missing,/<strong>—<\/strong>/);assert.doesNotMatch(missing,/<circle |<polyline /);
+ assert.match(kpiCards({rows:[],traffic:{...traffic,daily:[]},selected:'pageviews',context:'analytics'}),/<strong class="kpi-card-value">—<\/strong>/);assert.doesNotMatch(missing,/<circle |<polyline /);
 });
