@@ -17,12 +17,21 @@ export function kpiSeries(rows,traffic,key){
  }
  return result;
 }
+export function kpiCards({rows,traffic,selected,context,result}){
+ const labels={pageviews:'Page hits',tickets:'Tickets issued',conversions:'Sales',revenue:'Revenue',signups:'Email sign-ups',mixes:'Mix entries'};
+ return `<section class="kpi-cards" aria-label="${escape(context)} performance metrics">${Object.entries(labels).map(([id,label])=>{
+  const series=kpiSeries(rows,traffic,id),ready=(!result||result.state==='ready')&&series?.some(row=>row.value!==null);
+  const total=ready?format(series.reduce((sum,row)=>sum+(row.value||0),0),id):'—';
+  const detail=id==='pageviews'&&traffic?.incomplete?'Recorded hits only; earlier dates are unavailable.':id==='revenue'?'Ticket revenue after refunds.':id==='conversions'?'Paid ticket orders.':'Total for the selected date range.';
+  return `<button type="button" class="kpi-card ${selected===id?'active':''}" data-kpi="${id}" aria-pressed="${selected===id}" title="${detail}"><span class="kpi-card-label">${label}</span><strong class="kpi-card-value">${total}</strong></button>`;
+ }).join('')}</section>`;
+}
 export function kpiChart({rows,traffic,selected,context,selection={period:'30'},result}){
  const key=Object.hasOwn(metrics,selected)?selected:'signups',series=kpiSeries(rows,traffic,key);
  const periodLabel=selection.period==='custom'?`${selection.from} — ${selection.to}`:periods.find(([id])=>id===selection.period)?.[1]||'Selected range';
  const today=new Date().toISOString().slice(0,10);
  const summary=series?.some(r=>r.value!==null)?format(series.reduce((n,r)=>n+(r.value||0),0),key):'—';
- const controls=`<div class="kpi-header"><div class="chart-summary"><strong>${summary}</strong><span>${metrics[key]}</span></div><div class="kpi-controls"><select data-chart-period aria-label="${escape(context)} graph date range">${periods.map(([value,label])=>`<option value="${value}" ${selection.period===value?'selected':''}>${label}</option>`).join('')}</select></div>${selection.period==='custom'?`<form class="kpi-range" data-chart-range="${escape(context)}"><label>From (UTC)<input type="date" name="from" value="${escape(selection.draftFrom??selection.from??'')}" max="${today}" required></label><label>To (UTC)<input type="date" name="to" value="${escape(selection.draftTo??selection.to??'')}" max="${today}" required></label><button class="button primary" type="submit">Apply range</button></form>`:''}<div class="kpi-buttons" role="group" aria-label="${escape(context)} graph KPI">${Object.entries(metrics).map(([id,label])=>`<button class="button ${key===id?'primary':''}" data-kpi="${id}" aria-pressed="${key===id}">${({conversions:'Sales',revenue:'Revenue'})[id]||label}</button>`).join('')}</div></div>`;
+ const controls=`<div class="kpi-header"><div class="chart-summary"><strong>${summary}</strong><span>${metrics[key]}</span></div><div class="kpi-controls"><select data-chart-period aria-label="${escape(context)} graph date range">${periods.map(([value,label])=>`<option value="${value}" ${selection.period===value?'selected':''}>${label}</option>`).join('')}</select></div>${selection.period==='custom'?`<form class="kpi-range" data-chart-range="${escape(context)}"><label>From (UTC)<input type="date" name="from" value="${escape(selection.draftFrom??selection.from??'')}" max="${today}" required></label><label>To (UTC)<input type="date" name="to" value="${escape(selection.draftTo??selection.to??'')}" max="${today}" required></label><button class="button primary" type="submit">Apply range</button></form>`:''}</div>`;
  if(result&&result.state!=='ready')return controls+`<div class="empty" role="status">${result.state==='loading'?'Loading graph…':result.state==='pending'?'Choose dates and apply the range.':escape(result.message||'Graph unavailable.')}${result.state==='error'?'<p><button class="button" data-action="retry-chart">Retry</button></p>':''}</div>`;
  if(series===null)return controls+`<div class="empty" role="status">${!traffic||traffic.state==='loading'?'Loading website data…':'Website data unavailable.'}${traffic&&traffic.state!=='loading'?'<p><button class="button" data-action="retry-chart">Retry</button></p>':''}</div>`;
  if(!series.length)return controls+'<p class="empty">No data available.</p>';
