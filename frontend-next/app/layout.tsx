@@ -1,6 +1,7 @@
 import { SOCIAL_SHARE_IMAGE } from "../lib/social-metadata";
 import type { Metadata } from "next";
 import { Archivo_Black, Space_Grotesk } from "next/font/google";
+import PageAnalyticsTracker from "../components/PageAnalyticsTracker";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
 import { CartProvider } from "../components/CartProvider";
@@ -76,6 +77,7 @@ export default function RootLayout({
           pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID || ""}
           merchTrackingEnabled={isMetaMerchTrackingEnabled(process.env.META_MERCH_TRACKING_ENABLED)}
         >
+          <PageAnalyticsTracker />
           <CartProvider>
             <div className="site-shell">
 

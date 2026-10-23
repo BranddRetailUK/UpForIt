@@ -14,13 +14,14 @@ import {hash,sessionToken,sameOrigin,sessionCookie,csvCell,httpError} from './se
 import {reportingRange} from './reporting-range.mjs';
 import {kpiTrends,dashboard,mutate,audit,subscriberSql,entrySql,competitionId} from './data.mjs';
 import {metaAnalytics} from './meta.mjs';
-import {trafficAnalytics} from './traffic.mjs';
+import {createTrafficAnalytics} from './traffic.mjs';
 import {campaignList,campaignDetail,saveCampaign,queueCampaign,verifyWebhook,ingestEvents,unsubscribe,startCampaignWorker,emailHTML} from './campaigns.mjs';
 const production=process.env.NODE_ENV==='production';
 const port=Number(process.env.PORT||4310),root=fileURLToPath(new URL('./public',import.meta.url));
 const origin=process.env.ADMIN_ORIGIN||(process.env.RAILWAY_PUBLIC_DOMAIN?`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`:`http://localhost:${port}`);
 if(!process.env.DATABASE_URL||!process.env.AUTH_RATE_LIMIT_SECRET)throw new Error('DATABASE_URL and AUTH_RATE_LIMIT_SECRET are required.');
 const db=new pg.Pool({connectionString:process.env.DATABASE_URL,max:8,connectionTimeoutMillis:10000,idleTimeoutMillis:30000,statement_timeout:15000,...(process.env.DB_SSL==='true'?{ssl:{rejectUnauthorized:false}}:{})});
+const trafficAnalytics=createTrafficAnalytics({db});
 db.on('error',()=>console.error('Database connection error'));
 const client=await db.connect();try{await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(739128461)');await client.query(await readFile(new URL('./schema.sql',import.meta.url),'utf8'));await client.query('COMMIT');}catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2'};

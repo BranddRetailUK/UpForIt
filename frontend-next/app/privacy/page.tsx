@@ -20,6 +20,11 @@ export default function PrivacyPage() {
           Meta advertising measurement after you choose Accept in our cookie notice.
         </p>
 
+        <h2>Website analytics</h2>
+        <p>After you accept optional cookies, we record page paths and times directly in our database,
+          using a random visitor cookie lasting up to one year and a session cookie renewed for 1 minute
+          after each page hit. This helps us count page hits, visitors and visits. We do not store query
+          strings, IP addresses or account-page paths in these analytics records. Declining stops this tracking.</p>
         <h2>What Meta measurement records</h2>
         {merchTrackingEnabled ? (
           <p>
