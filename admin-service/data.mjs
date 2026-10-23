@@ -15,7 +15,7 @@ export async function dashboard(db){
  (SELECT COALESCE(sum(quantity),0)::int FROM ticket_order_items WHERE order_id=o.id AND unit_price_minor=0) free_count,
  (SELECT count(*)::int FROM tickets t WHERE t.order_id=o.id AND t.status='checked_in') checked_in,
  EXISTS(SELECT 1 FROM ticket_audit_log a WHERE a.order_id=o.id AND a.action='admin_simulated_purchase') simulated
- FROM ticket_orders o JOIN users u ON u.id=o.user_id JOIN events e ON e.id=o.event_id WHERE o.status<>'expired' ORDER BY o.created_at DESC LIMIT 500`),
+ FROM ticket_orders o JOIN users u ON u.id=o.user_id JOIN events e ON e.id=o.event_id WHERE o.status='paid' ORDER BY o.created_at DESC LIMIT 500`),
  db.query(`SELECT tt.id,tt.name,tt.price_minor,tt.currency,tt.capacity,tt.is_active,e.sales_open,e.title event_title,
  COALESCE((SELECT sum(i.quantity)::int FROM ticket_order_items i JOIN ticket_orders o ON o.id=i.order_id WHERE i.ticket_type_id=tt.id AND o.status='paid'),0) sold
  FROM ticket_types tt JOIN events e ON e.id=tt.event_id WHERE tt.archived_at IS NULL ORDER BY e.starts_at,tt.sort_order`),
@@ -23,7 +23,7 @@ export async function dashboard(db){
  (SELECT COALESCE(sum(total_minor-refunded_minor),0) FROM ticket_orders WHERE paid_at IS NOT NULL) revenue_minor,
  (SELECT count(*)::int FROM tickets WHERE status<>'void') issued_tickets,
  (SELECT count(*)::int FROM tickets WHERE status='checked_in') checked_in,
- (SELECT count(*)::int FROM ticket_orders WHERE status<>'expired') order_count`),
+ (SELECT count(*)::int FROM ticket_orders WHERE status='paid') order_count`),
  db.query(`SELECT id,title,starts_at,venue_name,slug FROM events WHERE status='published' AND ends_at>now() ORDER BY starts_at LIMIT 1`),
  db.query(`SELECT to_char(series_day,'YYYY-MM-DD') AS day,count(s.id)::int count FROM generate_series((now() AT TIME ZONE 'Europe/London')::date-29,(now() AT TIME ZONE 'Europe/London')::date,interval '1 day') AS series_day LEFT JOIN signups s ON (s.created_at AT TIME ZONE 'Europe/London')::date=series_day::date GROUP BY series_day ORDER BY series_day`),
  db.query(`SELECT a.action,a.created_at,u.display_name actor FROM admin_audit_log a JOIN users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 8`),
