@@ -14,10 +14,38 @@ export async function metaAnalytics(){
   let campaigns=[],after;
   do{const result=await get('campaigns',{fields:'id,name,status,effective_status',limit:'100',...(after?{after}:{})});campaigns.push(...(result.data||[]));after=result.paging?.next?result.paging?.cursors?.after:null;}while(after&&campaigns.length<1000);
   campaigns=visibleMetaCampaigns(campaigns);
-  let rows=[];after=null;
-  if(campaigns.length)do{const result=await get('insights',{time_range:JSON.stringify(range),level:'campaign',filtering:JSON.stringify([{field:'campaign.id',operator:'IN',value:campaigns.map(c=>c.id)}]),fields:'campaign_id,campaign_name,spend,impressions,inline_link_clicks,date_start,date_stop',limit:'100',...(after?{after}:{})});rows.push(...(result.data||[]));after=result.paging?.next?result.paging?.cursors?.after:null;}while(after&&rows.length<1000);
-  const data=campaigns.map(c=>{const r=rows.find(r=>r.campaign_id===c.id)||{};return {id:c.id,name:c.name,status:c.effective_status||c.status||'UNKNOWN',spend:Number(r.spend||0),impressions:Number(r.impressions||0),clicks:Number(r.inline_link_clicks||0)};});
-  const all=data.reduce((a,c)=>({spend:a.spend+c.spend,impressions:a.impressions+c.impressions,clicks:a.clicks+c.clicks}),{spend:0,impressions:0,clicks:0});
-  const value={state:'ready',range,all,campaigns:data};cache={value,until:Date.now()+60000};return value;
+  const ids=new Set(campaigns.map(c=>c.id));
+  const insights=async(breakdowns)=>{
+   if(!campaigns.length)return [];
+   const rows=[];let cursor;const seen=new Set();
+   do{
+    const result=await get('insights',{time_range:JSON.stringify(range),level:'campaign',filtering:JSON.stringify([{field:'campaign.id',operator:'IN',value:[...ids]}]),fields:'campaign_id,spend,impressions,inline_link_clicks,outbound_clicks,actions',limit:'500',...(breakdowns?{breakdowns}:{}),...(cursor?{after:cursor}:{})});
+    rows.push(...(result.data||[]).filter(r=>ids.has(r.campaign_id)));
+    cursor=result.paging?.next?result.paging?.cursors?.after:null;
+    if(result.paging?.next&&(!cursor||seen.has(cursor)||seen.size>=100))throw new Error('Incomplete Meta report');
+    if(cursor)seen.add(cursor);
+   }while(cursor);
+   return rows;
+  };
+  const metrics=r=>({spend:Number(r.spend||0),impressions:Number(r.impressions||0),clicks:Number(r.inline_link_clicks||0),outboundClicks:Number(r.outbound_clicks?.find(a=>a.action_type==='outbound_click')?.value||0),landingViews:Number(r.actions?.find(a=>a.action_type==='landing_page_view')?.value||0)});
+  const zero=()=>({spend:0,impressions:0,clicks:0,outboundClicks:0,landingViews:0});
+  const add=(a,b)=>{for(const k of Object.keys(a))a[k]+=b[k];return a;};
+  const rows=await insights();
+  const data=campaigns.map(c=>({id:c.id,name:c.name,status:c.effective_status||c.status||'UNKNOWN',...rows.filter(r=>r.campaign_id===c.id).reduce((a,r)=>add(a,metrics(r)),zero())}));
+  const all=data.reduce((a,c)=>add(a,c),zero());
+  const breakdowns=Object.fromEntries(await Promise.all([
+   ['placements','publisher_platform,platform_position'],['devices','impression_device'],['countries','country']
+  ].map(async([key,fields])=>{
+   try{
+    const groups=new Map();
+    for(const r of await insights(fields)){
+     const dimensions=fields.split(',').map(f=>r[f]||'unknown'),id=JSON.stringify(dimensions);
+     if(!groups.has(id))groups.set(id,{dimensions,...zero()});
+     const group=groups.get(id),m=metrics(r);for(const k of Object.keys(m))group[k]+=m[k];
+    }
+    return [key,{state:'ready',rows:[...groups.values()].sort((a,b)=>b.clicks-a.clicks||b.impressions-a.impressions)}];
+   }catch(error){return [key,{state:'error',reason:error.reason||'unavailable'}];}
+  })));
+  const value={state:'ready',range,all,campaigns:data,breakdowns};cache={value,until:Date.now()+60000};return value;
  }catch(error){return {state:'error',reason:error.reason||'unavailable'};}
 }
