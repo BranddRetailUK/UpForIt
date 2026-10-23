@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         const id = randomUUID();
         const meta = getMetaRequestContext(request, body.meta);
         const payload: Stripe.Checkout.SessionCreateParams = {
-          expires_at: Math.max(Math.floor(Date.now()/1000)+31*60, Math.min(Math.floor(Date.now()/1000)+23*3600, ...tiers.map(t=>Math.floor(new Date(t.sales_deadline).getTime()/1000)))),
+          expires_at: Math.ceil(Date.now()/1000)+30*60+5,
           mode: 'payment', payment_method_types: ['card'], customer_email: user.email,
           client_reference_id: id, metadata: { ticketOrderId: id },
           payment_intent_data: { metadata: { ticketOrderId: id } },
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
           cancel_url: `${siteUrl}/events/${tiers[0].event_slug}?checkout=cancelled`
         };
         await client.query(`INSERT INTO ticket_orders (id,user_id,event_id,status,currency,subtotal_minor,total_minor,idempotency_key,request_hash,reserved_until,checkout_payload,checkout_attempted_at,meta_consent_granted,meta_purchase_event_id,meta_context_encrypted)
-          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '24 hours',$7::jsonb,NULL,$8,$9,$10)`,
+          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '30 minutes',$7::jsonb,NULL,$8,$9,$10)`,
           [id,user.id,tiers[0].event_id,total,body.idempotencyKey,requestHash,JSON.stringify(payload),meta.consent,meta.consent ? metaEventId('ticket_purchase',id) : null,meta.consent ? encryptJson({fbp:meta.fbp,fbc:meta.fbc,clientIp:meta.clientIp,clientUserAgent:meta.clientUserAgent}) : null]);
         for (const line of lines) await client.query(`INSERT INTO ticket_order_items (id,order_id,ticket_type_id,ticket_type_name,unit_price_minor,quantity,line_total_minor) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(),id,line.tier.id,line.name,line.unitPriceMinor,line.quantity,line.unitPriceMinor*line.quantity]);
         order = { id,request_hash:requestHash,status:'pending',stripe_checkout_url:null,checkout_payload:payload,created_at:new Date() };

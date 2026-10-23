@@ -33,7 +33,7 @@ export async function recoverTicketCheckout(pool:Pool,stripe:Stripe,id:string,ac
   if(!order)throw new TicketRequestError('Order not found.',404);
   if(order.status!=='pending')return finishedCheckout(order);
   await db.query('UPDATE ticket_orders SET checkout_checked_at=now() WHERE id=$1',[id]);
-  const now=Date.now(),canSell=(order.admin_live_test&&['draft','published'].includes(order.event_status)||order.event_status==='published'&&order.sales_open)&&new Date(order.sales_deadline).getTime()>now;
+  const now=Date.now(),checkoutTimedOut=!!order.checkout_attempted_at&&now-new Date(order.checkout_attempted_at).getTime()>=30*60*1000,canSell=!checkoutTimedOut&&(order.admin_live_test&&['draft','published'].includes(order.event_status)||order.event_status==='published'&&order.sales_open)&&new Date(order.sales_deadline).getTime()>now;
   let session:Stripe.Checkout.Session|null=null;
   if(order.stripe_checkout_session_id)session=await stripe.checkout.sessions.retrieve(order.stripe_checkout_session_id);
   else {
@@ -43,7 +43,8 @@ export async function recoverTicketCheckout(pool:Pool,stripe:Stripe,id:string,ac
     if(!order.checkout_payload)throw new Error('Missing checkout payload');
     // Set expiry immediately before the first submission, then persist the exact
     // request AND attempt marker before network IO. Neither changes on retry.
-    order.checkout_payload={...order.checkout_payload,expires_at:Math.max(Math.floor(now/1000)+31*60,Math.min(Math.floor(now/1000)+23*3600,Math.floor(new Date(order.sales_deadline).getTime()/1000)))};
+    // Stripe requires at least 30 minutes at receipt; allow five seconds for transit.
+    order.checkout_payload={...order.checkout_payload,expires_at:Math.ceil(now/1000)+30*60+5};
     await db.query("UPDATE ticket_orders SET checkout_payload=$2::jsonb,checkout_attempted_at=now(),updated_at=now() WHERE id=$1 AND status='pending'",[id,JSON.stringify(order.checkout_payload)]);
     order.checkout_attempted_at=new Date(now);
    }else{

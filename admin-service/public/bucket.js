@@ -6,7 +6,7 @@ export function resetBucket(){state=null;generation++;}
 async function load(){const id=++generation;state={loading:true};try{const data=await ctx.api('/api/bucket');if(id===generation)state=data;}catch(e){if(id===generation)state={error:e.message};}if(id===generation)ctx.render();}
 export function bucket(){
  if(!state)void load();
- const head=`<header class="page-heading"><div><div class="eyebrow">NYE 2026</div><h1>Blackley’s Bucket</h1></div><div class="actions"><button class="button ghost" data-bucket="refresh" ${busy?'disabled':''}>Refresh entries</button><a class="button" href="/api/bucket?export=csv">Download CSV</a></div></header>`;
+ const head=`<header class="page-heading"><div><h1>Blackley’s Bucket</h1></div><div class="actions"><button class="button ghost" data-bucket="refresh" ${busy?'disabled':''}>Refresh entries</button><a class="button" href="/api/bucket?export=csv">Download CSV</a></div></header>`;
  if(!state||state.loading)return head+'<p role="status">Loading entries…</p>';
  if(state.error)return head+`<p class="form-message" role="alert">${esc(state.error)}</p>`;
  const entries=state.entries,called=entries.find(e=>e.status==='called'),played=entries.filter(e=>e.status==='played').length,remaining=entries.filter(e=>e.status==='entered'&&e.eligible).length;
