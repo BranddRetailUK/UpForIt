@@ -1,3 +1,4 @@
+import {visibleMetaCampaigns} from './meta-campaigns.mjs';
 import {createHmac} from 'node:crypto';
 let cache;
 export async function metaAnalytics(){
@@ -9,9 +10,10 @@ export async function metaAnalytics(){
  const version=/^v\d+\.\d+$/.test(process.env.META_GRAPH_API_VERSION||'')?process.env.META_GRAPH_API_VERSION:'v25.0';
  const get=async(path,params)=>{const url=new URL(`https://graph.facebook.com/${version}/${account}/${path}`);Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));if(secret)url.searchParams.set('appsecret_proof',createHmac('sha256',secret).update(token).digest('hex'));const r=await fetch(url,{headers:{authorization:`Bearer ${token}`},signal:AbortSignal.timeout(8000)});const body=await r.json();if(!r.ok||body.error){const error=new Error('Meta unavailable');error.reason=body.error?.code===190||r.status===401?'authorization':[10,200].includes(body.error?.code)||r.status===403?'permissions':r.status===429||[4,17,32,613].includes(body.error?.code)?'rate_limit':'provider';throw error;}return body;};
  try{
-  // Include campaign lifecycle states so paused/archived campaigns remain visible.
+  // Read lifecycle states, then exclude the retired campaigns before requesting metrics.
   let campaigns=[],after;
   do{const result=await get('campaigns',{fields:'id,name,status,effective_status',limit:'100',...(after?{after}:{})});campaigns.push(...(result.data||[]));after=result.paging?.next?result.paging?.cursors?.after:null;}while(after&&campaigns.length<1000);
+  campaigns=visibleMetaCampaigns(campaigns);
   let rows=[];after=null;
   if(campaigns.length)do{const result=await get('insights',{time_range:JSON.stringify(range),level:'campaign',filtering:JSON.stringify([{field:'campaign.id',operator:'IN',value:campaigns.map(c=>c.id)}]),fields:'campaign_id,campaign_name,spend,impressions,inline_link_clicks,date_start,date_stop',limit:'100',...(after?{after}:{})});rows.push(...(result.data||[]));after=result.paging?.next?result.paging?.cursors?.after:null;}while(after&&rows.length<1000);
   const data=campaigns.map(c=>{const r=rows.find(r=>r.campaign_id===c.id)||{};return {id:c.id,name:c.name,status:c.effective_status||c.status||'UNKNOWN',spend:Number(r.spend||0),impressions:Number(r.impressions||0),clicks:Number(r.inline_link_clicks||0)};});
