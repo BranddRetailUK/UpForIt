@@ -1,8 +1,9 @@
 import {httpError} from './security.mjs';
-const fields=`u.id,u.display_name,u.email,u.role,u.created_at,u.updated_at,u.email_verified_at,u.disabled_at,
- CASE WHEN EXISTS(SELECT 1 FROM admin_email_suppressions x WHERE x.email=lower(trim(u.email))) THEN 'Unsubscribed'
+const newsletterStatus=`CASE WHEN EXISTS(SELECT 1 FROM admin_email_suppressions x WHERE x.email=lower(trim(u.email))) THEN 'Unsubscribed'
  WHEN EXISTS(SELECT 1 FROM signups s LEFT JOIN admin_signup_preferences p ON p.signup_id=s.id WHERE lower(trim(s.email))=lower(trim(u.email)) AND COALESCE(p.status,'Subscribed')='Subscribed') THEN 'Subscribed'
- WHEN EXISTS(SELECT 1 FROM signups s WHERE lower(trim(s.email))=lower(trim(u.email))) THEN 'Unsubscribed' ELSE 'Not subscribed' END newsletter,
+ WHEN EXISTS(SELECT 1 FROM signups s WHERE lower(trim(s.email))=lower(trim(u.email))) THEN 'Unsubscribed' ELSE 'Not subscribed' END`;
+const fields=`u.id,u.display_name,u.email,u.role,u.created_at,u.updated_at,u.email_verified_at,u.disabled_at,
+ ${newsletterStatus} newsletter,
  (SELECT count(*)::int FROM ticket_orders o WHERE o.user_id=u.id AND o.paid_at IS NOT NULL) paid_orders,
  (SELECT COALESCE(sum(o.total_minor-o.refunded_minor),0) FROM ticket_orders o WHERE o.user_id=u.id AND o.paid_at IS NOT NULL) net_spend_minor,
  (SELECT COALESCE(sum(o.refunded_minor),0) FROM ticket_orders o WHERE o.user_id=u.id AND o.paid_at IS NOT NULL) refunded_minor,
@@ -14,7 +15,12 @@ export async function accountList(db,params){
  const where="($1='' OR u.display_name ILIKE '%'||$1||'%' OR u.email ILIKE '%'||$1||'%')";
  const total=(await db.query('SELECT count(*)::int total FROM users u WHERE '+where,[q])).rows[0].total;
  const rows=(await db.query(`SELECT ${fields} FROM users u WHERE ${where} ORDER BY u.created_at DESC,u.id DESC LIMIT 50 OFFSET $2`,[q,page*50])).rows;
- return {rows,total,page,pageSize:50};
+ const metrics=(await db.query(`SELECT count(*)::int total_accounts,
+ count(*) FILTER (WHERE u.email_verified_at IS NOT NULL)::int verified_accounts,
+ count(*) FILTER (WHERE (${newsletterStatus})='Subscribed')::int newsletter_subscribers,
+ count(*) FILTER (WHERE EXISTS(SELECT 1 FROM ticket_orders o WHERE o.user_id=u.id AND o.paid_at IS NOT NULL))::int accounts_with_paid_orders
+ FROM users u`)).rows[0];
+ return {rows,total,page,pageSize:50,metrics};
 }
 export async function accountDetail(db,id){
  if(!/^[0-9a-f-]{36}$/i.test(id||''))throw httpError(400,'Invalid account.');
