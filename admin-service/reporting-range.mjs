@@ -24,3 +24,5 @@ export function reportingRange(params,now=new Date()){
  if(![1,7,14,30,90].includes(days))throw httpError(400,'Choose 24 hours, 7 days, 30 days or a custom range.');
  return {since:new Date(now.getTime()-days*dayMs).toISOString(),until:now.toISOString(),days,period:String(days)};
 }
+
+export function reportingBucket(range){return Date.parse(range.until)-Date.parse(range.since)<=2*86400000?'hour':'day';}

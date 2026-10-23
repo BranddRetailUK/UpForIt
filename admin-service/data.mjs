@@ -1,3 +1,4 @@
+import {reportingBucket} from './reporting-range.mjs';
 import {randomUUID} from 'node:crypto';
 import {encryptJson,httpError,validateEntry,validateSettings} from './security.mjs';
 export const competitionId='nye-2026';
@@ -61,19 +62,20 @@ export async function mutate(pool,user,path,b){
 }
 
 export async function kpiTrends(db,range){
+ const unit=reportingBucket(range),format=unit==='hour'?'YYYY-MM-DD\"T\"HH24:00:00\"Z\"':'YYYY-MM-DD';
  return (await db.query(`WITH activity AS (
  SELECT created_at AS at, 'signups' AS metric, 1::numeric AS value FROM signups WHERE created_at >= $1::timestamptz AND created_at < $2::timestamptz
  UNION ALL SELECT created_at, 'tickets', 1 FROM tickets WHERE status<>'void' AND created_at >= $1::timestamptz AND created_at < $2::timestamptz
  UNION ALL SELECT paid_at, 'conversions', 1 FROM ticket_orders WHERE status='paid' AND paid_at >= $1::timestamptz AND paid_at < $2::timestamptz
  UNION ALL SELECT paid_at, 'revenue', (total_minor-refunded_minor)::numeric/100 FROM ticket_orders WHERE paid_at >= $1::timestamptz AND paid_at < $2::timestamptz
  UNION ALL SELECT created_at, 'mixes', 1 FROM mix_entries WHERE competition_id='nye-2026' AND created_at >= $1::timestamptz AND created_at < $2::timestamptz
- ) SELECT to_char(day,'YYYY-MM-DD') AS day,
+ ) SELECT to_char(day,$4) AS day,
  COALESCE(sum(value) FILTER (WHERE metric='signups'),0) AS signups,
  COALESCE(sum(value) FILTER (WHERE metric='tickets'),0) AS tickets,
  COALESCE(sum(value) FILTER (WHERE metric='conversions'),0) AS conversions,
  COALESCE(sum(value) FILTER (WHERE metric='revenue'),0) AS revenue,
  COALESCE(sum(value) FILTER (WHERE metric='mixes'),0) AS mixes
- FROM generate_series(($1::timestamptz AT TIME ZONE 'UTC')::date,(($2::timestamptz-interval '1 millisecond') AT TIME ZONE 'UTC')::date,interval '1 day') day
- LEFT JOIN activity ON (activity.at AT TIME ZONE 'UTC')::date=day::date
- GROUP BY day ORDER BY day`,[range.since,range.until])).rows;
+ FROM generate_series(date_trunc($3,$1::timestamptz AT TIME ZONE 'UTC'),date_trunc($3,($2::timestamptz-interval '1 millisecond') AT TIME ZONE 'UTC'),('1 '||$3)::interval) day
+ LEFT JOIN activity ON date_trunc($3,activity.at AT TIME ZONE 'UTC')=day
+ GROUP BY day ORDER BY day`,[range.since,range.until,unit,format])).rows;
 }

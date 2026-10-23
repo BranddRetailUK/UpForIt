@@ -1,0 +1,23 @@
+let ctx,state=null,generation=0,search='',page=0;
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const date=value=>value?new Date(value).toLocaleString('en-GB',{timeZone:'Europe/London'}):'—';
+const money=value=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(Number(value||0)/100);
+const status=a=>a.disabled_at?'Disabled':a.email_verified_at?'Verified':'Unverified';
+export function configureAccounts(context){ctx=context;}
+export function resetAccounts(){state=null;search='';page=0;generation++;}
+async function load(){const token=++generation;state={loading:true};ctx.render();try{const result=await ctx.api('/api/accounts?'+new URLSearchParams({q:search,page:String(page)}));if(token===generation)state=result;}catch(e){if(token===generation)state={error:e.message};}if(token===generation)ctx.render();}
+export function accounts(){
+ if(!state){state={loading:true};queueMicrotask(load);}
+ return `<header class="page-heading"><h1>User Accounts</h1><button class="button" data-accounts="refresh">Refresh</button></header><section class="panel"><form id="account-search" class="toolbar"><label class="search"><input name="q" type="search" aria-label="Search accounts by name or email" placeholder="Search name or email…" value="${esc(search)}"></label><button class="button" type="submit">Search</button></form>${state.loading?'<p class="empty" role="status">Loading accounts…</p>':state.error?`<p class="empty" role="alert">${esc(state.error)}</p>`:`<div class="table-wrap"><table><thead><tr><th>Account</th><th>Joined</th><th>Status / role</th><th>Newsletter</th><th>Paid orders</th><th>Net spend</th><th>Tickets</th><th>Last purchase</th><th></th></tr></thead><tbody>${state.rows.map(a=>`<tr><td>${esc(a.display_name)}<small>${esc(a.email)}</small></td><td>${date(a.created_at)}</td><td>${status(a)}<small>${esc(a.role)}</small></td><td>${esc(a.newsletter)}</td><td>${a.paid_orders}</td><td>${money(a.net_spend_minor)}</td><td>${a.tickets}</td><td>${date(a.last_purchase_at)}</td><td><button class="row-button" data-accounts="detail" data-id="${a.id}">View account</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No accounts match your search.</td></tr>'}</tbody></table></div><div class="table-footer"><span>${state.total} accounts · Page ${state.page+1}</span><div class="actions"><button class="button" data-accounts="previous" ${!page?'disabled':''}>Previous</button><button class="button" data-accounts="next" ${(page+1)*50>=state.total?'disabled':''}>Next</button></div></div>`}</section>`;
+}
+document.addEventListener('submit',event=>{if(event.target.id!=='account-search')return;event.preventDefault();search=new FormData(event.target).get('q').trim();page=0;void load();});
+document.addEventListener('click',async event=>{
+ const button=event.target.closest('[data-accounts]');if(!button)return;
+ const action=button.dataset.accounts;
+ if(action==='detail'){
+  const token=generation;button.disabled=true;try{const {account:a,orders}=await ctx.api('/api/accounts/'+button.dataset.id);
+   if(token!==generation)return;ctx.openDialog(ctx.dialogHead(esc(a.display_name),'User account')+`<div class="settings-body"><p>${esc(a.email)}</p><p>${status(a)} · ${esc(a.role)} · Newsletter: ${esc(a.newsletter)}</p><p>Registered: ${date(a.created_at)}</p><p>Email verified: ${date(a.email_verified_at)}</p><p>Last updated: ${date(a.updated_at)}</p>${a.disabled_at?`<p>Disabled: ${date(a.disabled_at)}</p>`:''}<p>Paid orders: ${a.paid_orders} · Net spend: ${money(a.net_spend_minor)} · Refunded: ${money(a.refunded_minor)}</p><p>Tickets: ${a.tickets} · Checked in: ${a.checked_in}</p><h2 style="margin-top:24px">Purchase history</h2><p class="tiny">Latest 100 paid orders, including refunds</p><div class="table-wrap"><table><thead><tr><th>Order / event</th><th>Paid</th><th>Net paid</th><th>Status</th><th>Confirmation email</th></tr></thead><tbody>${orders.map(o=>`<tr><td>${esc(o.order_number)}<small>${esc(o.event_title)} · ${o.ticket_count} tickets</small></td><td>${date(o.paid_at)}</td><td>${money(o.total_minor-o.refunded_minor)}</td><td>${esc(o.status)}</td><td>${esc(o.email_status||'Not queued')}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No purchases yet.</td></tr>'}</tbody></table></div></div><div class="dialog-actions"><button class="button" data-action="close">Close</button></div>`);
+  }catch(e){ctx.toast(e.message);}finally{button.disabled=false;}return;
+ }
+ if(action==='next')page++;if(action==='previous')page=Math.max(0,page-1);void load();
+});

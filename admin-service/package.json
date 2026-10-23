@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check reporting-range.mjs && node --check traffic.mjs && node --check meta.mjs && node --check data.mjs && node --check campaigns.mjs && node --check public/campaigns.js && node --check public/app.js && node --check public/kpi-chart.js && node --check bucket.mjs && node --check public/bucket.js && node --check scanner.mjs && node --check public/scanner.js && node --check checkout-recovery.mjs && node --check live-ticket-test.mjs && node --check public/ticket-test.js",
+    "check": "node --check server.mjs && node --check accounts.mjs && node --check public/accounts.js && node --check reporting-range.mjs && node --check traffic.mjs && node --check meta.mjs && node --check data.mjs && node --check campaigns.mjs && node --check public/campaigns.js && node --check public/app.js && node --check public/kpi-chart.js && node --check bucket.mjs && node --check public/bucket.js && node --check scanner.mjs && node --check public/scanner.js && node --check checkout-recovery.mjs && node --check live-ticket-test.mjs && node --check public/ticket-test.js",
     "test": "node --test test/*.test.mjs",
     "test:scanner": "node scripts/scanner-integration-test.mjs"
   },

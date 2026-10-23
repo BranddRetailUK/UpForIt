@@ -34,3 +34,13 @@ test('unrecorded history breaks lines and is not a zero total',()=>{
  const missing=kpiChart({rows:[],traffic:{...traffic,daily:[]},selected:'pageviews',context:'analytics'});
  assert.match(kpiCards({rows:[],traffic:{...traffic,daily:[]},selected:'pageviews',context:'analytics'}),/<strong class="kpi-card-value">—<\/strong>/);assert.doesNotMatch(missing,/<circle |<polyline /);
 });
+
+test('hourly series retain intraday points and totals without stretching the SVG',()=>{
+ const rows=[{day:'2026-10-23T09:00:00Z',revenue:0},{day:'2026-10-23T10:00:00Z',revenue:10},{day:'2026-10-23T11:00:00Z',revenue:0}];
+ assert.equal(kpiSeries(rows,null,'revenue').length,3);
+ const html=kpiChart({rows,selected:'revenue',context:'overview'});
+ assert.match(html,/10:00/);
+ assert.match(html,/preserveAspectRatio="xMidYMid meet"/);
+ assert.doesNotMatch(html,/preserveAspectRatio="none"/);
+ assert.match(kpiCards({rows,selected:'revenue',context:'overview'}),/£10.00/);
+});

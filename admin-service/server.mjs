@@ -1,3 +1,4 @@
+import {accountList,accountDetail} from './accounts.mjs';
 import {liveTestData,createLiveTest,operateLiveTest} from './live-ticket-test.mjs';
 import {reconcileCheckout} from './checkout-recovery.mjs';
 import {adminBucketData,administerBucket} from './bucket.mjs';
@@ -128,6 +129,8 @@ const server=createServer(async(req,res)=>{
    const [rows,traffic]=await Promise.all([kpiTrends(db,range),trafficAnalytics(range)]);
    return json(res,200,{state:'ready',range,rows,traffic});
   }
+  if(p==='/api/accounts'&&req.method==='GET')return json(res,200,await accountList(db,url.searchParams));
+  if(p.startsWith('/api/accounts/')&&req.method==='GET')return json(res,200,await accountDetail(db,p.slice('/api/accounts/'.length)));
   if(p==='/api/dashboard'&&req.method==='GET')return json(res,200,await dashboard(db));
   if(p==='/api/campaigns'&&req.method==='GET')return json(res,200,await campaignList(db));
   if(p==='/api/campaign'&&req.method==='GET')return json(res,200,await campaignDetail(db,url.searchParams.get('id')));
