@@ -122,7 +122,6 @@
 .facebook:hover { color: #111; background: #fff; border-color: #fff; }
 
 @media (max-width: 800px) {
-  .event :global(.home-bucket__strip) { display: none; }
   .event :global(.nye-event__strip) {
     display: block;
     height: 2px;

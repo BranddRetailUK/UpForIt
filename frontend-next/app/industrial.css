@@ -842,6 +842,9 @@ button,.btn,.pop-button,.industrial-button,.industrial-link,.past-event__link,.c
 .home-bucket__stats strong { color:var(--yellow); font-size:22px; margin-right:4px; }
 .home-bucket .industrial-button { justify-content:center; font-size:14px; min-width:290px; max-width:100%; }
 .home-bucket__strip { display:flex; justify-content:space-around; gap:16px; padding:18px; background:var(--yellow); color:#111; font:400 clamp(14px,1.6vw,20px)/1.3 var(--font-heavy),sans-serif; text-transform:uppercase; }
+@media(max-width:800px) {
+  .home-bucket__strip { display:none; }
+}
 @media(max-width:720px) {
   .home-bucket { margin-block:28px 36px; }
   .home-bucket__content { padding:28px 18px; }
