@@ -1,6 +1,7 @@
 import { SOCIAL_SHARE_IMAGE } from "../../lib/social-metadata";
 import type { Metadata } from "next";
 import MusicHub from "../../components/MusicHub";
+import BlackleyReleaseFeature from "../../components/BlackleyReleaseFeature";
 import { MUSIC_CONTENT } from "../../lib/music";
 
 const RELEASE_SHARE_DESCRIPTION = "Check out Married To The Music / Grift";
@@ -68,6 +69,7 @@ export default function MusicPage() {
         </div>
       </header>
 
+      <BlackleyReleaseFeature />
       <MusicHub blocks={MUSIC_CONTENT} />
     </div>
   );

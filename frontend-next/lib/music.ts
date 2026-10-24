@@ -121,22 +121,6 @@ export const MUSIC_CONTENT: readonly MusicContentBlock[] = [
     ]
   },
   {
-    id: "warm-up-audio",
-    kind: "audio",
-    title: "UPFORIT MiniMix 2026",
-    artist: "Scott Charles",
-    description:
-      "Listen back to Scott Charles's MiniMix from our last event, or download it and take the UPFORIT energy with you.",
-    date: "2026",
-    genre: "MiniMix",
-    mediaPublicId: "Scott_Charles_-_Up_For_It_MiniMix_2026_smkqax",
-    artworkPublicId: "378791832_342695141429926_6804341155809596322_n_xlhaks",
-    format: "mp3",
-    presentation: "wide",
-    placeholder: false,
-    downloadFilename: "scott-charles-upforit-minimix-2026"
-  },
-  {
     id: "after-dark-audio",
     kind: "audio",
     title: "After Dark",

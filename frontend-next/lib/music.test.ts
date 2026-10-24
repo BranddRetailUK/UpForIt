@@ -26,7 +26,7 @@ describe("music content catalogue", () => {
     ).toBe(true);
   });
 
-  it("leads with Scott Charles's playable MiniMix video and audio", () => {
+  it("keeps Scott Charles's playable MiniMix video without the separate audio section", () => {
     const video = MUSIC_CONTENT[0];
     const audio = MUSIC_CONTENT.find((block) => block.id === "warm-up-audio");
 
@@ -36,12 +36,7 @@ describe("music content catalogue", () => {
       mediaPublicId: "UpForIt_MiniMix_rhs1ez",
       placeholder: false
     });
-    expect(audio).toMatchObject({
-      kind: "audio",
-      artist: "Scott Charles",
-      mediaPublicId: "Scott_Charles_-_Up_For_It_MiniMix_2026_smkqax",
-      placeholder: false
-    });
+    expect(audio).toBeUndefined();
   });
 
   it("preserves editorial order in the all view and removes stories from media filters", () => {

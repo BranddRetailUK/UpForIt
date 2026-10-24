@@ -1,8 +1,6 @@
 "use client";
 
-import MixCompetitionBanner from "./MixCompetitionBanner";
 import {
-  Fragment,
   useEffect,
   useRef,
   useState,
@@ -64,14 +62,6 @@ function VolumeIcon({ muted = false }: { muted?: boolean }) {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 9h4l5-4v14l-5-4H4z" />
       {muted ? <path d="m17 9 5 6m0-6-5 6" /> : <path d="M17 8c2 2 2 6 0 8" />}
-    </svg>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3v12m-5-5 5 5 5-5M5 20h14" />
     </svg>
   );
 }
@@ -300,12 +290,10 @@ function AudioPlayer({
           )}
           aria-label={`Download ${block.title} by ${block.artist}`}
         >
-          <DownloadIcon />
           <span>Download</span>
         </a>
       ) : (
         <span className="mix-audio-player__download is-disabled" aria-hidden="true">
-          <DownloadIcon />
           <span>Download</span>
         </span>
       )}
@@ -575,7 +563,6 @@ function ReleaseShowcase({
 export default function MusicHub({ blocks }: MusicHubProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const publishedBlocks = blocks.filter((block) => !block.placeholder);
-  const firstVideoId = publishedBlocks.find(block => block.kind === "video")?.id;
 
   return (
     <section className="music-hub section-wrap" aria-label="Music and mixes">
@@ -595,10 +582,7 @@ export default function MusicHub({ blocks }: MusicHubProps) {
           }
           if (block.kind === "video") {
             return (
-              <Fragment key={block.id}>
-                <VideoCard block={block} activeId={activeId} onPlay={setActiveId} visible={visible} />
-                {block.id === firstVideoId && visible && <MixCompetitionBanner inFeed />}
-              </Fragment>
+              <VideoCard block={block} activeId={activeId} onPlay={setActiveId} visible={visible} key={block.id} />
             );
           }
           if (block.kind === "release") {
