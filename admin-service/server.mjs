@@ -15,6 +15,7 @@ import {hash,sessionToken,sameOrigin,sessionCookie,csvCell,httpError} from './se
 import {reportingRange} from './reporting-range.mjs';
 import {kpiTrends,dashboard,mutate,audit,subscriberSql,entrySql,competitionId} from './data.mjs';
 import {metaAnalytics} from './meta.mjs';
+import {metaSeries} from './meta-series.mjs';
 import {createTrafficAnalytics} from './traffic.mjs';
 import {campaignList,campaignDetail,saveCampaign,queueCampaign,verifyWebhook,ingestEvents,unsubscribe,startCampaignWorker,emailHTML} from './campaigns.mjs';
 const production=process.env.NODE_ENV==='production';
@@ -141,7 +142,8 @@ const server=createServer(async(req,res)=>{
    if(!await rate('campaign:'+user.id,60))throw httpError(429,'Too many campaign updates.');
    return json(res,200,await(p.endsWith('/save')?saveCampaign:queueCampaign)(db,user,await body(req)));
   }
-  if(p==='/api/analytics' &&req.method==='GET')return json(res,200,await metaAnalytics());
+  if(p==='/api/meta-series'&&req.method==='GET')return json(res,200,await metaSeries(reportingRange(url.searchParams),url.searchParams.get("campaign")||""));
+  if(p==='/api/analytics' &&req.method==='GET')return json(res,200,await metaAnalytics(url.searchParams.get("campaign")||""));
   if(p==='/api/traffic'&&req.method==='GET'){
    const days=Number(url.searchParams.get('days')||7);
    if(![1,7,30].includes(days))throw httpError(400,'Choose 1, 7 or 30 days.');

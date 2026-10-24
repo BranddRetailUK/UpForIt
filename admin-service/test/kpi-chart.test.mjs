@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {kpiSeries,kpiChart,kpiCards,chartScale,chartDateTicks} from '../public/kpi-chart.js';
+import {kpiSeries,kpiChart,kpiCards,chartScale,chartDateTicks,kpiPeriodControl} from '../public/kpi-chart.js';
 test('website chart preserves missing UTC dates and preserves partial boundary days',()=>{
  const traffic={state:'ready',range:{since:'2026-10-01T20:00:00Z',until:'2026-10-03T20:00:00Z'},daily:[{label:'2026-10-01',pageviews:2},{label:'2026-10-03',pageviews:5}]};
  assert.deepEqual(kpiSeries([],traffic,'pageviews'),[{day:'2026-10-01',value:2},{day:'2026-10-02',value:null},{day:'2026-10-03',value:5}]);
@@ -19,7 +19,7 @@ test('custom range ends on the selected date without an extra zero day',()=>{
  const traffic={state:'ready',range:{since:'2026-10-01T00:00:00Z',until:'2026-10-03T00:00:00Z'},daily:[]};
  assert.deepEqual(kpiSeries([],traffic,'pageviews').map(r=>r.day),['2026-10-01','2026-10-02']);
  const html=kpiChart({rows:[],selected:'tickets',context:'analytics',selection:{period:'custom',from:'2026-10-01',to:'2026-10-02'},result:{state:'pending'}});
- assert.match(html,/Apply range/);assert.match(html,/24 hours/);assert.match(html,/7 days/);assert.match(html,/30 days/);assert.match(html,/Choose dates and apply/);assert.doesNotMatch(html,/<svg/);
+ assert.match(html,/Apply range/);const control=kpiPeriodControl('analytics',{period:'1'});assert.match(control,/24 hours/);assert.match(control,/7 days/);assert.match(control,/30 days/);assert.doesNotMatch(html,/data-chart-period/);assert.match(html,/Choose dates and apply/);assert.doesNotMatch(html,/<svg/);
 });
 
 test('axes use uniform readable increments and cover the complete value range',()=>{
@@ -30,7 +30,7 @@ test('axes use uniform readable increments and cover the complete value range',(
 test('unrecorded history breaks lines and is not a zero total',()=>{
  const traffic={state:'ready',range:{since:'2026-10-01T00:00:00Z',until:'2026-10-04T00:00:00Z'},daily:[{label:'2026-10-01',pageviews:20},{label:'2026-10-03',pageviews:3}]};
  const html=kpiChart({rows:[],traffic,selected:'pageviews',context:'overview'});
- assert.match(html,/Partial data/);assert.equal((html.match(/<polyline /g)||[]).length,2);assert.equal((html.match(/<circle /g)||[]).length,2);
+ assert.doesNotMatch(html,/Partial data|Hover or focus/);assert.match(html,/role="tooltip" hidden/);assert.match(html,/Not recorded/);assert.equal((html.match(/<polyline /g)||[]).length,2);assert.equal((html.match(/<circle /g)||[]).length,2);
  const missing=kpiChart({rows:[],traffic:{...traffic,daily:[]},selected:'pageviews',context:'analytics'});
  assert.match(kpiCards({rows:[],traffic:{...traffic,daily:[]},selected:'pageviews',context:'analytics'}),/<strong class="kpi-card-value">—<\/strong>/);assert.doesNotMatch(missing,/<circle |<polyline /);
 });

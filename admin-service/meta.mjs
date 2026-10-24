@@ -1,8 +1,10 @@
 import {visibleMetaCampaigns} from './meta-campaigns.mjs';
 import {createHmac} from 'node:crypto';
-let cache;
-export async function metaAnalytics(){
- if(cache&&cache.until>Date.now())return cache.value;
+const cache=new Map();
+export async function metaAnalytics(campaignId=""){
+ if(campaignId&&!/^\d+$/.test(campaignId))return {state:"error",reason:"invalid_campaign"};
+ const cached=cache.get(campaignId);
+ if(cached&&cached.until>Date.now())return cached.value;
  const account=process.env.META_AD_ACCOUNT_ID,token=process.env.META_MARKETING_API_ACCESS_TOKEN,secret=process.env.META_APP_SECRET;
  if(!/^act_\d+$/.test(account||'')||!token)return {state:'not_configured'};
  const until=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -14,12 +16,14 @@ export async function metaAnalytics(){
   let campaigns=[],after;
   do{const result=await get('campaigns',{fields:'id,name,status,effective_status',limit:'100',...(after?{after}:{})});campaigns.push(...(result.data||[]));after=result.paging?.next?result.paging?.cursors?.after:null;}while(after&&campaigns.length<1000);
   campaigns=visibleMetaCampaigns(campaigns);
+  const campaignOptions=campaigns.filter(c=>(c.effective_status||c.status)==='ACTIVE');
+  if(campaignId)campaigns=campaigns.filter(c=>c.id===campaignId);
   const ids=new Set(campaigns.map(c=>c.id));
-  const insights=async(breakdowns)=>{
+  const insights=async(breakdowns,level="campaign")=>{
    if(!campaigns.length)return [];
    const rows=[];let cursor;const seen=new Set();
    do{
-    const result=await get('insights',{time_range:JSON.stringify(range),level:'campaign',filtering:JSON.stringify([{field:'campaign.id',operator:'IN',value:[...ids]}]),fields:'campaign_id,spend,impressions,inline_link_clicks,outbound_clicks,actions',limit:'500',...(breakdowns?{breakdowns}:{}),...(cursor?{after:cursor}:{})});
+    const result=await get('insights',{time_range:JSON.stringify(range),level,filtering:JSON.stringify([{field:'campaign.id',operator:'IN',value:[...ids]}]),fields:(level==='ad'?'ad_id,':'')+'campaign_id,spend,impressions,inline_link_clicks,outbound_clicks,actions',limit:'500',...(breakdowns?{breakdowns}:{}),...(cursor?{after:cursor}:{})});
     rows.push(...(result.data||[]).filter(r=>ids.has(r.campaign_id)));
     cursor=result.paging?.next?result.paging?.cursors?.after:null;
     if(result.paging?.next&&(!cursor||seen.has(cursor)||seen.size>=100))throw new Error('Incomplete Meta report');
@@ -46,6 +50,19 @@ export async function metaAnalytics(){
     return [key,{state:'ready',rows:[...groups.values()].sort((a,b)=>b.clicks-a.clicks||b.impressions-a.impressions)}];
    }catch(error){return [key,{state:'error',reason:error.reason||'unavailable'}];}
   })));
-  const value={state:'ready',range,all,campaigns:data,breakdowns};cache={value,until:Date.now()+60000};return value;
+  let ads={state:'ready',rows:[]};
+  try{
+   const inventory=[];let cursor;const seen=new Set();
+   if(ids.size)do{
+    const result=await get('ads',{fields:'id,name,status,effective_status,campaign_id,adset{start_time,end_time,promoted_object}',filtering:JSON.stringify([{field:'campaign.id',operator:'IN',value:[...ids]}]),limit:'100',...(cursor?{after:cursor}:{})});
+    inventory.push(...(result.data||[]).filter(a=>ids.has(a.campaign_id)));
+    cursor=result.paging?.next?result.paging?.cursors?.after:null;
+    if(result.paging?.next&&(!cursor||seen.has(cursor)||seen.size>=100))throw new Error('Incomplete Meta ads');
+    if(cursor)seen.add(cursor);
+   }while(cursor);
+   const adMetrics=await insights(null,'ad');
+   ads.rows=inventory.map(a=>({id:a.id,name:a.name,campaignId:a.campaign_id,campaignName:campaigns.find(c=>c.id===a.campaign_id)?.name||'',status:a.effective_status||a.status||'UNKNOWN',startTime:a.adset?.start_time,endTime:a.adset?.end_time,pixelId:a.adset?.promoted_object?.pixel_id||null,...adMetrics.filter(r=>r.ad_id===a.id).reduce((sum,r)=>add(sum,metrics(r)),zero())}));
+  }catch(error){ads={state:'error',reason:error.reason||'unavailable'};}
+  const value={state:'ready',range,all,campaigns:data,campaignOptions,breakdowns,ads};cache.set(campaignId,{value,until:Date.now()+60000});if(cache.size>50)cache.delete(cache.keys().next().value);return value;
  }catch(error){return {state:'error',reason:error.reason||'unavailable'};}
 }
