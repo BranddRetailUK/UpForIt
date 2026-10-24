@@ -1,0 +1,3 @@
+.banner {
+  margin-top: clamp(40px, 5vw, 72px);
+}

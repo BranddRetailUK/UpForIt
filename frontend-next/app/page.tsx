@@ -1,3 +1,5 @@
+import NyeBlackleyBanner from "../components/NyeBlackleyBanner";
+import styles from "./home-nye-banner.module.css";
 import { PAST_EVENTS } from "../lib/past-events";
 import Link from "next/link";
 import BlackleysBucketBanner from "../components/BlackleysBucketBanner";
@@ -35,6 +37,9 @@ export default function Home() {
         <Link href="/music" className="discover-card discover-card--music"><h2>TURN IT<br /><em>UP.</em></h2><span className="discover-card__action">Music &amp; mixes </span></Link>
         <Link href="/merch" className="discover-card discover-card--merch"><h2>UP FOR IT<br /><em>CLOTHING.</em></h2><span className="discover-card__action">Shop the collection </span></Link>
       </section>
+      <div className={styles.banner}>
+        <NyeBlackleyBanner showStrip={false} />
+      </div>
       <BlackleysBucketBanner titleId="home-bucket-title" />
       <EventUpdatesBanner />
       <section className="bass-archive section-wrap" aria-labelledby="archive-title"><div className="bass-section-heading"><div><h2 id="archive-title">GOOD TIMES. <em>ON RECORD.</em></h2></div><Link className="industrial-link" href="/events">Event archive </Link></div><div className="past-event-list">{PAST_EVENTS.map(event => <PastEventCard key={event.slug} event={event} />)}</div></section>
