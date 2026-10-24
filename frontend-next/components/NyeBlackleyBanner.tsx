@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import CloudinaryImage from "./CloudinaryImage";
 import NyeCountdown from "./NyeCountdown";
 import { CLOUDINARY_ASSETS } from "../lib/cloudinary";
@@ -8,13 +9,15 @@ type NyeBlackleyBannerProps = {
   headingLevel?: "h1" | "h2";
   priority?: boolean;
   showStrip?: boolean;
+  showTicketLink?: boolean;
 };
 
 export default function NyeBlackleyBanner({
   titleId = "home-nye-blackley-title",
   headingLevel: Heading = "h2",
   priority = false,
-  showStrip = true
+  showStrip = true,
+  showTicketLink = false
 }: NyeBlackleyBannerProps) {
   return (
     <>
@@ -30,6 +33,9 @@ export default function NyeBlackleyBanner({
             <Image className="nye-event__artist-logo" src="/brand/nye-2026/blackley-logo.png" alt="Blackley" width={2835} height={587} sizes="(max-width: 800px) 70vw, 360px" />
             <NyeCountdown />
             <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
+            {showTicketLink && <div className="industrial-actions nye-hero__actions">
+              <Link className="industrial-button" href="/events/nye-2026">BUY TICKETS</Link>
+            </div>}
 
           </div>
 
