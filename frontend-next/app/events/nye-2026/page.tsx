@@ -5,10 +5,15 @@ import { publicTicketSalesOpen } from "../../../lib/event-visibility";
 import type { Metadata } from "next";
 import EventUpdatesBanner from "../../../components/EventUpdatesBanner";
 import { CLOUDINARY_ASSETS, cloudinaryUrl } from "../../../lib/cloudinary";
+import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
-const description = "UPFORIT NYE 2026 at McCarthys Sports Bar, Bletchley. 31 December, doors open 5pm. Featuring Blackley.";
+const description = "Two rooms of Drum & Bass with Blackley at midnight. UPFORIT NYE 2026, 31 December at McCarthys Sports Bar, Bletchley. Doors 5pm. Tickets £10; four for £30.";
+
+function ArtistList({ names, compact = false }: { names: string[]; compact?: boolean }) {
+  return <ul className={`${styles.artists}${compact ? ` ${styles.mcs}` : ""}`}>{names.map(name => <li key={name}>{name}</li>)}</ul>;
+}
 
 export const metadata: Metadata = {
   title: "NYE 2026 — 31 December",
@@ -26,12 +31,39 @@ export const metadata: Metadata = {
 export default async function NyeEventPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const preview = process.env.NODE_ENV === "development" && (await searchParams).preview === "tickets";
   const salesOpen = publicTicketSalesOpen() && process.env.TICKETING_ENABLED === "true";
-  const showTickets = true;
   return (
-    <div className="nye-event">
-      {preview ? <div className="nye-preview-note">LOCAL PREVIEW · Ticket sales are not live</div> : null}
-      <NyeBlackleyBanner titleId="nye-title" headingLevel="h1" priority />
-      {showTickets ? <section className="section-wrap nye-event__tickets" aria-label="NYE tickets"><div className="nye-ticket-intro"><h2>NYE 2026<br /><em>TICKETS</em></h2><p className="nye-ticket-intro__venue">McCarthys Sports Bar</p><p className="nye-ticket-intro__location">4 Chandos Place<br />Bletchley, Milton Keynes, MK2 2SN</p><p className="nye-ticket-intro__doors">Doors open 5pm</p></div><NyeTickets preview={preview || !salesOpen} /></section> : null}
+    <div className={`nye-event ${styles.event}`}>
+      {preview ? <div className="nye-preview-note">LOCAL PREVIEW · Checkout disabled</div> : null}
+      <NyeBlackleyBanner titleId="nye-title" headingLevel="h1" priority showVenue={false} />
+      <section className={`section-wrap nye-event__tickets ${styles.tickets}`} aria-label="NYE tickets">
+        <div className={`nye-ticket-intro ${styles.intro}`}>
+          <h2><span className={styles.presenter}>UPFORIT Presents</span>NYE2026<br /><em>TICKETS</em></h2>
+          <p className={styles.summary}>Two rooms. A full night of Drum &amp; Bass.<br /><strong>Blackley taking us into 2027 at midnight.</strong></p>
+          <p className="nye-ticket-intro__venue">McCarthys Sports Bar</p>
+          <p className="nye-ticket-intro__location">4 Chandos Place<br />Bletchley, Milton Keynes, MK2 2SN</p>
+          <p className="nye-ticket-intro__doors"><time dateTime="2026-12-31">31 December 2026</time> · 5pm–2am</p>
+        </div>
+        <NyeTickets preview={preview || !salesOpen} />
+        <div className={styles.more}>
+          <details className={styles.lineup} open>
+            <summary><span>Explore the line-up</span><span className={styles.toggle} aria-hidden="true" /></summary>
+            <div className={styles.rooms}>
+              <div>
+                <h3>Main room</h3>
+                <p className={styles.headliner}>BLACKLEY <span>Midnight set</span></p>
+                <ArtistList names={["Garon T b2b Danny Darko", "Spektral", "Misty", "Locked in Chaos", "Sinik", "Deechase", "Jake Hypastep"]} />
+                <h4>MCs</h4>
+                <ArtistList compact names={["Big G", "E Dappa", "Treble", "Ashman", "Danzee", "Razor"]} />
+              </div>
+              <div>
+                <h3>Room 2 · The Balcony</h3>
+                <ArtistList names={["Scott Charles", "Ben Miszty", "Slumberjack", "Diatribe showcase"]} />
+              </div>
+            </div>
+          </details>
+          <a className={styles.facebook} href="https://www.facebook.com/events/2196247674321387/" target="_blank" rel="noopener noreferrer">View Facebook event</a>
+        </div>
+      </section>
       <BlackleysBucketBanner titleId="bucket-promo-title" />
       <EventUpdatesBanner id="nye-updates" />
     </div>

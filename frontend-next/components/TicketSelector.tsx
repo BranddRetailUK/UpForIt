@@ -211,7 +211,7 @@ export default function TicketSelector({
       {verificationRequired ? <button disabled={busy} onClick={async()=>{setBusy(true);try{const response=await fetch('/api/auth/resend-verification',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({next:`/events/${eventSlug}#tickets`})});const result=await response.json();setError(response.ok?'Verification email queued. Check your inbox.':result.error);}finally{setBusy(false);}}}>Resend verification email</button> : null}
       <div className="ticket-selector__action">
         <button className="pop-button pop-button--yellow" type="button" disabled={busy || total === 0} onClick={() => checkout()}>
-          {preview && eventSlug === "nye-2026" ? <TicketLaunchCountdown /> : preview ? "Checkout opens when tickets go live" : busy ? "Opening checkout…" : finishedOrder ? "Start a new purchase" : "Buy tickets"}
+          {preview && process.env.NODE_ENV === "development" ? "Buy tickets (preview)" : preview && eventSlug === "nye-2026" ? <TicketLaunchCountdown /> : preview ? "Checkout opens when tickets go live" : busy ? "Opening checkout…" : finishedOrder ? "Start a new purchase" : "Buy tickets"}
         </button>
       </div>
       {showAccountPrompt && <div className="ticket-account-prompt" ref={accountPromptRef} tabIndex={-1} role="region" aria-labelledby="ticket-account-title">
