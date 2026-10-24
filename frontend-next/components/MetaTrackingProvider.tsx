@@ -16,6 +16,7 @@ import {
   deleteMetaAttributionCookies,
   getMetaBrowserContext,
   persistMetaConsent,
+  rememberMetaClick,
   readMetaConsent
 } from "../lib/meta-client";
 import {
@@ -102,11 +103,13 @@ export function MetaTrackingProvider({
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
+    rememberMetaClick();
     setConsent(readMetaConsent());
     setReady(true);
   }, []);
 
   useEffect(() => {
+    rememberMetaClick();
     if (consent !== "granted" || !pixelId) return;
     installPixel(pixelId);
     if (containsSensitiveQuery(pathname)) return;
@@ -122,6 +125,7 @@ export function MetaTrackingProvider({
 
   const chooseConsent = useCallback((next: Exclude<MetaConsent, "unknown">) => {
     persistMetaConsent(next);
+    rememberMetaClick();
     if (next === "denied") clearOrderAttribution();
     else rememberOrderAttribution();
     setConsent(next);

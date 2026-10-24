@@ -40,7 +40,9 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
         try {
         if (result.status === "paid" && result.meta?.eventId && consent === "granted") {
           const storageKey = `upforit.meta.purchase.${result.meta.eventId}`;
-          const alreadyTracked = trackedEventId.current === result.meta.eventId || window.localStorage.getItem(storageKey) === "1";
+          let stored = false;
+          try { stored = window.localStorage.getItem(storageKey) === "1"; } catch { /* Storage can be blocked in in-app browsers. */ }
+          const alreadyTracked = trackedEventId.current === result.meta.eventId || stored;
           if (!alreadyTracked) {
             track("Purchase", {
               content_ids: result.meta.contents.map((item) => item.id),
@@ -53,7 +55,7 @@ export default function TicketConfirmation({ sessionId }: { sessionId: string })
               currency: result.meta.currency.toUpperCase()
             }, result.meta.eventId);
             trackedEventId.current = result.meta.eventId;
-            window.localStorage.setItem(storageKey, "1");
+            try { window.localStorage.setItem(storageKey, "1"); } catch { /* The event was still queued with its stable deduplication ID. */ }
           }
         }
         } catch { /* Analytics/storage availability must not change payment confirmation. */ }
