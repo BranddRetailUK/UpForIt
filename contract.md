@@ -41,6 +41,11 @@ lint=cd frontend-next && npm run lint
 minimum_release_check=npm run build; git diff --check; git status --short
 
 [production_deployment]
+release_workflow_updated=2026-10-24
+release_source=GitHub main is the source of truth for all completed site and admin updates
+MUST=validate, commit and push completed updates to main before release; exclude screenshots, exports, temporary files, build artifacts and secrets
+MUST_NOT=deploy local files directly to Railway, including railway up or source uploads; deploy only the committed main revision through the GitHub-connected release workflow
+release_blocker=if a Railway service is not connected to main, report the missing connection; do not bypass it with a direct upload
 provider=Railway
 project_id=f2b0b5dd-cc1f-4b80-b7bd-c0f3939ae013
 production_environment_id=9878dca0-f0ef-4e9c-8d1a-84fe67bef158

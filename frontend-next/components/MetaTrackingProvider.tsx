@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { clearOrderAttribution, rememberOrderAttribution } from "../lib/order-attribution-client";
 import { usePathname } from "next/navigation";
 import {
   createContext,
@@ -115,8 +116,14 @@ export function MetaTrackingProvider({
     lastPageViewPath = pagePath;
   }, [consent, pathname, pixelId]);
 
+  useEffect(() => {
+    if (ready) rememberOrderAttribution();
+  }, [ready, consent, pathname]);
+
   const chooseConsent = useCallback((next: Exclude<MetaConsent, "unknown">) => {
     persistMetaConsent(next);
+    if (next === "denied") clearOrderAttribution();
+    else rememberOrderAttribution();
     setConsent(next);
     setSettingsOpen(false);
     if (next === "denied") {

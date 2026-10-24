@@ -99,7 +99,7 @@ export default function BucketPage({initial,preview=false,account}:{initial:Buck
           <div className="bucket-hero-copy">
             <h1 id="bucket-title" aria-label="Blackley’s Bucket">
               <span className="bucket-logo-row"><span className="bucket-cre8 bucket-hero-cre8" role="img" aria-label="CRE8#DNB, Blackley’s label" /><Image src="/brand/nye-2026/blackley-logo.png" alt="Blackley’s" width={2835} height={587} className="bucket-blackley-logo" priority /><span className="bucket-cre8 bucket-hero-cre8 bucket-cre8-right" aria-hidden="true" /></span>
-              <Image src="/brand/blackleys-bucket/bucket-wordmark.png" alt="Bucket" width={2172} height={724} className="bucket-wordmark" priority />
+              <Image unoptimized src="https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_760/v1792830722/UPFORIT/blackleys-bucket/bucket-wordmark-20261024.png" alt="Bucket" width={2172} height={724} className="bucket-wordmark" priority />
             </h1>
             <p className="bucket-tagline">YOUR CHANCE TO PLAY AT NYE <em>2026</em></p>
             <ul className="bucket-stats" aria-label="Draw details"><li><strong>8</strong> DJs</li><li><strong>15</strong> MINUTES</li><li><strong>LIVE</strong> DRAW</li></ul>

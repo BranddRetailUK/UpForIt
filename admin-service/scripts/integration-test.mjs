@@ -39,7 +39,7 @@ try{
  const kpis=await request('/api/kpis?days=30',undefined,cookie);assert.equal(kpis.status,200);const report=await kpis.json();assert.equal(report.rows.length,31);assert.equal(report.rows.reduce((n,r)=>n+Number(r.signups),0),1);assert.equal(report.rows.reduce((n,r)=>n+Number(r.mixes),0),1);
  for(const params of ['days=999','from=bad&to=bad','from=2026-10-20&to=2026-10-01'])assert.equal((await request('/api/kpis?'+params,undefined,cookie)).status,400);
  await db.query("INSERT INTO signups(email,created_at) VALUES ('range-before@example.com','2025-01-01T23:59:59Z'),('range-start@example.com','2025-01-02T00:00:00Z'),('range-end@example.com','2025-01-03T23:59:59Z'),('range-after@example.com','2025-01-04T00:00:00Z')");
- const custom=await (await request('/api/kpis?from=2025-01-02&to=2025-01-03',undefined,cookie)).json();assert.equal(custom.rows.length,2);assert.deepEqual(custom.rows.map(r=>Number(r.signups)),[1,1]);
+ const custom=await (await request('/api/kpis?from=2025-01-02&to=2025-01-03',undefined,cookie)).json();assert.equal(custom.rows.length,48);assert.equal(Number(custom.rows[0].signups),1);assert.equal(Number(custom.rows[47].signups),1);assert.equal(custom.rows.reduce((sum,r)=>sum+Number(r.signups),0),2);
  await db.query("DELETE FROM signups WHERE email LIKE 'range-%@example.com'");
  assert.equal((await request('/api/subscriber',{id:d.subscribers[0].id,status:'Unsubscribed'},cookie)).status,200);
  assert.equal((await request('/api/entry',{id:entry,artist:'Reviewed DJ',title:'Test Mix',genre:'UKG',email:'dj@example.com',status:'hidden',reviewed:true,allow_download:false},cookie)).status,200);

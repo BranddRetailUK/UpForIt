@@ -20,7 +20,7 @@ Dedicated production admin service. Uses the existing UPFORIT PostgreSQL users, 
 
 Railway project: UPFORIT Events (`f2b0b5dd-cc1f-4b80-b7bd-c0f3939ae013`). Environment: production (`9878dca0-f0ef-4e9c-8d1a-84fe67bef158`). Service: ADMIN (`170b96b4-a69b-4bba-88ac-0aa8106cc5c9`). URL: https://admin-production-7548.up.railway.app
 
-Deploy only this directory with `railway up admin-service --path-as-root --project f2b0b5dd-cc1f-4b80-b7bd-c0f3939ae013 --environment 9878dca0-f0ef-4e9c-8d1a-84fe67bef158 --service 170b96b4-a69b-4bba-88ac-0aa8106cc5c9 --detach`. The service currently deploys from local source uploads. This analytics revision also requires the storefront deployment and migration described below.
+Validate changes, commit and push them to GitHub `main`, and release ADMIN from that committed revision through the GitHub-connected workflow. Never deploy local source using `railway up` or source uploads. If ADMIN is not connected to `main`, report the missing connection rather than bypassing it. Keep ADMIN rooted at `admin-service/` and deployed to the dedicated service above. The order-source update also requires the storefront migration described below.
 
 Railway variables reference FRONTEND values: DATABASE_URL, AUTH_RATE_LIMIT_SECRET, EMAIL_JOB_ENCRYPTION_KEY and META_* analytics credentials. ADMIN_ORIGIN must exactly match the service's public URL. Password recovery links to the existing storefront account flow.
 
@@ -78,3 +78,11 @@ Validation: run the existing admin HTTP/scanner suites and `DATABASE_URL=postgre
 Meta reporting excludes the nine retired campaign IDs in `meta-campaigns.mjs` from insight queries, rows and all ad KPI totals. The current Tickets + Bucket live campaign and future campaigns remain included, including if subsequently paused. Meta delivery settings are unchanged.
 
 Home and Analytics use six date-range KPI cards above the graph: page hits, tickets issued, sales, revenue, email sign-ups and mix entries. Clicking a card selects the series. Website visits and the separate traffic-summary/banner are omitted; top-page and landing-page tables remain on Analytics. Production FRONTEND and EMAIL_WORKER_PRODUCTION watch `/frontend-next/**`, so admin-only pushes do not replace their separately uploaded storefront releases.
+
+## Consented order sources
+
+Deploy storefront migration `020_order_attribution.sql` before ADMIN. After optional-cookie consent, the storefront remembers the latest tagged or externally referred public visit for up to 30 days. Direct/internal/Stripe returns preserve it. Guest and signed-in checkouts snapshot allowlisted fields only while consent remains granted; retries preserve the original snapshot. Declining clears the browser cookie; existing orders retain their snapshot. No full referrer URLs or click identifiers are saved. Existing orders remain un-attributed. Tickets & orders shows source and campaign, with full details in View order. Browser-reported evidence is not proof of an ad-caused sale. The live Meta advert already has `utm_source={{site_source_name}}&utm_medium=paid_social&utm_campaign=nye2026_ticket_launch&utm_content={{placement}}` tags, verified on 24 October.
+
+Public admin assets use ETag revalidation; authenticated JSON remains no-store. Large public artwork uses the existing Cloudinary CDN.
+
+Analytics ad KPI cards select spend, impressions or link clicks on the shared graph. Their totals use the selected UTC range, rounded to Meta calendar-hour precision, with hourly points for short ranges and daily totals for longer ranges. The lower Meta reports retain their existing reporting window. Meta hours are converted from the account timezone; unavailable reports remain unavailable rather than showing zero. Repeated DST hours that Meta combines cannot be split into separate UTC hourly points.

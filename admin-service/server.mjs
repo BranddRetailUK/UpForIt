@@ -1,3 +1,4 @@
+import {sendStatic} from './static-response.mjs';
 import {accountList,accountDetail} from './accounts.mjs';
 import {liveTestData,createLiveTest,operateLiveTest} from './live-ticket-test.mjs';
 import {reconcileCheckout} from './checkout-recovery.mjs';
@@ -34,7 +35,7 @@ async function rate(key,limit,minutes=15){const r=await db.query(`INSERT INTO au
 async function admin(req){const token=sessionToken(req);if(!token)throw httpError(401,'Please sign in.');const r=await db.query(`SELECT u.id,u.email,u.display_name FROM user_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.disabled_at IS NULL AND u.email_verified_at IS NOT NULL AND u.role='admin'`,[hash(token)]);if(!r.rows[0])throw httpError(401,'Please sign in with an admin account.');return r.rows[0];}
 const server=createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');res.setHeader('X-Frame-Options','DENY');res.setHeader('X-Robots-Tag','noindex, nofollow');
- res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src https://res.cloudinary.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+ res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com/brandduk/; font-src 'self'; connect-src 'self'; media-src https://res.cloudinary.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
  if(production)res.setHeader('Strict-Transport-Security','max-age=31536000');
  try{
  const url=new URL(req.url,origin),p=url.pathname;
@@ -162,10 +163,10 @@ const server=createServer(async(req,res)=>{
  }
  if(!['GET','HEAD'].includes(req.method))throw httpError(405,'Method not allowed.');
  if(p==='/vendor/zxing-browser.min.js'){
-  const data=await readFile(new URL('./node_modules/@zxing/browser/umd/zxing-browser.min.js',import.meta.url));res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});return res.end(req.method==='HEAD'?undefined:data);
+  const data=await readFile(new URL('./node_modules/@zxing/browser/umd/zxing-browser.min.js',import.meta.url));return sendStatic(req,res,data,'text/javascript; charset=utf-8');
  }
  const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':p==='/ticket-test'?'/ticket-test.html':['/scan','/scan/activate'].includes(p)?'/scanner.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
- const data=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(req.method==='HEAD'?undefined:data);
+ const data=await readFile(file);sendStatic(req,res,data,types[path.extname(file)]||'application/octet-stream');
  }catch(e){const status=e.status||(e.code==='ENOENT'?404:500);if(status===500)console.error('Admin request failed',{code:e.code||e.name,...(!production?{message:e.message,position:e.position}:{})});if(!res.headersSent)json(res,status,{error:status===500?'Unable to complete the request. Please try again.':e.message,...(e.ticket?{ticket:e.ticket}:{})});else res.end();}
 });
 server.requestTimeout=20000;server.headersTimeout=15000;

@@ -38,8 +38,10 @@ async function main(){
   function get(path:string,c=''){return new NextRequest('http://localhost:3000'+path,{headers:{cookie:c}});}
   assert.equal((await checkout(post('/api/tickets/checkout',body,'','https://evil.invalid'))).status,403);
   for(const guest of [{name:'',email:'guest@example.invalid'},{name:'Guest',email:'invalid'}])assert.equal((await checkout(post('/api/tickets/checkout',{...body,guest}))).status,400);
-  const first=await checkout(post('/api/tickets/checkout',body));assert.equal(first.status,200,await first.clone().text());assert.match(first.headers.get('set-cookie')!,/HttpOnly/);const orderId=(await first.json()).orderId;
-  const persisted=(await db.query('SELECT * FROM ticket_orders WHERE id=$1',[orderId])).rows[0];assert.equal(persisted.user_id,null);assert.equal(persisted.guest_name,'Guest Buyer');assert.equal(persisted.total_minor,3000);assert.equal((await db.query('SELECT * FROM users')).rowCount,0);
+  const source={version:1,source:'ig',medium:'paid_social',campaign:'nye-2026',landingPath:'/events/nye-2026',capturedAt:new Date().toISOString()};
+  const sourceCookie='upforit_order_source='+encodeURIComponent(JSON.stringify(source));
+  const first=await checkout(post('/api/tickets/checkout',body,sourceCookie));assert.equal(first.status,200,await first.clone().text());assert.match(first.headers.get('set-cookie')!,/HttpOnly/);const orderId=(await first.json()).orderId;
+  const persisted=(await db.query('SELECT * FROM ticket_orders WHERE id=$1',[orderId])).rows[0];assert.equal(persisted.source_attribution,null);assert.equal(persisted.user_id,null);assert.equal(persisted.guest_name,'Guest Buyer');assert.equal(persisted.total_minor,3000);assert.equal((await db.query('SELECT * FROM users')).rowCount,0);
   assert.equal((await checkout(post('/api/tickets/checkout',body,cookie))).status,200);assert.equal(creations,1);
   assert.equal((await checkout(post('/api/tickets/checkout',{...body,guest:{...body.guest,email:'changed@example.invalid'}},cookie))).status,409);
   const pending=await checkout(post('/api/tickets/checkout',{...body,idempotencyKey:randomUUID()},cookie));assert.equal(pending.status,409);assert.equal((await pending.json()).pendingOrderId,orderId);
@@ -75,7 +77,8 @@ async function main(){
   assert.equal((await verificationSession(post('/api/auth/verification-session',handoff))).status,410);
   assert.equal((await login(post('/api/auth/login',{...signupBody,password:'incorrect-password'}))).status,401);
   const signedIn=await login(post('/api/auth/login',signupBody));assert.equal(signedIn.status,200);assert.ok(signedIn.cookies.get(SESSION_COOKIE));userCookie=SESSION_COOKIE+'='+signedIn.cookies.get(SESSION_COOKIE)!.value;assert.equal((await checkout(post('/api/tickets/checkout',userBody,userCookie))).status,200);assert.equal((await confirmation(get('/api/tickets/confirmation?session_id=cs_'+orderId,userCookie))).status,404);
-  const next=await checkout(post('/api/tickets/checkout',{...body,idempotencyKey:randomUUID()},cookie));assert.equal(next.status,200);const nextId=(await next.json()).orderId;
+  const next=await checkout(post('/api/tickets/checkout',{...body,idempotencyKey:randomUUID()},cookie+'; '+sourceCookie+'; upforit_meta_consent=granted'));assert.equal(next.status,200);const nextId=(await next.json()).orderId;assert.equal((await db.query('SELECT source_attribution FROM ticket_orders WHERE id=$1',[nextId])).rows[0].source_attribution.campaign,'nye-2026');
+  const savedKey=(await db.query('SELECT idempotency_key FROM ticket_orders WHERE id=$1',[nextId])).rows[0].idempotency_key;await checkout(post('/api/tickets/checkout',{...body,idempotencyKey:savedKey},cookie));assert.equal((await db.query('SELECT source_attribution FROM ticket_orders WHERE id=$1',[nextId])).rows[0].source_attribution.source,'ig');
   assert.equal((await recover(post('/api/tickets/orders/'+nextId+'/checkout',{action:'cancel'},userCookie),{params:Promise.resolve({orderId:nextId})})).status,404);
   const cancelled=await recover(post('/api/tickets/orders/'+nextId+'/checkout',{action:'cancel'},cookie+'; '+userCookie),{params:Promise.resolve({orderId:nextId})});assert.equal(cancelled.status,200);assert.equal((await cancelled.json()).orderStatus,'expired');
   // Audit edge cases, using only this disposable database and fake Stripe.

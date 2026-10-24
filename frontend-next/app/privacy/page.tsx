@@ -58,6 +58,8 @@ export default function PrivacyPage() {
           or Stripe checkout-session references to Meta.
         </p>
 
+        <h2>Ticket purchase sources</h2>
+        <p>With your optional-cookie consent, we remember campaign tags, the referring website domain and a public landing-page path for up to 30 days. We attach this source information to a ticket order when you start checkout, to understand where sales come from. We do not store full referring URLs or unrelated query parameters. Direct return visits preserve your previous recorded source. Declining or withdrawing consent clears the source cookie and stops source collection for future orders; existing order records are not retrospectively changed.</p>
         <h2>Your choice</h2>
         <p>
           Declining prevents the Meta script from loading and prevents consent-gated server events. Your choice

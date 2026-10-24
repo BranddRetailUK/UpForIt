@@ -6,3 +6,7 @@ https://admin-production-7548.up.railway.app
 Do not add admin tools to the storefront account pages or `frontend-next/app/admin`. Keep customer account and public signup flows in the frontend. Existing storefront admin routes may redirect to the dedicated admin where appropriate. The two services share PostgreSQL; preserve current authentication, admin role checks and same-origin protections.
 
 Railway ADMIN service ID: `170b96b4-a69b-4bba-88ac-0aa8106cc5c9`. See `admin-service/README.md` for deployment instructions.
+
+# Release workflow
+
+Always validate, commit and push completed site and admin updates to `main`. GitHub `main` is the source of truth. Do not deploy local files directly to Railway (`railway up` or source uploads). Releases must use the committed `main` revision through the GitHub-connected workflow. If a service is not connected, report that blocker instead of uploading local files. Keep screenshots, exports, temporary files, generated build artifacts and secrets out of commits. See `contract.md`.

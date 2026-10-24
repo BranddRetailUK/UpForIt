@@ -1,3 +1,4 @@
+import { ATTRIBUTION_COOKIE, readOrderAttribution } from "../../../../lib/order-attribution";
 import { finishedCheckout, recoverTicketCheckout } from "../../../../lib/ticket-checkout-recovery";
 import { GUEST_COOKIE, guestAccessHash } from '../../../../lib/ticket-guest-access';
 import { createHash, randomUUID } from 'node:crypto';
@@ -75,9 +76,9 @@ export async function POST(request: NextRequest) {
           success_url: `${siteUrl}/tickets/confirmation?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${siteUrl}/events/${tiers[0].event_slug}?checkout=cancelled`
         };
-        await client.query(`INSERT INTO ticket_orders (id,user_id,event_id,status,currency,subtotal_minor,total_minor,idempotency_key,request_hash,reserved_until,checkout_payload,checkout_attempted_at,meta_consent_granted,meta_purchase_event_id,meta_context_encrypted,guest_name,guest_email,guest_access_hash)
-          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '30 minutes',$7::jsonb,NULL,$8,$9,$10,$11,$12,$13)`,
-          [id,user?.id ?? null,tiers[0].event_id,total,body.idempotencyKey,requestHash,JSON.stringify(payload),meta.consent,meta.consent ? metaEventId('ticket_purchase',id) : null,meta.consent ? encryptJson({fbp:meta.fbp,fbc:meta.fbc,clientIp:meta.clientIp,clientUserAgent:meta.clientUserAgent}) : null,guest?.name ?? null,guest?.email ?? null,guest ? accessHash : null]);
+        await client.query(`INSERT INTO ticket_orders (id,user_id,event_id,status,currency,subtotal_minor,total_minor,idempotency_key,request_hash,reserved_until,checkout_payload,checkout_attempted_at,meta_consent_granted,meta_purchase_event_id,meta_context_encrypted,guest_name,guest_email,guest_access_hash,source_attribution)
+          VALUES ($1,$2,$3,'pending','gbp',$4,$4,$5,$6,now()+interval '30 minutes',$7::jsonb,NULL,$8,$9,$10,$11,$12,$13,$14::jsonb)`,
+          [id,user?.id ?? null,tiers[0].event_id,total,body.idempotencyKey,requestHash,JSON.stringify(payload),meta.consent,meta.consent ? metaEventId('ticket_purchase',id) : null,meta.consent ? encryptJson({fbp:meta.fbp,fbc:meta.fbc,clientIp:meta.clientIp,clientUserAgent:meta.clientUserAgent}) : null,guest?.name ?? null,guest?.email ?? null,guest ? accessHash : null,JSON.stringify(readOrderAttribution(request.cookies.get(ATTRIBUTION_COOKIE)?.value,meta.consent))]);
         for (const line of lines) await client.query(`INSERT INTO ticket_order_items (id,order_id,ticket_type_id,ticket_type_name,unit_price_minor,quantity,line_total_minor) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(),id,line.tier.id,line.name,line.unitPriceMinor,line.quantity,line.unitPriceMinor*line.quantity]);
         order = { user_id:user?.id ?? null,id,request_hash:requestHash,status:'pending',stripe_checkout_url:null,checkout_payload:payload,created_at:new Date() };
       }

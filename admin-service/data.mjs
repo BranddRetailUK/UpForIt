@@ -10,7 +10,7 @@ export async function dashboard(db){
  const [subs,entries,settings,orders,tiers,metrics,event,growth,audit,workers,queue,accounts]=await Promise.all([
  db.query(subscriberSql+' ORDER BY s.created_at DESC'),db.query(entrySql+' ORDER BY e.created_at DESC',[competitionId]),
  db.query('SELECT * FROM mix_competitions WHERE id=$1',[competitionId]),
- db.query(`SELECT o.id,o.order_number,o.status,o.total_minor,o.refunded_minor,o.admissions_hold,o.currency,o.created_at,o.confirmation_email_sent_at,COALESCE(o.guest_name,u.display_name) display_name,COALESCE(o.guest_email,u.email) email,e.title event_title,
+ db.query(`SELECT o.id,o.order_number,o.status,o.source_attribution,o.meta_consent_granted,o.total_minor,o.refunded_minor,o.admissions_hold,o.currency,o.created_at,o.confirmation_email_sent_at,COALESCE(o.guest_name,u.display_name) display_name,COALESCE(o.guest_email,u.email) email,e.title event_title,
  (SELECT count(*)::int FROM tickets t WHERE t.order_id=o.id) ticket_count,
  (SELECT status FROM email_jobs WHERE order_id=o.id AND job_type='ticket_confirmation' ORDER BY created_at DESC LIMIT 1) email_status,
  (SELECT COALESCE(sum(quantity),0)::int FROM ticket_order_items WHERE order_id=o.id AND unit_price_minor=0) free_count,

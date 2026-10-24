@@ -11,7 +11,7 @@ export default function BlackleysBucketBanner({ titleId = "bucket-banner-title" 
               <Image src="/brand/nye-2026/blackley-logo.png" alt="Blackley’s" width={2835} height={587} sizes="(max-width: 720px) 80vw, 500px" />
               <span className="home-bucket__cre8 home-bucket__cre8--right" aria-hidden="true" />
             </span>
-            <Image className="home-bucket__wordmark" src="/brand/blackleys-bucket/bucket-wordmark.png" alt="Bucket" width={2172} height={724} sizes="(max-width: 720px) 230px, 330px" />
+            <Image className="home-bucket__wordmark" unoptimized src="https://res.cloudinary.com/brandduk/image/upload/f_auto,q_auto,c_limit,w_760/v1792830722/UPFORIT/blackleys-bucket/bucket-wordmark-20261024.png" alt="Bucket" width={2172} height={724} sizes="(max-width: 720px) 230px, 330px" />
           </h2>
           <p className="home-bucket__tagline">Your chance to play at NYE <em>2026</em></p>
           <ul className="home-bucket__stats" aria-label="DJ draw details">
