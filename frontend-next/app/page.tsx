@@ -38,7 +38,7 @@ export default function Home() {
         <Link href="/merch" className="discover-card discover-card--merch"><h2>UP FOR IT<br /><em>CLOTHING.</em></h2><span className="discover-card__action">Shop the collection </span></Link>
       </section>
       <div className={styles.banner}>
-        <NyeBlackleyBanner showStrip={false} showTicketLink />
+        <NyeBlackleyBanner showStrip={false} showTicketLink showVenue={false} />
       </div>
       <BlackleysBucketBanner titleId="home-bucket-title" />
       <EventUpdatesBanner />

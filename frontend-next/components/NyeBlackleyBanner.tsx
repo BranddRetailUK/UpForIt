@@ -10,6 +10,7 @@ type NyeBlackleyBannerProps = {
   priority?: boolean;
   showStrip?: boolean;
   showTicketLink?: boolean;
+  showVenue?: boolean;
 };
 
 export default function NyeBlackleyBanner({
@@ -17,7 +18,8 @@ export default function NyeBlackleyBanner({
   headingLevel: Heading = "h2",
   priority = false,
   showStrip = true,
-  showTicketLink = false
+  showTicketLink = false,
+  showVenue = true
 }: NyeBlackleyBannerProps) {
   return (
     <>
@@ -30,9 +32,9 @@ export default function NyeBlackleyBanner({
             <Heading id={titleId} className="nye-hero__title">
               <CloudinaryImage asset={CLOUDINARY_ASSETS.nye2026Title} alt="NYE 2026" sizes="(max-width: 640px) calc(100vw - 36px), (max-width: 696px) calc(100vw - 96px), (max-width: 800px) 600px, (max-width: 1000px) calc((100vw - 128px) / 2.08), (max-width: 1376px) calc((100vw - 156px) / 2.08), 587px" priority={priority} />
             </Heading>
-            <Image className="nye-event__artist-logo" src="/brand/nye-2026/blackley-logo.png" alt="Blackley" width={2835} height={587} sizes="(max-width: 800px) 70vw, 360px" />
+            <Image className="nye-event__artist-logo" src="/brand/nye-2026/blackley-logo.png" alt="Blackley" width={2835} height={587} sizes={showTicketLink ? "(max-width: 800px) 90vw, 560px" : "(max-width: 800px) 70vw, 360px"} />
             <NyeCountdown />
-            <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>
+            {showVenue && <p className="nye-hero__venue">McCarthys Sports Bar <span>Bletchley</span></p>}
             {showTicketLink && <div className="industrial-actions nye-hero__actions">
               <Link className="industrial-button" href="/events/nye-2026">BUY TICKETS</Link>
             </div>}

@@ -1,3 +1,29 @@
 .banner {
   margin-top: clamp(40px, 5vw, 72px);
 }
+
+.banner :global(.nye-event__artist-logo) {
+  width: 96%;
+  max-width: 580px;
+  margin: 20px auto;
+}
+
+.banner :global(.nye-hero__actions .industrial-button) {
+  width: 90%;
+  max-width: 520px;
+  min-height: 76px;
+  justify-content: center;
+  padding: 20px 24px;
+  font-family: var(--font-heavy), sans-serif;
+  font-size: clamp(22px, 2.3vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -.025em;
+}
+
+@media (max-width: 640px) {
+  .banner :global(.nye-hero__actions .industrial-button) {
+    width: 100%;
+    min-height: 68px;
+    font-size: 26px;
+  }
+}
