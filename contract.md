@@ -313,6 +313,13 @@ normalization=trim+lowercase
 duplicate_behavior=success without duplicate row
 current_scope=collect email only; no ESP/newsletter sync, consent ledger, confirmation email, unsubscribe route, or admin UI in this repo
 
+[meta_ad_creative_policy]
+updated=2026-10-25
+MUST_NOT=enable Meta Advantage+ creative Add music on any UpForIt ad; Meta-added music, including AI-generated music, must always remain off
+MUST=explicitly disable and verify Add music before publishing any new, duplicated, edited, or relaunched ad; do not rely on Meta defaults or inherited settings
+MUST_NOT=apply recommendations, automatic enhancements, or bulk optimisations that turn Add music back on
+audio_scope=preserve deliberately supplied original video audio; this prohibition concerns music automatically added by Meta
+
 [meta_ads_measurement]
 consent_cookie=upforit_meta_consent; granted or denied for 180 days; Meta script and server events remain disabled until granted
 current_scope=Meta conversion measurement is ticket-only while META_MERCH_TRACKING_ENABLED is false/unset; dormant merch instrumentation remains guarded for a future reviewed launch
