@@ -9,7 +9,7 @@ import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
-const description = "Two rooms of Drum & Bass with Blackley at midnight. UPFORIT NYE 2026, 31 December at McCarthys Sports Bar, Bletchley. Doors 5pm. Tickets £10; four for £30.";
+const description = "2 rooms of underground sounds with Blackley at midnight. UPFORIT NYE 2026, 31 December at McCarthys Sports Bar, Bletchley. Doors 5pm. Tickets £10; four for £30.";
 
 function ArtistList({ names, compact = false }: { names: string[]; compact?: boolean }) {
   return <ul className={`${styles.artists}${compact ? ` ${styles.mcs}` : ""}`}>{names.map(name => <li key={name}>{name}</li>)}</ul>;
@@ -38,7 +38,7 @@ export default async function NyeEventPage({ searchParams }: { searchParams: Pro
       <section className={`section-wrap nye-event__tickets ${styles.tickets}`} aria-label="NYE tickets">
         <div className={`nye-ticket-intro ${styles.intro}`}>
           <h2><span className={styles.presenter}>UPFORIT Presents</span>NYE2026<br /><em>TICKETS</em></h2>
-          <p className={styles.summary}>Two rooms. A full night of Drum &amp; Bass.<br /><strong>Blackley taking us into 2027 at midnight.</strong></p>
+          <p className={styles.summary}>2 rooms of underground sounds.<br /><strong>Blackley taking us into 2027 at midnight.</strong></p>
           <p className="nye-ticket-intro__venue">McCarthys Sports Bar</p>
           <p className="nye-ticket-intro__location">4 Chandos Place<br />Bletchley, Milton Keynes, MK2 2SN</p>
           <p className="nye-ticket-intro__doors"><time dateTime="2026-12-31">31 December 2026</time> · 5pm–2am</p>
