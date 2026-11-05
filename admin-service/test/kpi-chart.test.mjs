@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {kpiSeries,kpiChart,kpiCards,chartScale,chartDateTicks,kpiPeriodControl} from '../public/kpi-chart.js';
+test('mobile charts fit phone width and retain all hourly values with fewer axis labels',()=>{
+ const rows=Array.from({length:120},(_,i)=>({day:new Date(Date.UTC(2026,10,1,i)).toISOString().slice(0,16)+':00Z',revenue:i,conversions:1}));
+ const html=kpiChart({rows,selected:'revenue',context:'overview',renderWidth:280,compact:true});
+ assert.match(html,/viewBox="0 0 280 215"/);
+ assert.equal((html.match(/class="kpi-hit"/g)||[]).length,120);
+ assert.ok(chartDateTicks(120,3).length<=4);
+ const cards=kpiCards({rows,selected:'revenue',context:'overview',compact:true});
+ assert.equal((cards.match(/data-kpi=/g)||[]).length,4);
+ assert.match(cards,/£7,140.00/);
+ assert.match(kpiCards({rows,selected:'revenue',context:'overview'}),/Email sign-ups/);
+});
 test('website chart preserves missing UTC dates and preserves partial boundary days',()=>{
  const traffic={state:'ready',range:{since:'2026-10-01T20:00:00Z',until:'2026-10-03T20:00:00Z'},daily:[{label:'2026-10-01',pageviews:2},{label:'2026-10-03',pageviews:5}]};
  assert.deepEqual(kpiSeries([],traffic,'pageviews'),[{day:'2026-10-01',value:2},{day:'2026-10-02',value:null},{day:'2026-10-03',value:5}]);

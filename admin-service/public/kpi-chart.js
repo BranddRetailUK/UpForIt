@@ -22,8 +22,8 @@ export function kpiSeries(rows,traffic,key){
 }
 const cardIcons={pageviews:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',conversions:'<path d="M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4V5Z"/>',revenue:'<path d="M17 6c0-5-9-5-9 1v13M5 12h10M5 20h14"/>',impressions:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',clicks:'<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>'};
 const cardTop=(label,id)=>`<span class="stat-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${cardIcons[id]}</svg><span>${label}</span></span>`;
-export function kpiCards({rows,traffic,selected,context,result,meta,adSeries,campaignOnly=false}){
- const labels=campaignOnly?{}:context==='analytics'?{pageviews:'Page hits',conversions:'Sales',revenue:'Revenue'}:{pageviews:'Page hits',tickets:'Tickets issued',conversions:'Sales',revenue:'Revenue',signups:'Email sign-ups',mixes:'Mix entries'};
+export function kpiCards({rows,traffic,selected,context,result,meta,adSeries,campaignOnly=false,compact=false}){
+ const labels=compact&&context==='overview'?{revenue:'Revenue',conversions:'Sales',tickets:'Tickets issued',pageviews:'Page hits'}:campaignOnly?{}:context==='analytics'?{pageviews:'Page hits',conversions:'Sales',revenue:'Revenue'}:{pageviews:'Page hits',tickets:'Tickets issued',conversions:'Sales',revenue:'Revenue',signups:'Email sign-ups',mixes:'Mix entries'};
  return `<section class="kpi-cards" aria-label="${escape(context)} performance metrics">${Object.entries(labels).map(([id,label])=>{
   const series=kpiSeries(rows,traffic,id),ready=(!result||result.state==='ready')&&series?.some(row=>row.value!==null);
   const total=ready?format(series.reduce((sum,row)=>sum+(row.value||0),0),id):'—';
@@ -32,8 +32,8 @@ export function kpiCards({rows,traffic,selected,context,result,meta,adSeries,cam
  }).join('')}${context==='analytics'?['spend','impressions','clicks'].map(id=>`<button type="button" class="kpi-card ${selected===id?'active':''}" data-kpi="${id}" aria-pressed="${selected===id}" title="Meta totals for the selected range, reported in whole hours.">${cardTop(metrics[id],id==='spend'?'revenue':id)}<strong class="kpi-card-value">${adSeries?.state==='ready'?format(adSeries.all[id],id):'—'}</strong></button>`).join(''):''}</section>`;
 }
 export function kpiPeriodControl(context,selection){return `<select data-chart-period aria-label="${escape(context)} graph date range">${periods.map(([value,label])=>`<option value="${value}" ${selection.period===value?'selected':''}>${label}</option>`).join('')}</select>`;}
-export function kpiChart({rows,traffic,selected,context,selection={period:'30'},result,adSeries,renderWidth}){
- if(!renderWidth)chartRenderers.set(context,width=>kpiChart({rows,traffic,selected,context,selection,result,adSeries,renderWidth:width}));
+export function kpiChart({rows,traffic,selected,context,selection={period:'30'},result,adSeries,renderWidth,compact=false}){
+ if(!renderWidth)chartRenderers.set(context,width=>kpiChart({rows,traffic,selected,context,selection,result,adSeries,renderWidth:width,compact}));
  const key=Object.hasOwn(metrics,selected)?selected:'signups',isAd=['spend','impressions','clicks'].includes(key),series=isAd?(adSeries?.state==='ready'?kpiSeries(adSeries.rows,null,key):null):kpiSeries(rows,traffic,key);
  const periodLabel=selection.period==='custom'?`${selection.from} — ${selection.to}`:periods.find(([id])=>id===selection.period)?.[1]||'Selected range';
  const today=new Date().toISOString().slice(0,10);
@@ -45,13 +45,13 @@ export function kpiChart({rows,traffic,selected,context,selection={period:'30'},
  const website=['pageviews','visits'].includes(key),known=series.filter(row=>row.value!==null);
  if(website&&!known.length)return controls+'<p class="empty" role="status">No recorded traffic for this range. Direct tracking had not started yet.</p>';
  const scale=chartScale(series.map(row=>row.value));
- const width=renderWidth||Math.max(640,series.length*42+80),left=65,right=width-20,top=20,bottom=245;
+ const width=renderWidth||Math.max(640,series.length*42+80),left=compact?48:65,right=width-20,top=20,bottom=compact?175:245;
  const x=i=>series.length===1?(left+right)/2:left+i*(right-left)/(series.length-1),y=value=>bottom-value/scale.max*(bottom-top);
  const segments=[];let segment=[];series.forEach((row,i)=>{if(row.value===null){if(segment.length)segments.push(segment.join(' '));segment=[];}else segment.push(`${x(i)},${y(row.value)}`);});if(segment.length)segments.push(segment.join(' '));
- const indices=chartDateTicks(series.length),hourly=series[0].day.includes('T');
+ const indices=chartDateTicks(series.length,compact?3:6),hourly=series[0].day.includes('T');
  const tickFormat=value=>['revenue','spend'].includes(key)?new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',notation:'compact',maximumFractionDigits:1}).format(value):new Intl.NumberFormat('en-GB',{notation:'compact',maximumFractionDigits:1}).format(value);
  const dateFormat=day=>hourly?day.slice(11,16):series.length>14?String(Number(day.slice(8,10))):new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short',...(series[0].day.slice(0,4)!==series.at(-1).day.slice(0,4)?{year:'2-digit'}:{})}).format(new Date(day+'T00:00:00Z'));
- return controls+`<div class="chart kpi-chart" data-chart-context="${context}" data-points="${series.length}"><div class="kpi-plot"><svg preserveAspectRatio="xMidYMid meet" style="width:${width}px;min-width:${width}px;height:285px" viewBox="0 0 ${width} 285" role="img" aria-label="${metrics[key]} — ${escape(periodLabel)} (UTC)"><defs><linearGradient id="area-${context}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#efff00" stop-opacity=".22"/><stop offset="100%" stop-color="#efff00" stop-opacity="0"/></linearGradient></defs><g stroke="#383838" stroke-dasharray="3 4">${scale.ticks.map(value=>`<path d="M${left} ${y(value)}H${right}"/>`).join('')}</g>${scale.ticks.map(value=>`<text x="${left-14}" y="${y(value)+4}" text-anchor="end">${tickFormat(value)}</text>`).join('')}${indices.map(i=>`<text x="${x(i)}" y="${bottom+26}" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}">${dateFormat(series[i].day)}</text>`).join('')}${segments.map(points=>`<polygon points="${points.split(' ')[0].split(',')[0]},${bottom} ${points} ${points.split(' ').at(-1).split(',')[0]},${bottom}" fill="url(#area-${context})"/>`).join('')}${segments.map(points=>`<polyline points="${points}" stroke="#efff00" stroke-width="2" vector-effect="non-scaling-stroke" fill="none"/>`).join('')}${series.map((row,i)=>row.value===null?'':`<circle cx="${x(i)}" cy="${y(row.value)}" r="3" fill="#efff00" stroke="#efff00" stroke-width="1.5"></circle>`).join('')}${series.map((row,i)=>{const sales=rows.find(r=>r.day===row.day);const detail=row.value===null?'Not recorded':format(row.value,key);const extra=['conversions','revenue'].includes(key)&&sales?` · Sales: ${format(sales.conversions,'conversions')} · Revenue: ${format(sales.revenue,'revenue')}`:'';return `<rect class="kpi-hit" x="${x(i)-Math.min(30,Math.max(12,(right-left)/Math.max(1,series.length-1)/2))}" y="${top}" width="${Math.min(60,Math.max(24,(right-left)/Math.max(1,series.length-1)))}" height="${bottom-top}" fill="transparent" data-detail="${escape(row.day+' · '+metrics[key]+': '+detail+extra+(isAd?' · Meta hourly reporting':''))}" tabindex="${i===0?0:-1}" aria-label="${escape(row.day+': '+detail+extra)}"/>`;}).join('')}</svg></div><div class="kpi-tooltip" role="tooltip" hidden></div><span class="sr-only kpi-announcement" aria-live="polite"></span></div>`;
+ return controls+`<div class="chart kpi-chart" data-chart-context="${context}" data-points="${series.length}"><div class="kpi-plot"><svg preserveAspectRatio="xMidYMid meet" style="width:${width}px;min-width:${width}px;height:${compact?215:285}px" viewBox="0 0 ${width} ${compact?215:285}" role="img" aria-label="${metrics[key]} — ${escape(periodLabel)} (UTC)"><defs><linearGradient id="area-${context}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#efff00" stop-opacity=".22"/><stop offset="100%" stop-color="#efff00" stop-opacity="0"/></linearGradient></defs><g stroke="#383838" stroke-dasharray="3 4">${scale.ticks.map(value=>`<path d="M${left} ${y(value)}H${right}"/>`).join('')}</g>${scale.ticks.map(value=>`<text x="${left-14}" y="${y(value)+4}" text-anchor="end">${tickFormat(value)}</text>`).join('')}${indices.map(i=>`<text x="${x(i)}" y="${bottom+26}" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}">${dateFormat(series[i].day)}</text>`).join('')}${segments.map(points=>`<polygon points="${points.split(' ')[0].split(',')[0]},${bottom} ${points} ${points.split(' ').at(-1).split(',')[0]},${bottom}" fill="url(#area-${context})"/>`).join('')}${segments.map(points=>`<polyline points="${points}" stroke="#efff00" stroke-width="2" vector-effect="non-scaling-stroke" fill="none"/>`).join('')}${series.map((row,i)=>row.value===null?'':`<circle cx="${x(i)}" cy="${y(row.value)}" r="3" fill="#efff00" stroke="#efff00" stroke-width="1.5"></circle>`).join('')}${series.map((row,i)=>{const hitWidth=compact?Math.max(1,(right-left)/Math.max(1,series.length-1)):Math.min(60,Math.max(24,(right-left)/Math.max(1,series.length-1)));const sales=rows.find(r=>r.day===row.day);const detail=row.value===null?'Not recorded':format(row.value,key);const extra=['conversions','revenue'].includes(key)&&sales?` · Sales: ${format(sales.conversions,'conversions')} · Revenue: ${format(sales.revenue,'revenue')}`:'';return `<rect class="kpi-hit" x="${x(i)-hitWidth/2}" y="${top}" width="${hitWidth}" height="${bottom-top}" fill="transparent" data-detail="${escape(row.day+' · '+metrics[key]+': '+detail+extra+(isAd?' · Meta hourly reporting':''))}" tabindex="${i===0?0:-1}" aria-label="${escape(row.day+': '+detail+extra)}"/>`;}).join('')}</svg></div><div class="kpi-tooltip" role="tooltip" hidden></div><span class="sr-only kpi-announcement" aria-live="polite"></span></div>`;
 }
 // Nice, uniform increments keep the Y grid readable for zeros, counts and revenue.
 export function chartScale(values){
@@ -61,9 +61,9 @@ export function chartScale(values){
  return {max,step,ticks:Array.from({length:Math.round(max/step)+1},(_,i)=>i*step)};
 }
 // Date ticks use a constant number of days, not rounded fractional indices.
-export function chartDateTicks(length){
+export function chartDateTicks(length,maxTicks=6){
  if(length<=1)return [0];
- const step=Math.max(1,Math.ceil((length-1)/6));
+ const step=Math.max(1,Math.ceil((length-1)/maxTicks));
  return Array.from({length:Math.floor((length-1)/step)+1},(_,i)=>i*step);
 }
 
@@ -88,13 +88,13 @@ export function bindKpiCharts(root=document){
   };
   plot.onpointerleave=hide;plot.onfocusout=event=>{if(!plot.contains(event.relatedTarget))hide();};plot.querySelector('.kpi-plot').onscroll=hide;
   points.forEach((point,i)=>{
-   point.onpointerenter=event=>show(point,event);point.onpointermove=event=>show(point,event);point.onfocus=()=>show(point);point.onblur=hide;
+   point.onpointerdown=event=>show(point,event);point.onpointerenter=event=>show(point,event);point.onpointermove=event=>show(point,event);point.onfocus=()=>show(point);point.onblur=hide;
    point.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Escape'].includes(event.key))return;event.preventDefault();if(event.key==='Escape'){hide();point.blur();return;}const next=points[Math.max(0,Math.min(points.length-1,i+(event.key==='ArrowRight'?1:-1)))];point.setAttribute('tabindex','-1');next.setAttribute('tabindex','0');next.focus();};
   });
   };
   const container=plot.querySelector('.kpi-plot'),draw=chartRenderers.get(plot.dataset.chartContext);
   let lastWidth=0;
-  const resize=()=>{const width=Math.round(Math.max(640,Number(plot.dataset.points)*32+80,container.clientWidth));if(width===lastWidth)return;lastWidth=width;const template=document.createElement('template');template.innerHTML=draw(width);container.replaceChildren(template.content.querySelector('svg'));bindPoints();};
+  const resize=()=>{const width=Math.round(document.body.classList.contains('mobile-admin')?Math.max(240,container.clientWidth):Math.max(640,Number(plot.dataset.points)*32+80,container.clientWidth));if(width===lastWidth)return;lastWidth=width;const template=document.createElement('template');template.innerHTML=draw(width);container.replaceChildren(template.content.querySelector('svg'));bindPoints();};
   resize();
   const observer=new ResizeObserver(resize);observer.observe(container);chartObservers.set(plot.dataset.chartContext,observer);
  }

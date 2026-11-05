@@ -1,0 +1,9 @@
+{
+  "id": "/mobile", "name": "UpForIt ADMIN", "short_name": "UpForIt ADMIN",
+  "start_url": "/mobile#overview", "scope": "/mobile", "display": "standalone",
+  "background_color": "#171717", "theme_color": "#171717",
+  "icons": [
+    {"src": "/assets/admin-icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/assets/admin-icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

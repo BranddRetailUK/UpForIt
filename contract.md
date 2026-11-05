@@ -41,6 +41,7 @@ lint=cd frontend-next && npm run lint
 minimum_release_check=npm run build; git diff --check; git status --short
 
 [production_deployment]
+admin_mobile_app=/mobile on dedicated ADMIN service; /admin.webmanifest installs UpForIt ADMIN separately from /scan; phone/standalone visits to ADMIN root redirect while desktop retains existing console; shared admin controllers and APIs with mobile shell/cards/detail sheets
 release_workflow_updated=2026-10-24
 release_source=GitHub main is the source of truth for all completed site and admin updates
 MUST=validate, commit and push completed updates to main before release; exclude screenshots, exports, temporary files, build artifacts and secrets

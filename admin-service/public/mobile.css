@@ -1,0 +1,57 @@
+/* Phone shell: UPFORIT's existing fonts, yellow, charcoal panels and charts. */
+.mobile-admin{min-width:0;font-size:15px;line-height:1.45}
+.mobile-admin [hidden]{display:none!important}
+.mobile-admin .mobile-header{display:flex;align-items:center;gap:12px;max-width:720px;margin:auto;padding:calc(16px + env(safe-area-inset-top)) 18px 16px;border-bottom:1px solid var(--line)}
+.mobile-header img{width:132px;height:auto;display:block}.mobile-header>span{font-size:11px;letter-spacing:2px;color:var(--yellow);margin-top:4px}
+.mobile-admin main{max-width:720px;padding:20px 16px calc(110px + env(safe-area-inset-bottom));margin:auto;min-width:0}
+.mobile-admin .page-heading{gap:12px;margin:0 0 16px;flex-wrap:wrap}
+.mobile-admin .page-heading h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.mobile-admin .page-heading>.actions{width:100%;flex-wrap:wrap;gap:10px;justify-content:flex-start}
+.mobile-admin .page-heading:has(>.actions:empty){display:none}
+.mobile-admin [data-action=refresh]:not(.mobile-more button),.mobile-admin [data-accounts=refresh],.mobile-admin [data-campaign=refresh]{display:none}
+.mobile-admin .button,.mobile-admin .row-button{min-height:46px;border-radius:10px;font-size:13px;padding:11px 14px;white-space:normal;text-align:center}
+.mobile-admin .button svg{display:none}.mobile-admin input,.mobile-admin select,.mobile-admin textarea{font-size:16px;min-width:0;max-width:100%;border-radius:10px;min-height:46px}
+.mobile-admin input:not([type=checkbox]),.mobile-admin textarea{width:100%}.mobile-admin select{padding:10px 12px}.mobile-admin .field{min-width:0;font-size:13px;line-height:1.5}
+.mobile-admin .icon-button{min-width:44px;min-height:44px;flex:none}.mobile-admin h2{font-size:18px}.mobile-admin h3{font-size:15px}
+.mobile-admin .stats,.mobile-admin .kpi-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.mobile-admin .stat,.mobile-admin .kpi-card,.mobile-admin .analytics-view .kpi-card{border-radius:14px;padding:16px;min-height:104px;min-width:0;gap:12px}
+.mobile-admin .stat-top,.mobile-admin .kpi-card-label{font-size:12px;line-height:1.4}.mobile-admin .stat-top{gap:8px}.mobile-admin .stat-top svg{display:none}
+.mobile-admin .stat-value,.mobile-admin .kpi-card-value,.mobile-admin .analytics-view .kpi-card-value{font-size:26px;line-height:1.2;margin:12px 0 0;overflow-wrap:anywhere;letter-spacing:-.6px}
+.mobile-admin .stat-value{color:var(--yellow)}.mobile-admin .kpi-card.active{color:#111;background:var(--yellow)}
+.mobile-admin .analytics-view .kpi-card.active .stat-top,.mobile-admin .analytics-view .kpi-card.active .kpi-card-value{color:#111}
+.mobile-admin .analytics-view button.kpi-card.active{background:var(--yellow);border-color:var(--yellow);color:#111}
+.mobile-admin .columns,.mobile-admin .meta-breakdowns{grid-template-columns:minmax(0,1fr);gap:16px}
+.mobile-admin .panel{border-radius:14px;margin-bottom:16px;min-width:0}.mobile-admin .panel-head{padding:16px;flex-wrap:wrap;gap:10px}.mobile-admin .panel-head .tiny{font-size:11px;width:100%}
+.mobile-admin .text-link{font-size:12px;white-space:normal}.mobile-admin .table-wrap{overflow:visible}.mobile-admin .toolbar{padding:14px;flex-wrap:wrap;gap:10px}
+.mobile-admin .toolbar>.search{width:100%;flex:1;min-width:150px}.mobile-admin .search input{font-size:16px;min-height:24px}.mobile-admin .toolbar .actions{width:100%;flex-wrap:wrap}
+.mobile-admin .table-footer{padding:14px;gap:12px;flex-wrap:wrap;font-size:12px}.mobile-admin .table-footer .actions{flex-wrap:wrap}
+.mobile-admin .kpi-chart{padding:10px}.mobile-admin .kpi-panel{padding-top:0}.mobile-admin .kpi-plot{width:100%;min-width:0}.mobile-admin .kpi-range{display:grid;grid-template-columns:1fr;gap:10px;padding:14px}
+.mobile-admin .kpi-range label{min-width:0}.mobile-admin .kpi-range input{width:100%}.mobile-admin .kpi-tooltip{max-width:calc(100vw - 64px);white-space:normal}
+.mobile-admin .badge{font-size:10px;padding:6px 8px;line-height:1.2;max-width:100%;white-space:normal}
+.mobile-admin .badge.paid,.mobile-admin .badge.verified,.mobile-admin .badge.subscribed,.mobile-admin .badge.published{background:var(--yellow);border-color:var(--yellow);color:#111}
+.mobile-dock{position:fixed;bottom:0;inset-inline:0;z-index:10;display:flex;justify-content:center;gap:4px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:#202020f5;backdrop-filter:blur(16px);border-top:1px solid #3b3b3b}
+.mobile-dock a{flex:1;max-width:135px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:9px 2px;border-radius:10px;font-size:10px;color:#fff;min-height:57px}
+.mobile-dock a[aria-current=page]{background:#32332a;color:var(--yellow)}.mobile-dock svg{width:21px;height:21px}
+.mobile-section{margin:24px 0}.mobile-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}.mobile-section-head a{font-size:12px;color:var(--yellow)}
+.mobile-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:15px;border:1px solid #3a3a3a;background:var(--panel);color:#fff;border-radius:14px;min-height:82px;overflow-wrap:anywhere}
+.mobile-summary+.mobile-summary{margin-top:10px}.mobile-summary:hover{border-color:var(--yellow);background:#282828}
+.mobile-summary-copy{flex:1;min-width:0}.mobile-summary-copy>strong{display:block;font-size:15px;line-height:1.35;overflow-wrap:anywhere}.mobile-summary-copy>span{display:block;font-size:12px;line-height:1.4;margin-top:5px;overflow-wrap:anywhere}
+.mobile-summary-copy>strong small,.mobile-summary-copy>span small,.mobile-status small{display:none}.mobile-summary-copy .avatar{display:none}
+.mobile-report-card .mobile-summary-copy>strong small{display:block}
+.mobile-summary-end{display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:36%;flex:none;text-align:right;font-size:14px}.mobile-summary-end:empty{display:none}
+.mobile-summary[data-action=order] .mobile-summary-copy>strong{color:var(--yellow)}.mobile-status{font-size:11px;line-height:1.4}
+.mobile-more{display:grid;gap:10px}.mobile-more>a,.mobile-more>button{display:flex;align-items:center;gap:14px;padding:18px;border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:12px;font-size:15px;text-align:left;min-height:60px}
+.mobile-more svg{color:var(--yellow);width:21px;height:21px}.mobile-user{margin-top:24px;font-size:12px;color:#fff}
+.mobile-list{padding:0 12px 12px}.mobile-cards{display:grid;gap:10px}.mobile-cards .mobile-summary{margin:0}.mobile-list-search{display:flex;gap:8px;margin-bottom:12px}.mobile-list-search input{flex:1;min-width:0;background:#171717;border:1px solid #444;padding:12px;color:#fff}.mobile-status-filter{width:100%;margin-bottom:12px}
+.mobile-list-count{font-size:12px;margin:12px 0}.mobile-load-more{width:100%;margin-top:8px}.mobile-report-card{padding:14px;border:1px solid #3a3a3a;border-radius:12px;background:#242424;overflow-wrap:anywhere}.mobile-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.mobile-card-head .mobile-summary-copy{font-size:14px}.mobile-card-head small{display:block;font-size:12px;margin-top:5px}
+.mobile-card-details{margin-top:12px;border-top:1px solid #3b3b3b;padding-top:10px}.mobile-card-details summary{cursor:pointer;color:var(--yellow);font-size:12px;min-height:28px}.mobile-card-details dl{margin:8px 0 0}.mobile-card-details dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:10px;padding:9px 0;border-bottom:1px solid #333;font-size:12px}.mobile-card-details dt{color:var(--yellow)}.mobile-card-details dd{margin:0;overflow-wrap:anywhere}.mobile-card-details dd small{display:block}.mobile-card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.mobile-card-actions>*{flex:1}
+.mobile-admin dialog{width:100%;max-width:700px;max-height:calc(100dvh - env(safe-area-inset-top) - 16px);margin:auto auto 0;padding:0 0 calc(20px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;overflow:auto;overscroll-behavior:contain;border:1px solid #444;background:var(--panel)}
+.mobile-admin dialog::backdrop{background:#000b;backdrop-filter:blur(4px)}.mobile-admin:has(dialog[open]){overflow:hidden}.mobile-admin dialog>.panel-head{position:sticky;top:0;z-index:2;flex-wrap:nowrap;background:var(--panel);border-bottom:1px solid var(--line);padding:16px}
+.mobile-admin dialog>.panel-head>div{min-width:0;overflow-wrap:anywhere}.mobile-admin dialog h2{font-size:19px}.mobile-admin .form-grid{grid-template-columns:minmax(0,1fr);padding:16px;gap:16px}.mobile-admin .form-grid .full{grid-column:auto}.mobile-admin .settings-body{padding:16px;overflow-wrap:anywhere}
+.mobile-admin .detail-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:16px;gap:16px}.mobile-admin .detail-meta>div{min-width:0;overflow-wrap:anywhere}.mobile-admin .dialog-actions{display:flex;flex-wrap:wrap;padding:16px;gap:10px}.mobile-admin .dialog-actions>*{flex:1 1 130px}
+.mobile-admin dialog .settings-body>p+p{margin-top:10px}.mobile-admin dialog .settings-body>h3{margin:18px 0 10px}
+.mobile-admin .account-detail{padding:16px}.mobile-admin .account-totals{grid-template-columns:repeat(2,minmax(0,1fr))}.mobile-admin .account-dates{grid-template-columns:1fr}.mobile-admin .account-order header{flex-wrap:wrap;gap:10px}.mobile-admin .account-order dl{grid-template-columns:1fr}.mobile-admin .account-email{font-size:16px;overflow-wrap:anywhere}
+.mobile-admin .login{display:block;min-height:100dvh;background:var(--bg)}.mobile-admin .login-art{display:none}.mobile-admin .login-form-wrap{min-height:0;display:block;padding:calc(60px + env(safe-area-inset-top)) 24px 40px;max-width:430px}.mobile-admin .login-form{width:100%;max-width:none}.mobile-admin .login-form:before{content:'';display:block;width:180px;height:64px;background:url('/assets/logo.png') left center/contain no-repeat;margin-bottom:25px}.mobile-admin .login-form h2{font-size:26px}.mobile-admin .preview-tag{color:var(--yellow);border-color:#555;font-size:11px}.mobile-admin .login-options{flex-wrap:wrap;gap:12px;font-size:12px}.mobile-admin .login-form .button{width:100%}
+.mobile-admin #toast{bottom:calc(95px + env(safe-area-inset-bottom));max-width:calc(100vw - 32px);font-size:13px;overflow-wrap:anywhere}.mobile-admin .empty{font-size:13px;padding:20px;white-space:normal}.mobile-admin .form-message{font-size:13px}.mobile-admin .install-help p{margin-top:16px;font-size:15px;line-height:1.6}.install-help img{border-radius:20px}
+#network-state{padding:12px 16px;background:var(--yellow);color:#111;font-size:13px;text-align:center}
+@media(min-width:761px){.mobile-admin dialog{margin:auto;border-radius:22px}.mobile-admin main{padding-top:24px}}

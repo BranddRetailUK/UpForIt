@@ -165,7 +165,7 @@ const server=createServer(async(req,res)=>{
  if(p==='/vendor/zxing-browser.min.js'){
   const data=await readFile(new URL('./node_modules/@zxing/browser/umd/zxing-browser.min.js',import.meta.url));return sendStatic(req,res,data,'text/javascript; charset=utf-8');
  }
- const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':p==='/ticket-test'?'/ticket-test.html':['/scan','/scan/activate'].includes(p)?'/scanner.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
+ const file=path.resolve(root,'.'+decodeURIComponent(p==='/'?'/index.html':p==='/mobile'?'/mobile.html':p==='/ticket-test'?'/ticket-test.html':['/scan','/scan/activate'].includes(p)?'/scanner.html':p));if(!file.startsWith(root+path.sep))throw httpError(404,'Not found.');
  const data=await readFile(file);sendStatic(req,res,data,types[path.extname(file)]||'application/octet-stream');
  }catch(e){const status=e.status||(e.code==='ENOENT'?404:500);if(status===500)console.error('Admin request failed',{code:e.code||e.name,...(!production?{message:e.message,position:e.position}:{})});if(!res.headersSent)json(res,status,{error:status===500?'Unable to complete the request. Please try again.':e.message,...(e.ticket?{ticket:e.ticket}:{})});else res.end();}
 });
