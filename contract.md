@@ -42,6 +42,7 @@ minimum_release_check=npm run build; git diff --check; git status --short
 
 [production_deployment]
 admin_mobile_app=/mobile on dedicated ADMIN service; /admin.webmanifest installs UpForIt ADMIN separately from /scan; phone/standalone visits to ADMIN root redirect while desktop retains existing console; shared admin controllers and APIs with mobile shell/cards/detail sheets
+admin_push_notifications=More > Notifications; per-device opt-in for paid ticket sales, Blackley bucket entries and customer accounts; ADMIN server polls shared PostgreSQL every 15s with deduplicated deliveries and retries; VAPID keys server env only; /admin-sw.js scoped /mobile with no private caching; no backlog before opt-in; explicit logout removes device; admin role rechecked per send
 release_workflow_updated=2026-10-24
 release_source=GitHub main is the source of truth for all completed site and admin updates
 MUST=validate, commit and push completed updates to main before release; exclude screenshots, exports, temporary files, build artifacts and secrets

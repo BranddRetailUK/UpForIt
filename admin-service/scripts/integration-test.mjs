@@ -18,11 +18,11 @@ try{
  await db.query(`INSERT INTO users(id,email,display_name,password_hash,role,email_verified_at) VALUES($1,'admin@example.com','Test Admin',$3,'admin',now()),($2,'customer@example.com','Test Customer',$3,'customer',now())`,[admin,customer,passwordHash]);
  await db.query(`INSERT INTO signups(email) VALUES('signup@example.com')`);
  await db.query(`INSERT INTO mix_entries(id,competition_id,user_id,artist,title,genre,email,source,source_url) VALUES($1,'nye-2026',$2,'Test DJ','Test Mix','UKG','dj@example.com','Link','https://soundcloud.com/example/mix')`,[entry,customer]);
- const origin='http://localhost:4311';server=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,DATABASE_URL:connection.href,AUTH_RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),PORT:'4311',ADMIN_ORIGIN:origin,NODE_ENV:'test',ADMIN_LIVE_TICKET_TESTS_ENABLED:'false',META_MARKETING_API_ACCESS_TOKEN:''},stdio:['ignore','pipe','pipe']});
+ const origin='http://localhost:4311';server=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,DATABASE_URL:connection.href,AUTH_RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),PORT:'4311',ADMIN_ORIGIN:origin,NODE_ENV:'test',ADMIN_LIVE_TICKET_TESTS_ENABLED:'false',ADMIN_WEB_PUSH_ENABLED:'false',META_MARKETING_API_ACCESS_TOKEN:''},stdio:['ignore','pipe','pipe']});
  let serverError='';server.stderr.on('data',d=>{serverError+=d.toString();process.stderr.write(d);});
  for(let i=0;i<60;i++){try{const r=await fetch(origin+'/health');if(r.ok)break;}catch{}await new Promise(r=>setTimeout(r,100));if(i===59)throw Error('Server did not start: '+serverError);}
  const request=(path,body,cookie='',sentOrigin=origin)=>fetch(origin+path,{method:body===undefined?'GET':'POST',headers:{...(cookie?{cookie}:{}),...(body===undefined?{}:{'Content-Type':'application/json',Origin:sentOrigin})},...(body===undefined?{}:{body:JSON.stringify(body)})});
- for(const path of ['/api/ticket-test','/api/bucket','/api/bucket?export=csv','/api/dashboard','/api/kpis','/api/analytics','/api/traffic','/api/campaigns','/api/campaign?id=00000000-0000-4000-8000-000000000000','/api/export?type=signups'])assert.equal((await request(path)).status,401);
+ for(const path of ['/api/notifications','/api/ticket-test','/api/bucket','/api/bucket?export=csv','/api/dashboard','/api/kpis','/api/analytics','/api/traffic','/api/campaigns','/api/campaign?id=00000000-0000-4000-8000-000000000000','/api/export?type=signups'])assert.equal((await request(path)).status,401);
  assert.equal((await request('/api/checkout/reconcile',{id:randomUUID()})).status,401);
  assert.equal((await request('/api/ticket-test',{action:'create'})).status,401);
  assert.equal((await request('/api/login',{email:'admin@example.com',password},'','https://evil.example.com')).status,403);
@@ -46,6 +46,12 @@ try{
  assert.equal((await request('/api/settings',{submissions:false,voting:false,close:'2026-11-01T00:00:00Z',voteClose:'2026-11-02T00:00:00Z',announce:'2026-11-03T00:00:00Z'},cookie)).status,200);
  d=await (await request('/api/dashboard',undefined,cookie)).json();assert.equal(d.subscribers[0].status,'Unsubscribed');assert.equal(d.entries[0].reviewed,true);assert.equal(d.entries[0].status,'hidden');assert.equal(d.settings.voting_open,false);
  const exported=await request('/api/export?type=signups&status=Subscribed',undefined,cookie);assert.equal(exported.status,200);assert.ok(!(await exported.text()).includes('signup@example.com'));
+ assert.equal((await request('/api/notifications/subscribe',{},cookie,'https://evil.example.com')).status,403);
+ assert.equal((await request('/api/notifications/subscribe',{},cookie)).status,503);
+ assert.equal((await request('/api/notifications/status',{endpoint:'https://web.push.apple.com/test'},cookie)).status,200);
+ assert.equal((await request('/api/notifications/status',{endpoint:'https://127.0.0.1/private'},cookie)).status,400);
+ assert.equal((await request('/api/notifications/test',{endpoint:'https://web.push.apple.com/test'})).status,401);
+ assert.equal((await (await request('/api/notifications',undefined,cookie)).json()).enabled,false);
  const pool=new pg.Pool({connectionString:connection.href});
  try{
   await db.query("INSERT INTO signups(email) VALUES('active@example.com'),('ACTIVE@example.com'),('skip@example.com')");

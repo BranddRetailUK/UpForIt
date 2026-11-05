@@ -1,4 +1,5 @@
 import {sendStatic} from './static-response.mjs';
+import {pushConfiguration,savePushSubscription,pushDeviceStatus,removePushSubscription,logoutWithPush,testPush,startPushWorker} from './notifications.mjs';
 import {accountList,accountDetail} from './accounts.mjs';
 import {liveTestData,createLiveTest,operateLiveTest} from './live-ticket-test.mjs';
 import {reconcileCheckout} from './checkout-recovery.mjs';
@@ -26,7 +27,7 @@ if(!process.env.DATABASE_URL||!process.env.AUTH_RATE_LIMIT_SECRET)throw new Erro
 const db=new pg.Pool({connectionString:process.env.DATABASE_URL,max:8,connectionTimeoutMillis:10000,idleTimeoutMillis:30000,statement_timeout:15000,...(process.env.DB_SSL==='true'?{ssl:{rejectUnauthorized:false}}:{})});
 const trafficAnalytics=createTrafficAnalytics({db});
 db.on('error',()=>console.error('Database connection error'));
-const client=await db.connect();try{await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(739128461)');await client.query(await readFile(new URL('./schema.sql',import.meta.url),'utf8'));await client.query('COMMIT');}catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
+const client=await db.connect();try{await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(739128461)');await client.query(await readFile(new URL('./schema.sql',import.meta.url),'utf8'));await client.query(await readFile(new URL('./notifications.sql',import.meta.url),'utf8'));await client.query('COMMIT');}catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 const types={'.webmanifest':'application/manifest+json','.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2'};
 const dummy='$2b$12$lQAEeVgLq1f7nNcxz6A19u/wCgh4hfTi2qvYozqzDAt2JplQyhj5G';
 function json(res,status,body){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));}
@@ -90,7 +91,19 @@ const server=createServer(async(req,res)=>{
   // Every data read, export and mutation rechecks the live user role and session.
   const user=await admin(req);
   if(p==='/api/session'&&req.method==='GET')return json(res,200,{user,storefront:process.env.STOREFRONT_URL||'https://www.upforitevents.co.uk'});
-  if(p==='/api/logout'&&req.method==='POST'){await db.query('DELETE FROM user_sessions WHERE token_hash=$1',[hash(sessionToken(req))]);res.setHeader('Set-Cookie',sessionCookie('',0,production));return json(res,200,{ok:true});}
+  if(p==='/api/logout'&&req.method==='POST'){const b=await body(req);await logoutWithPush(db,user.id,hash(sessionToken(req)),b.pushEndpoint);res.setHeader('Set-Cookie',sessionCookie('',0,production));return json(res,200,{ok:true});}
+  if(p==='/api/notifications'&&req.method==='GET')return json(res,200,pushConfiguration());
+  if(p.startsWith('/api/notifications/')&&req.method==='POST'){
+   if(!await rate('push:'+user.id,60,1))throw httpError(429,'Too many notification requests. Please wait.');
+   const b=await body(req);
+   if(p==='/api/notifications/status')return json(res,200,await pushDeviceStatus(db,user.id,b.endpoint));
+   if(p==='/api/notifications/subscribe')return json(res,200,await savePushSubscription(db,user.id,hash(sessionToken(req)),b));
+   if(p==='/api/notifications/unsubscribe')return json(res,200,await removePushSubscription(db,user.id,b.endpoint));
+   if(p==='/api/notifications/test'){
+    if(!await rate('push-test:'+user.id,3,1))throw httpError(429,'Please wait before sending another test.');
+    return json(res,200,await testPush(db,user.id,b.endpoint));
+   }
+  }
   if(p==='/api/scanner/devices'&&req.method==='GET')return json(res,200,{devices:await scannerDevices(db)});
   if(p==='/api/scanner/enrol'&&req.method==='POST'){
    if(!await rate('scanner-enrol:'+user.id,60))throw httpError(429,'Too many scanner access requests.');
@@ -172,4 +185,5 @@ const server=createServer(async(req,res)=>{
 server.requestTimeout=20000;server.headersTimeout=15000;
 server.listen(port,production?'0.0.0.0':'127.0.0.1',()=>console.log(`UPFORIT admin listening on port ${port}`));
 const stopCampaignWorker=startCampaignWorker(db,origin);
-process.on('SIGTERM',()=>{stopCampaignWorker();server.close(()=>db.end().finally(()=>process.exit(0)));});
+const stopPushWorker=startPushWorker(db);
+process.on('SIGTERM',()=>{stopCampaignWorker();stopPushWorker();server.close(()=>db.end().finally(()=>process.exit(0)));});
