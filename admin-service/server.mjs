@@ -27,7 +27,7 @@ const db=new pg.Pool({connectionString:process.env.DATABASE_URL,max:8,connection
 const trafficAnalytics=createTrafficAnalytics({db});
 db.on('error',()=>console.error('Database connection error'));
 const client=await db.connect();try{await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(739128461)');await client.query(await readFile(new URL('./schema.sql',import.meta.url),'utf8'));await client.query('COMMIT');}catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2'};
+const types={'.webmanifest':'application/manifest+json','.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.woff2':'font/woff2'};
 const dummy='$2b$12$lQAEeVgLq1f7nNcxz6A19u/wCgh4hfTi2qvYozqzDAt2JplQyhj5G';
 function json(res,status,body){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));}
 async function body(req){if(!req.headers['content-type']?.startsWith('application/json'))throw httpError(415,'JSON required.');let chunks=[],size=0;for await(const chunk of req){size+=chunk.length;if(size>65536)throw httpError(413,'Request too large.');chunks.push(chunk);}try{const v=JSON.parse(Buffer.concat(chunks).toString());if(!v||typeof v!=='object'||Array.isArray(v))throw Error();return v;}catch{throw httpError(400,'Invalid JSON.');}}
