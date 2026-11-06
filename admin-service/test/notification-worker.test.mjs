@@ -13,7 +13,7 @@ test('push worker displays visible notifications and only navigates to allowlist
  vm.runInNewContext(source,{self,URL});
  let pending;const event={data:{json:()=>({kind:'sales',body:'A ticket sale.',url:'https://evil.test',tag:'same-event'})},waitUntil:p=>pending=p};
  handlers.push(event);await pending;
- assert.equal(shown[0][0],'UpForIt ADMIN');assert.equal(shown[0][1].body,'A ticket sale.');assert.equal(shown[0][1].tag,'same-event');
+ assert.equal(shown[0][0],'New order');assert.equal(shown[0][1].body,'A ticket sale.');assert.equal(shown[0][1].tag,'same-event');
  handlers.notificationclick({notification:{data:{kind:'sales',url:'https://evil.test'},close(){}},waitUntil:p=>pending=p});await pending;
  assert.deepEqual(navigated,['https://admin.example.test/mobile#tickets']);assert.equal(opened.length,0);
  self.clients.matchAll=async()=>[];
